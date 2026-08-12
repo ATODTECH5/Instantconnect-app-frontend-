@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
 	Pressable,
 	ScrollView,
@@ -25,7 +25,7 @@ import { GetStartedPanel } from "@/components/onboarding/get-started-panel";
 import { OnboardingSlide } from "@/components/onboarding/onboarding-slide";
 import { ORBIT_FRAME, OrbitIllustration } from "@/components/onboarding/orbit-illustration";
 import { PagerDots } from "@/components/onboarding/pager-dots";
-import { Ink, Type } from "@/constants/theme";
+import { Ink, Spacing, Type } from "@/constants/theme";
 
 const SLIDES = [
 	{
@@ -33,44 +33,54 @@ const SLIDES = [
 		title: "Meet Real People\nAround You",
 		body: "Discover nearby people for networking, friendship, social activities, talents, and meaningful real-world connections.",
 		illustration: <OrbitIllustration />,
-		illustrationTop: 222,
-		illustrationHeight: ORBIT_FRAME.height,
+		illustrationFrame: ORBIT_FRAME,
 	},
 	{
 		key: "meetups",
 		title: "Plan Safer Meetups\nwith Confidence",
 		body: "Chat securely, exchange details, choose meetup spots together, and verify arrivals with our GPS-powered safety system.",
 		illustration: <CardStackIllustration />,
-		illustrationTop: 216,
-		illustrationHeight: CARD_STACK_FRAME.height,
+		illustrationFrame: CARD_STACK_FRAME,
 	},
 	{
 		key: "places",
 		title: "Connect Beyond the\nSwipe",
 		body: "From cafés and coworking spaces to local events, discover the perfect place to meet people who share your interests.",
 		illustration: <DiscoveryIllustration />,
-		illustrationTop: 165,
-		illustrationHeight: DISCOVERY_FRAME.height,
+		illustrationFrame: DISCOVERY_FRAME,
 	},
 ];
 
 /** Overlay height for the Skip control. */
 const HEADER_HEIGHT = 44;
 
+/** Dot diameter plus the track's vertical padding. */
+const DOTS_HEIGHT = 10;
+
 export default function OnboardingScreen() {
 	const { width, height } = useWindowDimensions();
 	const insets = useSafeAreaInsets();
 	const [index, setIndex] = useState(0);
+	const pagerRef = useRef<ScrollView>(null);
+	const indexRef = useRef(0);
 
 	const isGetStarted = index === SLIDES.length;
+	const footerBottom = insets.bottom + Spacing.four;
+	const slideBottomInset = footerBottom + DOTS_HEIGHT + Spacing.three;
 
 	const handleScroll = useCallback(
 		(event: NativeSyntheticEvent<NativeScrollEvent>) => {
 			const next = Math.round(event.nativeEvent.contentOffset.x / width);
+			indexRef.current = next;
 			setIndex((current) => (current === next ? current : next));
 		},
 		[width],
 	);
+
+	// A rotation or split view resize leaves the pager parked between two pages.
+	useEffect(() => {
+		pagerRef.current?.scrollTo({ x: indexRef.current * width, animated: false });
+	}, [width]);
 
 	const handleSkip = useCallback(() => router.replace("/get-started"), []);
 	const handleStart = useCallback(() => router.replace("/(tabs)"), []);
@@ -80,6 +90,7 @@ export default function OnboardingScreen() {
 			<StatusBar style={isGetStarted ? "light" : "dark"} />
 
 			<ScrollView
+				ref={pagerRef}
 				horizontal
 				pagingEnabled
 				showsHorizontalScrollIndicator={false}
@@ -87,14 +98,14 @@ export default function OnboardingScreen() {
 				scrollEventThrottle={16}
 			>
 				{SLIDES.map((slide) => (
-					<View key={slide.key} style={{ width }}>
+					<View key={slide.key} style={{ width, height }}>
 						<OnboardingSlide
 							title={slide.title}
 							body={slide.body}
 							illustration={slide.illustration}
-							illustrationTop={slide.illustrationTop}
-							illustrationHeight={slide.illustrationHeight}
-							safeTop={insets.top}
+							illustrationFrame={slide.illustrationFrame}
+							topInset={insets.top}
+							bottomInset={slideBottomInset}
 						/>
 					</View>
 				))}
@@ -118,7 +129,7 @@ export default function OnboardingScreen() {
 						</Pressable>
 					</View>
 
-					<View style={[styles.footer, { bottom: insets.bottom + 24 }]}>
+					<View style={[styles.footer, { bottom: footerBottom }]}>
 						<PagerDots count={SLIDES.length} activeIndex={index} />
 					</View>
 				</>

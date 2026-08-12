@@ -137,3 +137,9 @@ export const Spacing = {
 
 export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
 export const MaxContentWidth = 800;
+
+/** Every onboarding frame was exported against this artboard. */
+export const DesignFrame = { width: 393, height: 852 } as const;
+
+/** Phone sized reading column, centred once the screen grows past it. */
+export const MaxColumnWidth = 420;

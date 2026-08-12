@@ -9,10 +9,18 @@ import IconDiscover from "@/assets/onboarding/gs-icon-discover.svg";
 import IconMatches from "@/assets/onboarding/gs-icon-matches.svg";
 import IconVerified from "@/assets/onboarding/gs-icon-verified.svg";
 import { GradientBackground } from "@/components/gradient-background";
-import { Brand, Ink, Type } from "@/constants/theme";
+import { Brand, Ink, MaxColumnWidth, Spacing, Type } from "@/constants/theme";
+import { useDesignScale } from "@/hooks/use-design-scale";
 
 const HERO_SIZE = 74;
 const BADGE_SIZE = 44;
+
+/** Vertical rhythm from the artboard, tightened on shorter screens. */
+const GAP = {
+	headline: 37,
+	features: 53,
+	betweenFeatures: 38,
+} as const;
 
 type Feature = {
 	key: string;
@@ -50,47 +58,60 @@ const FEATURES: Feature[] = [
 
 export function GetStartedPanel({ onStart }: { onStart: () => void }) {
 	const insets = useSafeAreaInsets();
+	const { vertical } = useDesignScale();
 
 	return (
 		<GradientBackground style={styles.panel}>
 			<ScrollView
 				contentContainerStyle={[
 					styles.content,
-					{ paddingTop: insets.top + 32, paddingBottom: insets.bottom + 32 },
+					{
+						paddingTop: insets.top + Spacing.five * vertical,
+						paddingBottom: insets.bottom + Spacing.five * vertical,
+					},
 				]}
 				showsVerticalScrollIndicator={false}
 			>
-				<View style={styles.hero}>
-					<HeroPin width={HERO_SIZE} height={HERO_SIZE} />
-				</View>
+				<View style={styles.column}>
+					<View style={styles.hero}>
+						<HeroPin width={HERO_SIZE} height={HERO_SIZE} />
+					</View>
 
-				<Text style={styles.headline}>Meet People Near You. Right Now</Text>
+					<Text style={[styles.headline, { marginTop: GAP.headline * vertical }]}>
+						Meet People Near You. Right Now
+					</Text>
 
-				<View style={styles.features}>
-					{FEATURES.map(({ key, Icon, title, body }) => (
-						<View key={key} style={styles.feature}>
-							<View style={styles.badge}>
-								<Icon width={BADGE_SIZE} height={BADGE_SIZE} />
+					<View
+						style={{
+							marginTop: GAP.features * vertical,
+							gap: GAP.betweenFeatures * vertical,
+						}}
+					>
+						{FEATURES.map(({ key, Icon, title, body }) => (
+							<View key={key} style={styles.feature}>
+								<View style={styles.badge}>
+									<Icon width={BADGE_SIZE} height={BADGE_SIZE} />
+								</View>
+
+								<View style={styles.featureText}>
+									<Text style={styles.featureTitle}>{title}</Text>
+									<Text style={styles.featureBody}>{body}</Text>
+								</View>
 							</View>
+						))}
+					</View>
 
-							<View style={styles.featureText}>
-								<Text style={styles.featureTitle}>{title}</Text>
-								<Text style={styles.featureBody}>{body}</Text>
-							</View>
-						</View>
-					))}
+					<View style={styles.spacer} />
+
+					<Pressable
+						accessibilityRole="button"
+						accessibilityLabel="Get started"
+						onPress={onStart}
+						style={({ pressed }) => [styles.cta, pressed && styles.ctaPressed]}
+					>
+						<Text style={styles.ctaLabel}>Get Started</Text>
+					</Pressable>
 				</View>
-
-				<View style={styles.spacer} />
-
-				<Pressable
-					accessibilityRole="button"
-					accessibilityLabel="Get started"
-					onPress={onStart}
-					style={({ pressed }) => [styles.cta, pressed && styles.ctaPressed]}
-				>
-					<Text style={styles.ctaLabel}>Get Started</Text>
-				</Pressable>
 			</ScrollView>
 		</GradientBackground>
 	);
@@ -102,7 +123,13 @@ const styles = StyleSheet.create({
 	},
 	content: {
 		flexGrow: 1,
+		alignItems: "center",
 		paddingHorizontal: 16,
+	},
+	column: {
+		flexGrow: 1,
+		width: "100%",
+		maxWidth: MaxColumnWidth,
 	},
 	hero: {
 		width: HERO_SIZE,
@@ -115,11 +142,6 @@ const styles = StyleSheet.create({
 		...Type.heroTitle,
 		color: Ink.surface,
 		textAlign: "center",
-		marginTop: 37,
-	},
-	features: {
-		marginTop: 53,
-		gap: 38,
 	},
 	feature: {
 		flexDirection: "row",
@@ -150,7 +172,9 @@ const styles = StyleSheet.create({
 		minHeight: 40,
 	},
 	cta: {
-		height: 48,
+		minHeight: 48,
+		paddingVertical: Spacing.two,
+		paddingHorizontal: Spacing.four,
 		borderRadius: 8,
 		backgroundColor: Ink.surface,
 		alignItems: "center",
