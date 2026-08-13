@@ -25,6 +25,12 @@ export const Ink = {
 	surface: "#FFFFFF",
 	/** Body copy sitting on the brand gradient. */
 	onBrandMuted: "#E6E5EA",
+	placeholder: "#C7C5CD",
+	border: "#E6E5EA",
+	borderStrong: "#C9C8D3",
+	/** Not in the sign up frames: invalid state is ours to define. */
+	danger: "#D92D3E",
+	dangerSurface: "#FEF2F3",
 } as const;
 
 export type BrandColor = keyof typeof Brand;
@@ -123,6 +129,23 @@ export const Type = {
 	},
 	featureBody: { fontFamily: UiFont.regular, fontSize: 14, lineHeight: 18 },
 	cta: { fontFamily: UiFont.semibold, fontSize: 16, lineHeight: 22, letterSpacing: -0.1 },
+	/**
+	 * 30.8 measured, since the sign up frame was set in a face whose cap height
+	 * ratio is lower than Inter's. 31 reproduces the drawn cap height.
+	 */
+	authTitle: { fontFamily: UiFont.bold, fontSize: 31, lineHeight: 38, letterSpacing: -0.4 },
+	authSubtitle: { fontFamily: UiFont.regular, fontSize: 16, lineHeight: 24 },
+	/**
+	 * The frames set labels at 8pt and field text at 12pt, both below the size
+	 * this app can ship. Raised to the smallest values that stay legible at the
+	 * largest dynamic type step; drop them back here to match the frame exactly.
+	 */
+	fieldLabel: { fontFamily: UiFont.medium, fontSize: 12, lineHeight: 16 },
+	fieldValue: { fontFamily: UiFont.regular, fontSize: 15, lineHeight: 20 },
+	fieldError: { fontFamily: UiFont.regular, fontSize: 12, lineHeight: 16 },
+	consent: { fontFamily: UiFont.regular, fontSize: 13, lineHeight: 18 },
+	consentLink: { fontFamily: UiFont.semibold, fontSize: 13, lineHeight: 18 },
+	dividerLabel: { fontFamily: UiFont.regular, fontSize: 13, lineHeight: 18 },
 } as const;
 
 export const Spacing = {
@@ -134,6 +157,15 @@ export const Spacing = {
 	five: 32,
 	six: 64,
 } as const;
+
+export const Radius = {
+	control: 8,
+	sheet: 24,
+	checkbox: 2,
+} as const;
+
+/** Apple asks for 44pt, Android for 48dp, so the larger one wins everywhere. */
+export const MinTapTarget = 48;
 
 export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
 export const MaxContentWidth = 800;

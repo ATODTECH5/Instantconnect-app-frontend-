@@ -83,7 +83,7 @@ export default function OnboardingScreen() {
 	}, [width]);
 
 	const handleSkip = useCallback(() => router.replace("/get-started"), []);
-	const handleStart = useCallback(() => router.replace("/(tabs)"), []);
+	const handleStart = useCallback(() => router.push("/sign-up"), []);
 
 	return (
 		<View style={styles.screen}>

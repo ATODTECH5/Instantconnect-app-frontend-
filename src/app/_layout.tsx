@@ -66,6 +66,7 @@ export default function RootLayout() {
 				<Stack.Screen name="(tabs)" />
 				<Stack.Screen name="onboarding" options={{ gestureEnabled: false }} />
 				<Stack.Screen name="get-started" options={{ gestureEnabled: false }} />
+				<Stack.Screen name="sign-up" />
 			</Stack>
 			{isSplashVisible && <BrandSplash onFinish={handleSplashFinish} />}
 		</ThemeProvider>
