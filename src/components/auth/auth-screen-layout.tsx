@@ -8,7 +8,6 @@ import { GlassIconButton } from "@/components/ui/glass-icon-button";
 import { Ink, MaxColumnWidth, Radius, Spacing, Type } from "@/constants/theme";
 import { useDesignScale } from "@/hooks/use-design-scale";
 
-/** Vertical rhythm from the artboard, tightened on shorter screens. */
 const GAP = {
 	afterBack: 41,
 	afterTitle: 12,
@@ -18,21 +17,18 @@ const GAP = {
 const SHEET_PADDING_TOP = 40;
 
 export type AuthScreenLayoutProps = {
-	title: string;
-	subtitle: string;
-	onBack: () => void;
+	title?: string;
+	subtitle?: string;
+	headerContent?: ReactNode;
+	onBack?: () => void;
 	backLabel?: string;
 	children: ReactNode;
 };
 
-/**
- * Brand gradient header over a rounded white sheet, shared by every screen in
- * the auth flow. The header scrolls with the sheet so the whole form stays
- * reachable on short devices and behind the keyboard.
- */
 export function AuthScreenLayout({
 	title,
 	subtitle,
+	headerContent,
 	onBack,
 	backLabel = "Go back",
 	children,
@@ -50,22 +46,38 @@ export function AuthScreenLayout({
 			>
 				<View style={styles.column}>
 					<View style={[styles.header, { paddingTop: insets.top + Spacing.two }]}>
-						<GlassIconButton
-							Icon={ArrowLeftIcon}
-							accessibilityLabel={backLabel}
-							onPress={onBack}
-						/>
+						{onBack ? (
+							<GlassIconButton
+								Icon={ArrowLeftIcon}
+								accessibilityLabel={backLabel}
+								onPress={onBack}
+							/>
+						) : null}
 
-						<Text
-							accessibilityRole="header"
-							style={[styles.title, { marginTop: GAP.afterBack * vertical }]}
-						>
-							{title}
-						</Text>
+						{title ? (
+							<Text
+								accessibilityRole="header"
+								style={[styles.title, { marginTop: GAP.afterBack * vertical }]}
+							>
+								{title}
+							</Text>
+						) : null}
 
-						<Text style={[styles.subtitle, { marginTop: GAP.afterTitle * vertical }]}>
-							{subtitle}
-						</Text>
+						{subtitle ? (
+							<Text
+								style={[
+									styles.subtitle,
+									{
+										marginTop:
+											(title ? GAP.afterTitle : GAP.afterBack) * vertical,
+									},
+								]}
+							>
+								{subtitle}
+							</Text>
+						) : null}
+
+						{headerContent}
 					</View>
 
 					<View
@@ -79,11 +91,6 @@ export function AuthScreenLayout({
 					>
 						{children}
 
-						{/*
-						 * The sheet stops at its content, so bouncing past the end or
-						 * opening the keyboard would otherwise expose the gradient
-						 * underneath it.
-						 */}
 						<View style={[styles.sheetUnderlay, { height, bottom: -height }]} />
 					</View>
 				</View>

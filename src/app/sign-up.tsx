@@ -12,6 +12,7 @@ import { FormField } from "@/components/ui/form-field";
 import { LabelledDivider } from "@/components/ui/labelled-divider";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { Brand, Ink, Spacing, Type } from "@/constants/theme";
+import { useSignUpDraft } from "@/features/auth/sign-up-draft";
 import { signUpSchema, type SignUpInput, type SignUpValues } from "@/features/auth/sign-up-schema";
 
 const FIELD_GAP = 22;
@@ -25,6 +26,7 @@ const DEFAULT_VALUES: SignUpValues = {
 };
 
 export default function SignUpScreen() {
+	const { setDraft } = useSignUpDraft();
 	const emailRef = useRef<TextInput>(null);
 	const phoneRef = useRef<TextInput>(null);
 	const passwordRef = useRef<TextInput>(null);
@@ -44,16 +46,23 @@ export default function SignUpScreen() {
 		else router.replace("/get-started");
 	}, []);
 
+	// The account is created once the terms are accepted, so a valid form hands
+	// its values to the gate rather than submitting here.
 	const submit = handleSubmit(
-		useCallback((_values: SignUpInput) => {
-			router.replace("/(tabs)");
-		}, []),
+		useCallback(
+			(values: SignUpInput) => {
+				setDraft(values);
+				router.push("/terms");
+			},
+			[setDraft],
+		),
 	);
 
-	// Terms, social providers and log in have no destination in the app yet, so
-	// these stay inert rather than pushing routes that would fail to resolve.
+	const openTerms = useCallback(() => router.push("/terms"), []);
+
+	// Social providers and log in have no destination in the app yet, so these
+	// stay inert rather than pushing routes that would fail to resolve.
 	const handleSocial = useCallback((_provider: SocialProvider) => {}, []);
-	const openTerms = useCallback(() => {}, []);
 	const goToLogIn = useCallback(() => {}, []);
 
 	return (
