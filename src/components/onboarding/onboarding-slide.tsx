@@ -1,88 +1,98 @@
 import type { ReactNode } from "react";
-import { StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 
-import { Brand, Ink, Type } from "@/constants/theme";
+import { ScaledFrame } from "@/components/scaled-frame";
+import { Brand, Ink, MaxColumnWidth, Type } from "@/constants/theme";
+import { useDesignScale } from "@/hooks/use-design-scale";
 
-/** Every measurement in the onboarding frames is relative to this width. */
-const DESIGN_WIDTH = 393;
+const LOGO_SIZE = 46;
+const ILLUSTRATION_MAX_SCALE = 1.15;
 
 /**
- * Vertical anchors read off the three exports. The title and body sit at the
- * same y on every slide, so they are pinned here and only the artwork moves.
- * Offsets are measured down from the safe area rather than the frame top.
+ * The artwork gets whatever height is left once the logo and the copy are laid
+ * out, down to this floor. Past that the slide scrolls rather than clipping.
  */
-const DESIGN = {
-	safeTop: 59,
-	logoTop: 99,
-	logoSize: 46,
-	titleInk: 555,
-	bodyInk: 645,
-} as const;
+const MIN_ILLUSTRATION_HEIGHT = 150;
 
-/** Distance from a text block's box top to the first painted pixel. */
-const TITLE_INK_OFFSET = 8;
-const BODY_INK_OFFSET = 5;
-const TITLE_BLOCK_HEIGHT = Type.slideTitle.lineHeight * 2;
+/** Vertical rhythm from the artboard, tightened on shorter screens. */
+const GAP = {
+	logo: 40,
+	illustration: 36,
+	title: 24,
+	body: 14,
+} as const;
 
 type OnboardingSlideProps = {
 	title: string;
 	body: string;
 	illustration: ReactNode;
-	/** Top edge of the artwork in design space. */
-	illustrationTop: number;
-	illustrationHeight: number;
-	safeTop: number;
+	illustrationFrame: { width: number; height: number };
+	topInset: number;
+	bottomInset: number;
 };
 
 export function OnboardingSlide({
 	title,
 	body,
 	illustration,
-	illustrationTop,
-	illustrationHeight,
-	safeTop,
+	illustrationFrame,
+	topInset,
+	bottomInset,
 }: OnboardingSlideProps) {
-	const { width } = useWindowDimensions();
-	const scale = width / DESIGN_WIDTH;
-
-	const logoGap = DESIGN.logoTop - DESIGN.safeTop;
-	const illustrationGap = illustrationTop - (DESIGN.logoTop + DESIGN.logoSize);
-	const titleGap = DESIGN.titleInk - (illustrationTop + illustrationHeight) - TITLE_INK_OFFSET;
-	const bodyGap =
-		DESIGN.bodyInk -
-		BODY_INK_OFFSET -
-		(DESIGN.titleInk - TITLE_INK_OFFSET + TITLE_BLOCK_HEIGHT);
+	const { vertical } = useDesignScale();
 
 	return (
-		<View style={[styles.slide, { width, paddingTop: safeTop }]}>
-			<View style={[styles.logo, { marginTop: logoGap * scale }]} />
+		<ScrollView
+			style={styles.scroll}
+			contentContainerStyle={[
+				styles.content,
+				{ paddingTop: topInset, paddingBottom: bottomInset },
+			]}
+			showsVerticalScrollIndicator={false}
+		>
+			<View style={styles.column}>
+				<View style={[styles.logo, { marginTop: GAP.logo * vertical }]} />
 
-			<View
-				style={{
-					height: illustrationHeight * scale,
-					marginTop: illustrationGap * scale,
-					justifyContent: "center",
-				}}
-			>
-				<View style={{ transform: [{ scale }] }}>{illustration}</View>
+				<ScaledFrame
+					frame={illustrationFrame}
+					maxScale={ILLUSTRATION_MAX_SCALE}
+					style={[styles.illustration, { marginTop: GAP.illustration * vertical }]}
+				>
+					{illustration}
+				</ScaledFrame>
+
+				<Text style={[styles.title, { marginTop: GAP.title * vertical }]}>{title}</Text>
+				<Text style={[styles.body, { marginTop: GAP.body * vertical }]}>{body}</Text>
 			</View>
-
-			<Text style={[styles.title, { marginTop: titleGap * scale }]}>{title}</Text>
-			<Text style={[styles.body, { marginTop: bodyGap * scale }]}>{body}</Text>
-		</View>
+		</ScrollView>
 	);
 }
 
 const styles = StyleSheet.create({
-	slide: {
+	scroll: {
+		flex: 1,
+	},
+	content: {
+		flexGrow: 1,
+		alignItems: "center",
+	},
+	column: {
+		flexGrow: 1,
+		width: "100%",
+		maxWidth: MaxColumnWidth,
 		alignItems: "center",
 		paddingHorizontal: 30,
 	},
 	logo: {
-		width: DESIGN.logoSize,
-		height: DESIGN.logoSize,
+		width: LOGO_SIZE,
+		height: LOGO_SIZE,
 		borderRadius: 8,
 		backgroundColor: Brand.purple,
+	},
+	illustration: {
+		flex: 1,
+		alignSelf: "stretch",
+		minHeight: MIN_ILLUSTRATION_HEIGHT,
 	},
 	title: {
 		...Type.slideTitle,

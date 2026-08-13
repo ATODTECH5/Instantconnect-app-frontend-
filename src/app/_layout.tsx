@@ -20,6 +20,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useColorScheme } from "react-native";
 
 import { BrandSplash } from "@/components/brand-splash";
+import { SignUpDraftProvider } from "@/features/auth/sign-up-draft";
 
 SplashScreen.preventAutoHideAsync();
 SplashScreen.setOptions({ duration: 200, fade: true });
@@ -62,11 +63,19 @@ export default function RootLayout() {
 	return (
 		<ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
 			<StatusBar style={isSplashVisible ? "light" : "auto"} />
-			<Stack screenOptions={{ headerShown: false }}>
-				<Stack.Screen name="(tabs)" />
-				<Stack.Screen name="onboarding" options={{ gestureEnabled: false }} />
-				<Stack.Screen name="get-started" options={{ gestureEnabled: false }} />
-			</Stack>
+			<SignUpDraftProvider>
+				<Stack screenOptions={{ headerShown: false }}>
+					<Stack.Screen name="(tabs)" />
+					<Stack.Screen name="onboarding" options={{ gestureEnabled: false }} />
+					<Stack.Screen name="get-started" options={{ gestureEnabled: false }} />
+					<Stack.Screen name="sign-up" />
+					<Stack.Screen name="terms" />
+					<Stack.Screen name="verify-email" options={{ gestureEnabled: false }} />
+					<Stack.Screen name="account-created" />
+					<Stack.Screen name="create-pin" />
+					<Stack.Screen name="interests" options={{ gestureEnabled: false }} />
+				</Stack>
+			</SignUpDraftProvider>
 			{isSplashVisible && <BrandSplash onFinish={handleSplashFinish} />}
 		</ThemeProvider>
 	);

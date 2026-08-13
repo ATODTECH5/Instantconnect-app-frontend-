@@ -5,7 +5,7 @@ import { useCallback } from "react";
 import { GetStartedPanel } from "@/components/onboarding/get-started-panel";
 
 export default function GetStartedScreen() {
-	const handleStart = useCallback(() => router.replace("/(tabs)"), []);
+	const handleStart = useCallback(() => router.push("/sign-up"), []);
 
 	return (
 		<>
