@@ -3,16 +3,21 @@ import { StatusBar } from "expo-status-bar";
 import { useCallback, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
+import { AuthFooterNote } from "@/components/auth/auth-footer-note";
 import { AuthScreenLayout } from "@/components/auth/auth-screen-layout";
 import { OtpInput } from "@/components/auth/otp-input";
 import { LoadingOverlay } from "@/components/ui/loading-overlay";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { Brand, Ink, Spacing, Type } from "@/constants/theme";
-import { AuthError, resendVerificationCode, verifyEmail } from "@/features/auth/auth-service";
+import {
+	AuthError,
+	resendPasswordResetCode,
+	verifyPasswordResetCode,
+} from "@/features/auth/auth-service";
 
 const CODE_LENGTH = 4;
 
-export default function VerifyEmailScreen() {
+export default function ResetCodeScreen() {
 	const { email } = useLocalSearchParams<{ email?: string }>();
 
 	const [code, setCode] = useState("");
@@ -22,11 +27,11 @@ export default function VerifyEmailScreen() {
 	const [isResending, setIsResending] = useState(false);
 	const [resendNotice, setResendNotice] = useState<string | null>(null);
 
-	const goToLogIn = useCallback(() => router.replace("/sign-in"), []);
+	const goToSignIn = useCallback(() => router.replace("/sign-in"), []);
 
 	const handleBack = useCallback(() => {
 		if (router.canGoBack()) router.back();
-		else router.replace("/sign-up");
+		else router.replace("/forgot-password");
 	}, []);
 
 	const handleChange = useCallback((next: string) => {
@@ -36,8 +41,8 @@ export default function VerifyEmailScreen() {
 	}, []);
 
 	const handleVerify = useCallback(async (submitted: string) => {
-		// Typing the last digit submits, and so does the button, so without this
-		// a single verification can run twice and stack two success screens.
+		// The last digit submits and so does the button, so without this guard one
+		// verification can run twice and stack two new password screens.
 		if (isVerifyingRef.current) return;
 
 		if (submitted.length < CODE_LENGTH) {
@@ -50,10 +55,8 @@ export default function VerifyEmailScreen() {
 		setIsVerifying(true);
 
 		try {
-			await verifyEmail(submitted);
-			// Verification is terminal, so the code screen is left behind rather
-			// than kept underneath for a back gesture to return to.
-			router.replace("/account-created");
+			const { resetToken } = await verifyPasswordResetCode(submitted);
+			router.replace({ pathname: "/new-password", params: { resetToken } });
 		} catch (cause) {
 			setError(
 				cause instanceof AuthError
@@ -71,14 +74,14 @@ export default function VerifyEmailScreen() {
 		setIsResending(true);
 
 		try {
-			await resendVerificationCode();
+			await resendPasswordResetCode(email ?? "");
 			setResendNotice("We sent a new code.");
 		} catch {
 			setError("We could not send a new code. Please try again.");
 		} finally {
 			setIsResending(false);
 		}
-	}, []);
+	}, [email]);
 
 	return (
 		<>
@@ -87,9 +90,11 @@ export default function VerifyEmailScreen() {
 			<AuthScreenLayout
 				onBack={handleBack}
 				subtitle={
-					email ? `We sent a code to ${email}` : "We sent a code to your email address"
+					email
+						? `Please enter the ${CODE_LENGTH} digit code sent to ${email}`
+						: `Please enter the ${CODE_LENGTH} digit code sent to your email`
 				}
-				title="Check Your Email"
+				title="Get Your Code"
 			>
 				<OtpInput
 					autoFocus
@@ -104,7 +109,7 @@ export default function VerifyEmailScreen() {
 				<View style={styles.submit}>
 					<PrimaryButton
 						disabled={code.length < CODE_LENGTH}
-						label="Verify Email"
+						label="Verify and Proceed"
 						loading={isVerifying}
 						onPress={() => handleVerify(code)}
 					/>
@@ -135,15 +140,14 @@ export default function VerifyEmailScreen() {
 
 				<View style={styles.spacer} />
 
-				<Text style={styles.footer}>
-					Already have an account?{" "}
-					<Text accessibilityRole="link" onPress={goToLogIn} style={styles.footerLink}>
-						Log in
-					</Text>
-				</Text>
+				<AuthFooterNote
+					actionLabel="Log in"
+					onPress={goToSignIn}
+					prompt="Remember your password?"
+				/>
 			</AuthScreenLayout>
 
-			<LoadingOverlay label="Verifying your email" visible={isVerifying} />
+			<LoadingOverlay label="Checking your code" visible={isVerifying} />
 		</>
 	);
 }
@@ -158,7 +162,7 @@ const styles = StyleSheet.create({
 		justifyContent: "center",
 		alignItems: "center",
 		gap: Spacing.two - Spacing.half,
-		marginTop: Spacing.five,
+		marginTop: Spacing.four,
 	},
 	resendPrompt: {
 		...Type.footnote,
@@ -180,14 +184,5 @@ const styles = StyleSheet.create({
 	spacer: {
 		flex: 1,
 		minHeight: Spacing.five,
-	},
-	footer: {
-		...Type.footnote,
-		color: Ink.muted,
-		textAlign: "center",
-	},
-	footerLink: {
-		...Type.footnoteLink,
-		color: Brand.purple,
 	},
 });

@@ -1,6 +1,9 @@
-import { ActivityIndicator, Pressable, StyleSheet, Text } from "react-native";
+import { Pressable, StyleSheet, Text } from "react-native";
 
+import { GradientSpinner } from "@/components/ui/gradient-spinner";
 import { Brand, MinTapTarget, Radius, Spacing, Type } from "@/constants/theme";
+
+const SPINNER_SIZE = 18;
 
 export type PrimaryButtonProps = {
 	label: string;
@@ -34,7 +37,7 @@ export function PrimaryButton({
 			]}
 		>
 			{loading ? (
-				<ActivityIndicator color={Brand.onBrand} />
+				<GradientSpinner size={SPINNER_SIZE} />
 			) : (
 				<Text style={styles.label}>{label}</Text>
 			)}

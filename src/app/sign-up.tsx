@@ -60,10 +60,10 @@ export default function SignUpScreen() {
 
 	const openTerms = useCallback(() => router.push("/terms"), []);
 
-	// Social providers and log in have no destination in the app yet, so these
-	// stay inert rather than pushing routes that would fail to resolve.
+	// Social providers have no destination in the app yet.
 	const handleSocial = useCallback((_provider: SocialProvider) => {}, []);
-	const goToLogIn = useCallback(() => {}, []);
+
+	const goToLogIn = useCallback(() => router.replace("/sign-in"), []);
 
 	return (
 		<>
@@ -194,11 +194,7 @@ export default function SignUpScreen() {
 				) : null}
 
 				<View style={styles.submit}>
-					<PrimaryButton
-						label="Sign Up"
-						loading={isSubmitting}
-						onPress={submit}
-					/>
+					<PrimaryButton label="Sign Up" loading={isSubmitting} onPress={submit} />
 				</View>
 
 				<View style={styles.social}>

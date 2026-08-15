@@ -11,8 +11,10 @@ import Svg, { Circle, Defs, LinearGradient, Stop } from "react-native-svg";
 import { BrandGradientStops } from "@/constants/theme";
 
 const DEFAULT_SIZE = 36;
-const STROKE_WIDTH = 4;
 const SPIN_DURATION = 1100;
+
+/** The artboard draws a 4pt ring at 36 and a 2pt ring at 18. */
+const STROKE_RATIO = 9;
 
 export function GradientSpinner({ size = DEFAULT_SIZE }: { size?: number }) {
 	const rotation = useSharedValue(0);
@@ -29,7 +31,8 @@ export function GradientSpinner({ size = DEFAULT_SIZE }: { size?: number }) {
 		transform: [{ rotate: `${rotation.value}deg` }],
 	}));
 
-	const radius = (size - STROKE_WIDTH) / 2;
+	const strokeWidth = size / STROKE_RATIO;
+	const radius = (size - strokeWidth) / 2;
 
 	return (
 		<Animated.View accessibilityRole="progressbar" style={spinStyle}>
@@ -55,7 +58,7 @@ export function GradientSpinner({ size = DEFAULT_SIZE }: { size?: number }) {
 					fill="none"
 					r={radius}
 					stroke="url(#spinner)"
-					strokeWidth={STROKE_WIDTH}
+					strokeWidth={strokeWidth}
 				/>
 			</Svg>
 		</Animated.View>
