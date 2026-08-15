@@ -215,3 +215,12 @@ export const DesignFrame = { width: 393, height: 852 } as const;
 
 /** Phone sized reading column, centred once the screen grows past it. */
 export const MaxColumnWidth = 420;
+
+/** `StyleSheet.absoluteFillObject` is missing from the RN 0.86 typings. */
+export const AbsoluteFill = {
+	position: "absolute",
+	top: 0,
+	left: 0,
+	right: 0,
+	bottom: 0,
+} satisfies ViewStyle;

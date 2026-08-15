@@ -69,11 +69,17 @@ export default function RootLayout() {
 					<Stack.Screen name="onboarding" options={{ gestureEnabled: false }} />
 					<Stack.Screen name="get-started" options={{ gestureEnabled: false }} />
 					<Stack.Screen name="sign-up" />
+					<Stack.Screen name="sign-in" />
 					<Stack.Screen name="terms" />
 					<Stack.Screen name="verify-email" options={{ gestureEnabled: false }} />
 					<Stack.Screen name="account-created" />
 					<Stack.Screen name="create-pin" />
 					<Stack.Screen name="interests" options={{ gestureEnabled: false }} />
+					<Stack.Screen name="forgot-password" />
+					<Stack.Screen name="reset-code" />
+					<Stack.Screen name="new-password" options={{ gestureEnabled: false }} />
+					<Stack.Screen name="password-changed" options={{ gestureEnabled: false }} />
+					<Stack.Screen name="location" options={{ gestureEnabled: false }} />
 				</Stack>
 			</SignUpDraftProvider>
 			{isSplashVisible && <BrandSplash onFinish={handleSplashFinish} />}

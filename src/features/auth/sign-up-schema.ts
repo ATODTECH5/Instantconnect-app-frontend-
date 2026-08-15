@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { passwordSchema } from "@/features/auth/password-rules";
+
 /** Local 0XXXXXXXXXX or international +234XXXXXXXXXX, spaces and dashes allowed. */
 const NIGERIAN_PHONE = /^(?:0|\+?234)(?:7[01]|8[01]|9[01])\d{8}$/;
 
@@ -17,13 +19,7 @@ export const signUpSchema = z.object({
 		.string()
 		.transform(stripSeparators)
 		.pipe(z.string().regex(NIGERIAN_PHONE, "Enter a valid Nigerian phone number")),
-	password: z
-		.string()
-		.min(8, "Use at least 8 characters")
-		.max(72, "Password is too long")
-		.regex(/[a-z]/, "Include a lowercase letter")
-		.regex(/[A-Z]/, "Include an uppercase letter")
-		.regex(/\d/, "Include a number"),
+	password: passwordSchema,
 	termsAccepted: z.boolean().refine((accepted) => accepted, "Accept the terms to continue"),
 });
 
