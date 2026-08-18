@@ -1,98 +1,262 @@
-import * as Device from "expo-device";
-import { Platform, StyleSheet } from "react-native";
+import { router } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import { useCallback, useState } from "react";
+import { RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { AnimatedIcon } from "@/components/animated-icon";
-import { HintRow } from "@/components/hint-row";
-import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
-import { WebBadge } from "@/components/web-badge";
-import { BottomTabInset, MaxContentWidth, Spacing } from "@/constants/theme";
+import { AiRecommendationCard } from "@/components/home/ai-recommendation-card";
+import { CardCarousel } from "@/components/home/card-carousel";
+import { CategoryStrip } from "@/components/home/category-strip";
+import { EventCard } from "@/components/home/event-card";
+import { HomeHeader } from "@/components/home/home-header";
+import { HomeSearchBar } from "@/components/home/home-search-bar";
+import { PersonCard } from "@/components/home/person-card";
+import { SectionHeader } from "@/components/home/section-header";
+import { GradientSpinner } from "@/components/ui/gradient-spinner";
+import { StateMessage } from "@/components/ui/state-message";
+import { Brand, Gap, Ink, MaxColumnWidth, Spacing, Type } from "@/constants/theme";
+import type { NearbyEvent, NearbyPerson } from "@/features/home/home-feed";
+import { useConnectRequests } from "@/features/home/use-connect-requests";
+import { useHomeFeed } from "@/features/home/use-home-feed";
+import { useDesignScale } from "@/hooks/use-design-scale";
+import { useNavBarInset } from "@/hooks/use-nav-bar-inset";
 
-function getDevMenuHint() {
-	if (Platform.OS === "web") {
-		return <ThemedText type="small">use browser devtools</ThemedText>;
-	}
-	if (Device.isDevice) {
-		return (
-			<ThemedText type="small">
-				shake device or press <ThemedText type="code">m</ThemedText> in terminal
-			</ThemedText>
-		);
-	}
-	const shortcut = Platform.OS === "android" ? "cmd+m (or ctrl+m)" : "cmd+d";
-	return (
-		<ThemedText type="small">
-			press <ThemedText type="code">{shortcut}</ThemedText>
-		</ThemedText>
-	);
+const EDGE_INSET = Spacing.three;
+const PERSON_CARD_WIDTH = 171;
+const PERSON_CARD_GAP = 11;
+const EVENT_CARD_WIDTH = 228;
+const EVENT_CARD_GAP = 10;
+
+const BLOCK = {
+	afterHeader: 24,
+	afterGreeting: 19,
+	afterSearch: 16,
+	afterCategories: 20,
+	afterPromo: 26,
+	afterSectionTitle: 12,
+	beforeSection: 26,
+} as const;
+
+function greetingFor(hour: number) {
+	if (hour < 12) return "Good morning";
+	if (hour < 17) return "Good afternoon";
+
+	return "Good evening";
 }
 
 export default function HomeScreen() {
-	return (
-		<ThemedView style={styles.container}>
-			<SafeAreaView style={styles.safeArea}>
-				<ThemedView style={styles.heroSection}>
-					<AnimatedIcon />
-					<ThemedText type="title" style={styles.title}>
-						Welcome to&nbsp;Expo
-					</ThemedText>
-				</ThemedView>
+	const { status, feed, error, refreshing, reload, refresh } = useHomeFeed();
+	const { stateFor, connect } = useConnectRequests();
+	const { horizontal, vertical } = useDesignScale();
+	const navInset = useNavBarInset();
 
-				<ThemedText type="code" style={styles.code}>
-					get started
-				</ThemedText>
+	const [query, setQuery] = useState("");
 
-				<ThemedView type="backgroundElement" style={styles.stepContainer}>
-					<HintRow
-						title="Try editing"
-						hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-					/>
-					<HintRow title="Dev tools" hint={getDevMenuHint()} />
-					<HintRow
-						title="Fresh start"
-						hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-					/>
-				</ThemedView>
+	const personWidth = Math.round(PERSON_CARD_WIDTH * horizontal);
+	const eventWidth = Math.round(EVENT_CARD_WIDTH * horizontal);
 
-				{Platform.OS === "web" && <WebBadge />}
+	const openDiscover = useCallback(
+		(params?: Record<string, string>) => router.push({ pathname: "/discover", params }),
+		[],
+	);
+
+	const handleSearch = useCallback(() => {
+		const trimmed = query.trim();
+		if (trimmed.length > 0) openDiscover({ q: trimmed });
+	}, [openDiscover, query]);
+
+	const handleCategory = useCallback(
+		(id: string) => openDiscover({ category: id }),
+		[openDiscover],
+	);
+
+	const openPerson = useCallback((id: string) => router.push(`/person/${id}`), []);
+
+	const renderPerson = useCallback(
+		(person: NearbyPerson) => (
+			<PersonCard
+				connectionState={stateFor(person.id)}
+				onConnect={connect}
+				onOpen={openPerson}
+				person={person}
+				width={personWidth}
+			/>
+		),
+		[connect, openPerson, personWidth, stateFor],
+	);
+
+	const renderEvent = useCallback(
+		(event: NearbyEvent) => (
+			<EventCard event={event} onOpen={() => openDiscover()} width={eventWidth} />
+		),
+		[eventWidth, openDiscover],
+	);
+
+	if (status === "loading") {
+		return (
+			<SafeAreaView edges={["top", "left", "right"]} style={styles.centred}>
+				<StatusBar style="dark" />
+				<GradientSpinner />
+
+				<Text style={styles.loadingLabel}>Finding people near you</Text>
 			</SafeAreaView>
-		</ThemedView>
+		);
+	}
+
+	if (status === "error" || feed === null) {
+		return (
+			<SafeAreaView edges={["top", "left", "right"]} style={styles.centred}>
+				<StatusBar style="dark" />
+
+				<View style={styles.errorBox}>
+					<StateMessage
+						actionLabel="Try again"
+						isError
+						message={error ?? "We could not load your feed."}
+						onPressAction={reload}
+					/>
+				</View>
+			</SafeAreaView>
+		);
+	}
+
+	return (
+		<SafeAreaView edges={["top", "left", "right"]} style={styles.screen}>
+			<StatusBar style="dark" />
+
+			<ScrollView
+				contentContainerStyle={[styles.content, { paddingBottom: navInset + Spacing.four }]}
+				refreshControl={
+					<RefreshControl
+						onRefresh={refresh}
+						refreshing={refreshing}
+						tintColor={Brand.purple}
+					/>
+				}
+				showsVerticalScrollIndicator={false}
+				style={styles.scroll}
+			>
+				<View style={styles.column}>
+					<View style={styles.padded}>
+						<HomeHeader
+							avatar={feed.avatar}
+							isOnline={feed.isOnline}
+							onChangePlace={() => router.push("/location")}
+							onOpenNotifications={() => router.push("/notifications")}
+							onOpenProfile={() => router.push("/profile")}
+							place={feed.place}
+							unreadCount={feed.unreadCount}
+						/>
+
+						<Text
+							accessibilityRole="header"
+							style={[styles.greeting, { marginTop: BLOCK.afterHeader * vertical }]}
+						>
+							{greetingFor(new Date().getHours())}, {feed.firstName} 👋
+						</Text>
+
+						<View style={{ marginTop: BLOCK.afterGreeting * vertical }}>
+							<HomeSearchBar
+								onChangeText={setQuery}
+								onOpenFilters={() => openDiscover({ filters: "open" })}
+								onSubmit={handleSearch}
+								value={query}
+							/>
+						</View>
+
+						<View style={{ marginTop: BLOCK.afterSearch * vertical }}>
+							<CategoryStrip onSelect={handleCategory} />
+						</View>
+
+						<View style={{ marginTop: BLOCK.afterCategories * vertical }}>
+							<AiRecommendationCard
+								matchCount={feed.matchCount}
+								onPress={() => openDiscover({ source: "ai" })}
+							/>
+						</View>
+					</View>
+
+					<View style={[styles.padded, { marginTop: BLOCK.afterPromo * vertical }]}>
+						<SectionHeader title="People Near you" />
+					</View>
+
+					<View style={{ marginTop: BLOCK.afterSectionTitle * vertical }}>
+						<CardCarousel
+							accessibilityLabel="People near you"
+							data={feed.people}
+							edgeInset={EDGE_INSET}
+							emptyMessage="No one nearby matches your interests yet. Widen your area to see more people."
+							gap={PERSON_CARD_GAP}
+							itemWidth={personWidth}
+							keyExtractor={(person) => person.id}
+							renderCard={renderPerson}
+						/>
+					</View>
+
+					<View style={[styles.padded, { marginTop: BLOCK.beforeSection * vertical }]}>
+						<SectionHeader
+							actionLabel="View all"
+							onPressAction={() => openDiscover({ tab: "events" })}
+							title="Happening Around You"
+						/>
+					</View>
+
+					<View style={{ marginTop: BLOCK.afterSectionTitle * vertical }}>
+						<CardCarousel
+							accessibilityLabel="Events happening around you"
+							data={feed.events}
+							edgeInset={EDGE_INSET}
+							emptyMessage="Nothing is scheduled around you right now. Check back soon."
+							gap={EVENT_CARD_GAP}
+							itemWidth={eventWidth}
+							keyExtractor={(event) => event.id}
+							renderCard={renderEvent}
+						/>
+					</View>
+				</View>
+			</ScrollView>
+		</SafeAreaView>
 	);
 }
 
 const styles = StyleSheet.create({
-	container: {
+	screen: {
 		flex: 1,
-		justifyContent: "center",
-		flexDirection: "row",
+		backgroundColor: Ink.surface,
 	},
-	safeArea: {
+	centred: {
 		flex: 1,
-		paddingHorizontal: Spacing.four,
-		alignItems: "center",
-		gap: Spacing.three,
-		paddingBottom: BottomTabInset + Spacing.three,
-		maxWidth: MaxContentWidth,
-	},
-	heroSection: {
 		alignItems: "center",
 		justifyContent: "center",
+		gap: Gap.card,
+		padding: Spacing.three,
+		backgroundColor: Ink.surface,
+	},
+	loadingLabel: {
+		...Type.promoBody,
+		color: Ink.muted,
+	},
+	errorBox: {
+		width: "100%",
+		maxWidth: MaxColumnWidth,
+	},
+	scroll: {
 		flex: 1,
-		paddingHorizontal: Spacing.four,
-		gap: Spacing.four,
 	},
-	title: {
-		textAlign: "center",
+	content: {
+		flexGrow: 1,
+		paddingTop: Gap.tight,
 	},
-	code: {
-		textTransform: "uppercase",
+	column: {
+		width: "100%",
+		maxWidth: MaxColumnWidth,
+		alignSelf: "center",
 	},
-	stepContainer: {
-		gap: Spacing.three,
-		alignSelf: "stretch",
-		paddingHorizontal: Spacing.three,
-		paddingVertical: Spacing.four,
-		borderRadius: Spacing.four,
+	padded: {
+		paddingHorizontal: EDGE_INSET,
+	},
+	greeting: {
+		...Type.greeting,
+		color: Ink.title,
 	},
 });

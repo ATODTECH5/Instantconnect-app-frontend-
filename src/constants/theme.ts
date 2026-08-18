@@ -11,6 +11,7 @@ export const Brand = {
 	violet: "#A136DD",
 	purple: "#9333EA",
 	purpleLight: "#A855F7",
+	purpleSoft: "#C084FC",
 	purpleSurface: "#F3E8FF",
 	purpleSurfaceSubtle: "#FAF5FF",
 	onBrand: "#FFFFFF",
@@ -40,7 +41,34 @@ export const Ink = {
 	keypadPressed: "#EDECEF",
 	rowBorder: "#EDF1F3",
 	cardBorder: "#94A3B8",
+	/** Presence dot on avatars and people cards. */
+	online: "#41C97C",
+	/** Unread count on the notification bell. */
+	badge: "#EF4444",
+	badgeRing: "#F9FAFB",
+	label: "#42404D",
+	meta: "#83818E",
+	/** Caption sitting on a photo, under the card's darkening scrim. */
+	onMedia: "#FFFFFF",
+	onMediaMuted: "#E6E5EA",
+	mediaScrim: "rgba(0, 0, 0, 0.35)",
+	mediaControl: "rgba(255, 255, 255, 0.1)",
+	/** Floating tab bar, which sits over scrolling content. */
+	navGlass: "rgba(255, 255, 255, 0.07)",
+	navBorder: "rgba(255, 255, 255, 0.4)",
+	navFallback: "rgba(255, 255, 255, 0.94)",
 } as const;
+
+/** Pale disc plus icon tint for each home category. */
+export const CategoryTone = {
+	peach: { surface: "#FFF7ED", icon: "#FB923C" },
+	sky: { surface: "#DBF0FF", icon: "#248DDE" },
+	mint: { surface: "#DCFCE7", icon: "#16A34A" },
+	blush: { surface: "#FDF2F8", icon: "#EC4899" },
+	lilac: { surface: "#F3E8FF", icon: "#9333EA" },
+} as const;
+
+export type CategoryToneName = keyof typeof CategoryTone;
 
 export type BrandColor = keyof typeof Brand;
 
@@ -64,6 +92,14 @@ const BRAND_GRADIENT_CSS =
 export const BrandGradient = Platform.select({
 	web: { backgroundImage: BRAND_GRADIENT_CSS } as ViewStyle,
 	default: { experimental_backgroundImage: BRAND_GRADIENT_CSS } satisfies ViewStyle,
+});
+
+/** Darkens the foot of a photo so the caption over it stays readable. */
+const MEDIA_SCRIM_CSS = "linear-gradient(180deg, rgba(0, 0, 0, 0) 38%, rgba(0, 0, 0, 0.78) 100%)";
+
+export const MediaScrim = Platform.select({
+	web: { backgroundImage: MEDIA_SCRIM_CSS } as ViewStyle,
+	default: { experimental_backgroundImage: MEDIA_SCRIM_CSS } satisfies ViewStyle,
 });
 
 export const Colors = {
@@ -169,6 +205,23 @@ export const Type = {
 	successTitle: { fontFamily: UiFont.bold, fontSize: 24, lineHeight: 32, letterSpacing: -0.3 },
 	successBody: { fontFamily: UiFont.regular, fontSize: 14, lineHeight: 22 },
 	optionLabel: { fontFamily: UiFont.regular, fontSize: 16, lineHeight: 22 },
+	greeting: { fontFamily: UiFont.bold, fontSize: 15, lineHeight: 22, letterSpacing: -0.2 },
+	placeLabel: { fontFamily: UiFont.medium, fontSize: 15, lineHeight: 20 },
+	sectionTitle: { fontFamily: UiFont.bold, fontSize: 16, lineHeight: 22, letterSpacing: -0.2 },
+	sectionLink: { fontFamily: UiFont.medium, fontSize: 14, lineHeight: 20 },
+	promoTitle: { fontFamily: UiFont.bold, fontSize: 15, lineHeight: 20 },
+	promoBody: { fontFamily: UiFont.regular, fontSize: 13, lineHeight: 18 },
+	/**
+	 * The home frame sets category labels at 10pt and every card caption at 8pt,
+	 * both unreadable on a shipping device. These are the smallest sizes that
+	 * hold the frame's hierarchy while staying legible at the largest type step.
+	 */
+	categoryLabel: { fontFamily: UiFont.regular, fontSize: 12, lineHeight: 16 },
+	badgeLabel: { fontFamily: UiFont.medium, fontSize: 11, lineHeight: 14 },
+	cardName: { fontFamily: UiFont.semibold, fontSize: 13, lineHeight: 18 },
+	cardMeta: { fontFamily: UiFont.regular, fontSize: 11, lineHeight: 15 },
+	cardAction: { fontFamily: UiFont.medium, fontSize: 12, lineHeight: 16 },
+	tabLabel: { fontFamily: UiFont.regular, fontSize: 12, lineHeight: 16 },
 } as const;
 
 export const Spacing = {
@@ -187,13 +240,18 @@ export const Radius = {
 	checkbox: 2,
 	dialog: 12,
 	codeBox: 4,
+	media: 16,
+	pill: 999,
 } as const;
 
-/**
- * The gradient as SVG stops, for strokes and fills that cannot take the CSS
- * string. These are the raw design offsets, not the reprojected ones in
- * `BRAND_GRADIENT_CSS`, since an SVG gradient carries its own axis.
- */
+/** Gaps the 4pt scale does not land on, measured off the home frame. */
+export const Gap = {
+	tight: 6,
+	snug: 10,
+	card: 12,
+	section: 20,
+} as const;
+
 export const BrandGradientStops = [
 	{ offset: 0.227215, color: Brand.orange },
 	{ offset: 0.30792, color: Brand.coral },
@@ -204,19 +262,17 @@ export const BrandGradientStops = [
 	{ offset: 0.92, color: Brand.purple },
 ] as const;
 
-/** Apple asks for 44pt, Android for 48dp, so the larger one wins everywhere. */
 export const MinTapTarget = 48;
 
 export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
 export const MaxContentWidth = 800;
 
-/** Every onboarding frame was exported against this artboard. */
+export const NavBarHeight = 81;
+
 export const DesignFrame = { width: 393, height: 852 } as const;
 
-/** Phone sized reading column, centred once the screen grows past it. */
 export const MaxColumnWidth = 420;
 
-/** `StyleSheet.absoluteFillObject` is missing from the RN 0.86 typings. */
 export const AbsoluteFill = {
 	position: "absolute",
 	top: 0,
