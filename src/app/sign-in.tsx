@@ -15,7 +15,7 @@ import { FormField } from "@/components/ui/form-field";
 import { LabelledDivider } from "@/components/ui/labelled-divider";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { Brand, Ink, Spacing, Type } from "@/constants/theme";
-import { AuthError, setBiometricsEnabled, signIn } from "@/features/auth/auth-service";
+import { setBiometricsEnabled, signIn } from "@/features/auth/auth-service";
 import {
 	BIOMETRIC_LABEL,
 	getBiometricSupport,
@@ -23,6 +23,7 @@ import {
 	type BiometricKind,
 } from "@/features/auth/biometrics";
 import { signInSchema, type SignInInput, type SignInValues } from "@/features/auth/sign-in-schema";
+import { describeError } from "@/lib/api/api-error";
 
 const FIELD_GAP = 22;
 
@@ -74,11 +75,7 @@ export default function SignInScreen() {
 				if (support.available) setBiometricKind(support.kind);
 				else enterApp();
 			} catch (cause) {
-				setFormError(
-					cause instanceof AuthError
-						? cause.message
-						: "We could not sign you in. Please try again.",
-				);
+				setFormError(describeError(cause));
 			} finally {
 				isSubmittingRef.current = false;
 			}

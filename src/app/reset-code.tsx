@@ -9,11 +9,8 @@ import { OtpInput } from "@/components/auth/otp-input";
 import { LoadingOverlay } from "@/components/ui/loading-overlay";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { Brand, Ink, Spacing, Type } from "@/constants/theme";
-import {
-	AuthError,
-	resendPasswordResetCode,
-	verifyPasswordResetCode,
-} from "@/features/auth/auth-service";
+import { resendPasswordResetCode, verifyPasswordResetCode } from "@/features/auth/auth-service";
+import { describeError } from "@/lib/api/api-error";
 
 const CODE_LENGTH = 4;
 
@@ -40,44 +37,55 @@ export default function ResetCodeScreen() {
 		setResendNotice(null);
 	}, []);
 
-	const handleVerify = useCallback(async (submitted: string) => {
-		// The last digit submits and so does the button, so without this guard one
-		// verification can run twice and stack two new password screens.
-		if (isVerifyingRef.current) return;
+	const handleVerify = useCallback(
+		async (submitted: string) => {
+			// The last digit submits and so does the button, so without this guard one
+			// verification can run twice and stack two new password screens.
+			if (isVerifyingRef.current) return;
 
-		if (submitted.length < CODE_LENGTH) {
-			setError(`Enter the ${CODE_LENGTH} digit code`);
+			// The code is only meaningful against the address it was sent to, so
+			// arriving without one means the request step was skipped.
+			if (!email) {
+				setError("We do not know which address to check. Please request a new code.");
+				return;
+			}
+
+			if (submitted.length < CODE_LENGTH) {
+				setError(`Enter the ${CODE_LENGTH} digit code`);
+				return;
+			}
+
+			isVerifyingRef.current = true;
+			setError(null);
+			setIsVerifying(true);
+
+			try {
+				const { resetToken } = await verifyPasswordResetCode(email, submitted);
+				router.replace({ pathname: "/new-password", params: { resetToken } });
+			} catch (cause) {
+				setError(describeError(cause));
+				isVerifyingRef.current = false;
+				setIsVerifying(false);
+			}
+		},
+		[email],
+	);
+
+	const handleResend = useCallback(async () => {
+		if (!email) {
+			setError("We do not know which address to send to. Please request a new code.");
 			return;
 		}
 
-		isVerifyingRef.current = true;
-		setError(null);
-		setIsVerifying(true);
-
-		try {
-			const { resetToken } = await verifyPasswordResetCode(submitted);
-			router.replace({ pathname: "/new-password", params: { resetToken } });
-		} catch (cause) {
-			setError(
-				cause instanceof AuthError
-					? cause.message
-					: "We could not verify that code. Please try again.",
-			);
-			isVerifyingRef.current = false;
-			setIsVerifying(false);
-		}
-	}, []);
-
-	const handleResend = useCallback(async () => {
 		setError(null);
 		setResendNotice(null);
 		setIsResending(true);
 
 		try {
-			await resendPasswordResetCode(email ?? "");
+			await resendPasswordResetCode(email);
 			setResendNotice("We sent a new code.");
-		} catch {
-			setError("We could not send a new code. Please try again.");
+		} catch (cause) {
+			setError(describeError(cause));
 		} finally {
 			setIsResending(false);
 		}

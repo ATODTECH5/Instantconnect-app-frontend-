@@ -15,6 +15,7 @@ import { Brand, Ink, MaxColumnWidth, MinTapTarget, Spacing, Type } from "@/const
 import { createAccount } from "@/features/auth/auth-service";
 import { useSignUpDraft } from "@/features/auth/sign-up-draft";
 import { TERMS } from "@/features/legal/terms";
+import { describeError } from "@/lib/api/api-error";
 
 const BACK_SIZE = 44;
 const ICON_SIZE = 24;
@@ -59,8 +60,8 @@ export default function TermsScreen() {
 			const { email } = await createAccount(draft);
 			clearDraft();
 			router.replace({ pathname: "/verify-email", params: { email } });
-		} catch {
-			setSubmitError("We could not create your account. Please try again.");
+		} catch (cause) {
+			setSubmitError(describeError(cause));
 		} finally {
 			setIsSubmitting(false);
 		}
