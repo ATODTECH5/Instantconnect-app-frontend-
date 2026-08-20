@@ -8,7 +8,8 @@ import { OtpInput } from "@/components/auth/otp-input";
 import { LoadingOverlay } from "@/components/ui/loading-overlay";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { Brand, Ink, Spacing, Type } from "@/constants/theme";
-import { AuthError, resendVerificationCode, verifyEmail } from "@/features/auth/auth-service";
+import { resendVerificationCode, verifyEmail } from "@/features/auth/auth-service";
+import { describeError } from "@/lib/api/api-error";
 
 const CODE_LENGTH = 4;
 
@@ -35,50 +36,61 @@ export default function VerifyEmailScreen() {
 		setResendNotice(null);
 	}, []);
 
-	const handleVerify = useCallback(async (submitted: string) => {
-		// Typing the last digit submits, and so does the button, so without this
-		// a single verification can run twice and stack two success screens.
-		if (isVerifyingRef.current) return;
+	const handleVerify = useCallback(
+		async (submitted: string) => {
+			// Typing the last digit submits, and so does the button, so without this
+			// a single verification can run twice and stack two success screens.
+			if (isVerifyingRef.current) return;
 
-		if (submitted.length < CODE_LENGTH) {
-			setError(`Enter the ${CODE_LENGTH} digit code`);
+			// The address is what the code is checked against, so arriving without one
+			// means the registration step was skipped rather than that the code is wrong.
+			if (!email) {
+				setError("We do not know which address to verify. Please sign up again.");
+				return;
+			}
+
+			if (submitted.length < CODE_LENGTH) {
+				setError(`Enter the ${CODE_LENGTH} digit code`);
+				return;
+			}
+
+			isVerifyingRef.current = true;
+			setError(null);
+			setIsVerifying(true);
+
+			try {
+				await verifyEmail(email, submitted);
+				// Verification is terminal, so the code screen is left behind rather
+				// than kept underneath for a back gesture to return to.
+				router.replace("/account-created");
+			} catch (cause) {
+				setError(describeError(cause));
+				isVerifyingRef.current = false;
+				setIsVerifying(false);
+			}
+		},
+		[email],
+	);
+
+	const handleResend = useCallback(async () => {
+		if (!email) {
+			setError("We do not know which address to send to. Please sign up again.");
 			return;
 		}
 
-		isVerifyingRef.current = true;
-		setError(null);
-		setIsVerifying(true);
-
-		try {
-			await verifyEmail(submitted);
-			// Verification is terminal, so the code screen is left behind rather
-			// than kept underneath for a back gesture to return to.
-			router.replace("/account-created");
-		} catch (cause) {
-			setError(
-				cause instanceof AuthError
-					? cause.message
-					: "We could not verify that code. Please try again.",
-			);
-			isVerifyingRef.current = false;
-			setIsVerifying(false);
-		}
-	}, []);
-
-	const handleResend = useCallback(async () => {
 		setError(null);
 		setResendNotice(null);
 		setIsResending(true);
 
 		try {
-			await resendVerificationCode();
+			await resendVerificationCode(email);
 			setResendNotice("We sent a new code.");
-		} catch {
-			setError("We could not send a new code. Please try again.");
+		} catch (cause) {
+			setError(describeError(cause));
 		} finally {
 			setIsResending(false);
 		}
-	}, []);
+	}, [email]);
 
 	return (
 		<>

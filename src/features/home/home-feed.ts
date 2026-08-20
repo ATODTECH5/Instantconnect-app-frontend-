@@ -22,7 +22,6 @@ export type NearbyEvent = {
 };
 
 export type HomeFeed = {
-	firstName: string;
 	avatar: ImageSourcePropType;
 	isOnline: boolean;
 	place: string;
@@ -136,7 +135,6 @@ export async function fetchHomeFeed(): Promise<HomeFeed> {
 	await delay(MOCK_LATENCY_MS);
 
 	return {
-		firstName: "Halima",
 		avatar: require("@/assets/onboarding/avatar-5.png"),
 		isOnline: true,
 		place: "Lagos, Ikeja",

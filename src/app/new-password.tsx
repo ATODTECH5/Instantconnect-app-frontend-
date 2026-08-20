@@ -11,12 +11,13 @@ import { FormErrorBanner } from "@/components/ui/form-error-banner";
 import { FormField } from "@/components/ui/form-field";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { Spacing } from "@/constants/theme";
-import { AuthError, setNewPassword } from "@/features/auth/auth-service";
+import { setNewPassword } from "@/features/auth/auth-service";
 import {
 	newPasswordSchema,
 	type NewPasswordInput,
 	type NewPasswordValues,
 } from "@/features/auth/reset-password-schema";
+import { describeError } from "@/lib/api/api-error";
 
 const FIELD_GAP = 22;
 
@@ -67,11 +68,7 @@ export default function NewPasswordScreen() {
 				await setNewPassword(resetToken, values.password);
 				router.replace("/password-changed");
 			} catch (cause) {
-				setFormError(
-					cause instanceof AuthError
-						? cause.message
-						: "We could not change your password. Please try again.",
-				);
+				setFormError(describeError(cause));
 			} finally {
 				isSubmittingRef.current = false;
 			}

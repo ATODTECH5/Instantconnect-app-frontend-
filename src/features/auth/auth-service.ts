@@ -1,87 +1,131 @@
+import { z } from "zod";
+
 import type { SignInInput } from "@/features/auth/sign-in-schema";
-import type { SignUpInput } from "@/features/auth/sign-up-schema";
+import { toE164, type SignUpInput } from "@/features/auth/sign-up-schema";
+import { request } from "@/lib/api/api-client";
+import { resetTokenSchema, sessionSchema } from "@/lib/api/session-schema";
+import { getRefreshToken, setSession, toSession } from "@/lib/api/session-store";
+
+/** Mirrors `RegistrationResponseDto` on the server. */
+const registrationSchema = z.object({ email: z.string().min(1) });
 
 /**
- * Stand-in for the account API. Every call resolves after a delay so the
- * loading and error states are exercisable before the backend exists; swapping
- * these bodies for real requests is the only change the screens need.
+ * The body is spelled out field by field rather than spread from the form,
+ * because the server validates with `forbidNonWhitelisted` and rejects the whole
+ * request if the draft ever grows a key the DTO does not declare.
  */
-const MOCK_LATENCY_MS = 1600;
-
-export class AuthError extends Error {}
-
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
 export async function createAccount(input: SignUpInput): Promise<{ email: string }> {
-	await delay(MOCK_LATENCY_MS);
-	return { email: input.email };
-}
-
-export async function verifyEmail(code: string): Promise<void> {
-	await delay(MOCK_LATENCY_MS);
-
-	if (code === "0000") {
-		throw new AuthError("That code is not correct. Check it and try again.");
-	}
-}
-
-export async function resendVerificationCode(): Promise<void> {
-	await delay(MOCK_LATENCY_MS);
+	return request("/auth/register", {
+		method: "POST",
+		body: {
+			fullName: input.fullName,
+			email: input.email,
+			phone: toE164(input.phone),
+			password: input.password,
+			termsAccepted: input.termsAccepted,
+		},
+		schema: registrationSchema,
+	});
 }
 
 /**
- * A real PIN must go to the keychain via `expo-secure-store`, never to state or
- * AsyncStorage. This mock deliberately keeps no copy of it.
+ * Verification is what issues the account's first session, so the tokens are
+ * stored here rather than returned. Every caller of `request` with `auth` set
+ * reads the same store, so the screens after this one are authenticated without
+ * passing anything along.
  */
-export async function createPin(_pin: string): Promise<void> {
-	await delay(MOCK_LATENCY_MS);
+export async function verifyEmail(email: string, code: string): Promise<void> {
+	const session = await request("/auth/verify-email", {
+		method: "POST",
+		body: { email, code },
+		schema: sessionSchema,
+	});
+
+	await setSession(toSession(session));
 }
 
-export async function saveInterests(_interestIds: string[]): Promise<void> {
-	await delay(MOCK_LATENCY_MS);
-}
-
-export async function signIn(input: SignInInput): Promise<{ email: string }> {
-	await delay(MOCK_LATENCY_MS);
-
-	if (input.password === "wrong") {
-		throw new AuthError("That email and password do not match.");
-	}
-
-	return { email: input.email };
-}
-
-export async function setBiometricsEnabled(_enabled: boolean): Promise<void> {
-	await delay(MOCK_LATENCY_MS / 4);
+export async function resendVerificationCode(email: string): Promise<void> {
+	await request("/auth/resend-verification", { method: "POST", body: { email } });
 }
 
 /**
- * Resolves whether or not the address has an account, since answering honestly
- * would turn this screen into a way to enumerate registered users.
+ * A PIN is a device unlock, not a credential the account has, so it stays on the
+ * phone. The keychain write lands with the `expo-secure-store` rebuild; until
+ * then nothing is kept, and `pinEnabled` is deliberately not reported to the
+ * server, since a flag saying a PIN exists when the device has none is worse
+ * than no flag at all.
  */
-export async function requestPasswordReset(_email: string): Promise<void> {
-	await delay(MOCK_LATENCY_MS);
+export async function createPin(_pin: string): Promise<void> {}
+
+export async function saveInterests(interestIds: string[]): Promise<void> {
+	await request("/users/me/interests", { method: "PUT", body: { interestIds }, auth: true });
 }
 
-export async function resendPasswordResetCode(_email: string): Promise<void> {
-	await delay(MOCK_LATENCY_MS);
+export async function signIn(input: SignInInput): Promise<void> {
+	const session = await request("/auth/sign-in", {
+		method: "POST",
+		body: {
+			email: input.email,
+			password: input.password,
+			keepSignedIn: input.keepSignedIn,
+		},
+		schema: sessionSchema,
+	});
+
+	await setSession(toSession(session));
 }
 
 /**
- * The token stands in for what a real endpoint returns once the code checks
- * out, so the new password screen proves it came through the code step rather
- * than carrying the raw code onward.
+ * Revokes the refresh token server side. Returns quietly when there is nothing
+ * to revoke, and the server answers 204 for a token that is already gone, so the
+ * local sign out that follows is never blocked by this.
  */
-export async function verifyPasswordResetCode(code: string): Promise<{ resetToken: string }> {
-	await delay(MOCK_LATENCY_MS);
+export async function revokeRefreshToken(): Promise<void> {
+	const refreshToken = getRefreshToken();
 
-	if (code === "0000") {
-		throw new AuthError("That code is not correct. Check it and try again.");
-	}
+	if (!refreshToken) return;
 
-	return { resetToken: `reset_${code}` };
+	await request("/auth/sign-out", { method: "POST", body: { refreshToken } });
 }
 
-export async function setNewPassword(_resetToken: string, _password: string): Promise<void> {
-	await delay(MOCK_LATENCY_MS);
+/** The biometric secret is the OS's, so only the fact of enrolment is recorded. */
+export async function setBiometricsEnabled(enabled: boolean): Promise<void> {
+	await request("/users/me/security", {
+		method: "PATCH",
+		body: { biometricsEnabled: enabled },
+		auth: true,
+	});
+}
+
+/**
+ * Resolves whether or not the address has an account, because the server answers
+ * the same either way: a truthful answer would turn this into a way to enumerate
+ * registered users.
+ */
+export async function requestPasswordReset(email: string): Promise<void> {
+	await request("/auth/forgot-password", { method: "POST", body: { email } });
+}
+
+/** Issuing a new code retires the previous one, so a resend is the same call. */
+export async function resendPasswordResetCode(email: string): Promise<void> {
+	await requestPasswordReset(email);
+}
+
+/**
+ * The grant proves the code step was cleared, so the raw code never travels on
+ * to the new password screen.
+ */
+export async function verifyPasswordResetCode(
+	email: string,
+	code: string,
+): Promise<{ resetToken: string }> {
+	return request("/auth/verify-reset-code", {
+		method: "POST",
+		body: { email, code },
+		schema: resetTokenSchema,
+	});
+}
+
+export async function setNewPassword(resetToken: string, password: string): Promise<void> {
+	await request("/auth/reset-password", { method: "POST", body: { resetToken, password } });
 }

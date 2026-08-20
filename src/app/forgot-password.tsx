@@ -11,12 +11,13 @@ import { FormErrorBanner } from "@/components/ui/form-error-banner";
 import { FormField } from "@/components/ui/form-field";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { Spacing } from "@/constants/theme";
-import { AuthError, requestPasswordReset } from "@/features/auth/auth-service";
+import { requestPasswordReset } from "@/features/auth/auth-service";
 import {
 	forgotPasswordSchema,
 	type ForgotPasswordInput,
 	type ForgotPasswordValues,
 } from "@/features/auth/reset-password-schema";
+import { describeError } from "@/lib/api/api-error";
 
 const DEFAULT_VALUES: ForgotPasswordValues = { email: "" };
 
@@ -50,11 +51,7 @@ export default function ForgotPasswordScreen() {
 			await requestPasswordReset(values.email);
 			router.push({ pathname: "/reset-code", params: { email: values.email } });
 		} catch (cause) {
-			setFormError(
-				cause instanceof AuthError
-					? cause.message
-					: "We could not send a reset link. Please try again.",
-			);
+			setFormError(describeError(cause));
 		} finally {
 			isSubmittingRef.current = false;
 		}

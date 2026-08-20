@@ -18,6 +18,7 @@ import { Brand, Gap, Ink, MaxColumnWidth, Spacing, Type } from "@/constants/them
 import type { NearbyEvent, NearbyPerson } from "@/features/home/home-feed";
 import { useConnectRequests } from "@/features/home/use-connect-requests";
 import { useHomeFeed } from "@/features/home/use-home-feed";
+import { useCurrentUser } from "@/features/user/use-current-user";
 import { useDesignScale } from "@/hooks/use-design-scale";
 import { useNavBarInset } from "@/hooks/use-nav-bar-inset";
 
@@ -46,6 +47,7 @@ function greetingFor(hour: number) {
 
 export default function HomeScreen() {
 	const { status, feed, error, refreshing, reload, refresh } = useHomeFeed();
+	const { data: user } = useCurrentUser();
 	const { stateFor, connect } = useConnectRequests();
 	const { horizontal, vertical } = useDesignScale();
 	const navInset = useNavBarInset();
@@ -54,6 +56,11 @@ export default function HomeScreen() {
 
 	const personWidth = Math.round(PERSON_CARD_WIDTH * horizontal);
 	const eventWidth = Math.round(EVENT_CARD_WIDTH * horizontal);
+
+	// The name arrives on its own request, so the greeting reads correctly on its
+	// own until it does rather than showing a placeholder that then changes.
+	const greeting = greetingFor(new Date().getHours());
+	const greetingLine = user ? `${greeting}, ${user.firstName}` : greeting;
 
 	const openDiscover = useCallback(
 		(params?: Record<string, string>) => router.push({ pathname: "/discover", params }),
@@ -152,7 +159,7 @@ export default function HomeScreen() {
 							accessibilityRole="header"
 							style={[styles.greeting, { marginTop: BLOCK.afterHeader * vertical }]}
 						>
-							{greetingFor(new Date().getHours())}, {feed.firstName} 👋
+							{greetingLine} 👋
 						</Text>
 
 						<View style={{ marginTop: BLOCK.afterGreeting * vertical }}>
