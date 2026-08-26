@@ -64,7 +64,10 @@
 			"reactCompiler": true
 		},
 		"extra": {
-			"router": {}
+			"router": {},
+			"eas": {
+				"projectId": "af7e0987-1f94-4727-b899-4703088b5e45"
+			}
 		},
 		"owner": "atodtech300s-team",
 		"runtimeVersion": {
