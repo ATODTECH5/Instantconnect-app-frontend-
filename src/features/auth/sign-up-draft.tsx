@@ -20,10 +20,7 @@ export function SignUpDraftProvider({ children }: { children: ReactNode }) {
 	const setDraft = useCallback((next: SignUpInput) => setDraftState(next), []);
 	const clearDraft = useCallback(() => setDraftState(null), []);
 
-	const value = useMemo(
-		() => ({ draft, setDraft, clearDraft }),
-		[draft, setDraft, clearDraft],
-	);
+	const value = useMemo(() => ({ draft, setDraft, clearDraft }), [draft, setDraft, clearDraft]);
 
 	return <SignUpDraftContext.Provider value={value}>{children}</SignUpDraftContext.Provider>;
 }

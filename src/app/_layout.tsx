@@ -55,7 +55,7 @@ export default function RootLayout() {
 	useEffect(() => {
 		if (!isReady || !navigationState?.key || hasRoutedRef.current) return;
 		hasRoutedRef.current = true;
-		router.replace("/onboarding");
+		router.replace("/search");
 	}, [isReady, navigationState?.key]);
 
 	const handleSplashFinish = useCallback(() => setIsSplashVisible(false), []);
@@ -87,6 +87,7 @@ export default function RootLayout() {
 								options={{ gestureEnabled: false }}
 							/>
 							<Stack.Screen name="location" options={{ gestureEnabled: false }} />
+							<Stack.Screen name="search" />
 						</Stack>
 					</SignUpDraftProvider>
 					{isSplashVisible && <BrandSplash onFinish={handleSplashFinish} />}

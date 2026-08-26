@@ -60,4 +60,3 @@ const styles = StyleSheet.create({
 		marginTop: Spacing.five + Spacing.two,
 	},
 });
-
