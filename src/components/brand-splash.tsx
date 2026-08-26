@@ -1,9 +1,8 @@
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { StyleSheet } from "react-native";
 import Animated, {
 	useAnimatedStyle,
 	useSharedValue,
-	withDelay,
 	withTiming,
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
@@ -19,21 +18,31 @@ const WORDMARK = { fontSize: 24, lineHeight: 32 } as const;
 
 type BrandSplashProps = {
 	onFinish: () => void;
+	/** Held at full opacity until true, so a slow launch never reveals the screen behind. */
+	ready?: boolean;
 };
 
-export function BrandSplash({ onFinish }: BrandSplashProps) {
+export function BrandSplash({ onFinish, ready = true }: BrandSplashProps) {
 	const opacity = useSharedValue(1);
 	const { horizontal } = useDesignScale();
+	const [minHoldElapsed, setMinHoldElapsed] = useState(false);
+	const hasFadedRef = useRef(false);
 
 	useEffect(() => {
-		opacity.value = withDelay(
-			HOLD_DURATION,
-			withTiming(0, { duration: FADE_DURATION }, (finished) => {
-				"worklet";
-				if (finished) scheduleOnRN(onFinish);
-			}),
-		);
-	}, [opacity, onFinish]);
+		const timer = setTimeout(() => setMinHoldElapsed(true), HOLD_DURATION);
+
+		return () => clearTimeout(timer);
+	}, []);
+
+	useEffect(() => {
+		if (hasFadedRef.current || !ready || !minHoldElapsed) return;
+		hasFadedRef.current = true;
+
+		opacity.value = withTiming(0, { duration: FADE_DURATION }, (finished) => {
+			"worklet";
+			if (finished) scheduleOnRN(onFinish);
+		});
+	}, [ready, minHoldElapsed, opacity, onFinish]);
 
 	const animatedStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
 
