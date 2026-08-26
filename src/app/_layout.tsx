@@ -6,22 +6,16 @@ import {
 	Inter_700Bold,
 	useFonts,
 } from "@expo-google-fonts/inter";
-import {
-	DarkTheme,
-	DefaultTheme,
-	Stack,
-	ThemeProvider,
-	router,
-	useRootNavigationState,
-} from "expo-router";
+import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useColorScheme } from "react-native";
 
 import { BrandSplash } from "@/components/brand-splash";
 import { AuthSessionProvider } from "@/features/auth/auth-session";
 import { SignUpDraftProvider } from "@/features/auth/sign-up-draft";
+import { StartupGate } from "@/features/auth/startup-gate";
 import { QueryProvider } from "@/lib/query/query-provider";
 
 SplashScreen.preventAutoHideAsync();
@@ -37,8 +31,7 @@ export default function RootLayout() {
 		Inter_700Bold,
 	});
 	const [isSplashVisible, setIsSplashVisible] = useState(true);
-	const navigationState = useRootNavigationState();
-	const hasRoutedRef = useRef(false);
+	const [hasDecided, setHasDecided] = useState(false);
 
 	// A missing font must not strand the user on the native splash screen.
 	const isReady = fontsLoaded || fontError !== null;
@@ -47,17 +40,7 @@ export default function RootLayout() {
 		if (isReady) SplashScreen.hideAsync();
 	}, [isReady]);
 
-	/**
-	 * The tabs own "/" so that NativeTabs keeps its index trigger, so onboarding
-	 * is routed to instead. This runs behind the splash overlay, so the tabs are
-	 * never visible. Swap the condition for a persisted flag to show it once.
-	 */
-	useEffect(() => {
-		if (!isReady || !navigationState?.key || hasRoutedRef.current) return;
-		hasRoutedRef.current = true;
-		router.replace("/search");
-	}, [isReady, navigationState?.key]);
-
+	const handleDecided = useCallback(() => setHasDecided(true), []);
 	const handleSplashFinish = useCallback(() => setIsSplashVisible(false), []);
 
 	if (!isReady) return null;
@@ -67,6 +50,7 @@ export default function RootLayout() {
 			<AuthSessionProvider>
 				<ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
 					<StatusBar style={isSplashVisible ? "light" : "auto"} />
+					<StartupGate onDecided={handleDecided} />
 					<SignUpDraftProvider>
 						<Stack screenOptions={{ headerShown: false }}>
 							<Stack.Screen name="(tabs)" />
@@ -90,7 +74,9 @@ export default function RootLayout() {
 							<Stack.Screen name="search" />
 						</Stack>
 					</SignUpDraftProvider>
-					{isSplashVisible && <BrandSplash onFinish={handleSplashFinish} />}
+					{isSplashVisible && (
+						<BrandSplash onFinish={handleSplashFinish} ready={hasDecided} />
+					)}
 				</ThemeProvider>
 			</AuthSessionProvider>
 		</QueryProvider>

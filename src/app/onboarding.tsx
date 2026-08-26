@@ -26,6 +26,7 @@ import { OnboardingSlide } from "@/components/onboarding/onboarding-slide";
 import { ORBIT_FRAME, OrbitIllustration } from "@/components/onboarding/orbit-illustration";
 import { PagerDots } from "@/components/onboarding/pager-dots";
 import { Ink, Spacing, Type } from "@/constants/theme";
+import { markOnboardingSeen } from "@/lib/api/onboarding-storage";
 
 const SLIDES = [
 	{
@@ -82,8 +83,14 @@ export default function OnboardingScreen() {
 		pagerRef.current?.scrollTo({ x: indexRef.current * width, animated: false });
 	}, [width]);
 
-	const handleSkip = useCallback(() => router.replace("/get-started"), []);
-	const handleStart = useCallback(() => router.push("/sign-up"), []);
+	const handleSkip = useCallback(() => {
+		void markOnboardingSeen();
+		router.replace("/get-started");
+	}, []);
+	const handleStart = useCallback(() => {
+		void markOnboardingSeen();
+		router.push("/sign-up");
+	}, []);
 
 	return (
 		<View style={styles.screen}>
