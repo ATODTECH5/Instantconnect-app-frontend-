@@ -1,10 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { StyleSheet } from "react-native";
-import Animated, {
-	useAnimatedStyle,
-	useSharedValue,
-	withTiming,
-} from "react-native-reanimated";
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 
 import { BrandWordmark } from "@/components/brand-wordmark";
