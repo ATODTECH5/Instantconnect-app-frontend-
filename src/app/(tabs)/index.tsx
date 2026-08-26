@@ -62,20 +62,17 @@ export default function HomeScreen() {
 	const greeting = greetingFor(new Date().getHours());
 	const greetingLine = user ? `${greeting}, ${user.firstName}` : greeting;
 
-	const openDiscover = useCallback(
-		(params?: Record<string, string>) => router.push({ pathname: "/discover", params }),
+	const openSearch = useCallback(
+		(params?: Record<string, string>) => router.push({ pathname: "/search", params }),
 		[],
 	);
 
 	const handleSearch = useCallback(() => {
 		const trimmed = query.trim();
-		if (trimmed.length > 0) openDiscover({ q: trimmed });
-	}, [openDiscover, query]);
+		if (trimmed.length > 0) openSearch({ q: trimmed });
+	}, [openSearch, query]);
 
-	const handleCategory = useCallback(
-		(id: string) => openDiscover({ category: id }),
-		[openDiscover],
-	);
+	const handleCategory = useCallback((id: string) => openSearch({ category: id }), [openSearch]);
 
 	const openPerson = useCallback((id: string) => router.push(`/person/${id}`), []);
 
@@ -94,9 +91,9 @@ export default function HomeScreen() {
 
 	const renderEvent = useCallback(
 		(event: NearbyEvent) => (
-			<EventCard event={event} onOpen={() => openDiscover()} width={eventWidth} />
+			<EventCard event={event} onOpen={() => openSearch()} width={eventWidth} />
 		),
-		[eventWidth, openDiscover],
+		[eventWidth, openSearch],
 	);
 
 	if (status === "loading") {
@@ -165,7 +162,7 @@ export default function HomeScreen() {
 						<View style={{ marginTop: BLOCK.afterGreeting * vertical }}>
 							<HomeSearchBar
 								onChangeText={setQuery}
-								onOpenFilters={() => openDiscover({ filters: "open" })}
+								onOpenFilters={() => openSearch({ filters: "open" })}
 								onSubmit={handleSearch}
 								value={query}
 							/>
@@ -178,7 +175,7 @@ export default function HomeScreen() {
 						<View style={{ marginTop: BLOCK.afterCategories * vertical }}>
 							<AiRecommendationCard
 								matchCount={feed.matchCount}
-								onPress={() => openDiscover({ source: "ai" })}
+								onPress={() => openSearch({ source: "ai" })}
 							/>
 						</View>
 					</View>
@@ -203,7 +200,7 @@ export default function HomeScreen() {
 					<View style={[styles.padded, { marginTop: BLOCK.beforeSection * vertical }]}>
 						<SectionHeader
 							actionLabel="View all"
-							onPressAction={() => openDiscover({ tab: "events" })}
+							onPressAction={() => openSearch({ tab: "events" })}
 							title="Happening Around You"
 						/>
 					</View>

@@ -37,13 +37,14 @@ const CategoryButton = memo(function CategoryButton({ category, onPress }: Categ
 
 export type CategoryStripProps = {
 	onSelect: (id: string) => void;
+	title?: string;
 };
 
-export function CategoryStrip({ onSelect }: CategoryStripProps) {
+export function CategoryStrip({ onSelect, title = "Categories" }: CategoryStripProps) {
 	return (
 		<View style={styles.card}>
 			<Text accessibilityRole="header" style={styles.title}>
-				Categories
+				{title}
 			</Text>
 
 			<View style={styles.row}>

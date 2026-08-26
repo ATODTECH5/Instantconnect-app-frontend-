@@ -6,14 +6,23 @@ export type SectionHeaderProps = {
 	title: string;
 	actionLabel?: string;
 	onPressAction?: () => void;
+	/** Inert counterpart to the action, for a result count. */
+	trailingText?: string;
 };
 
-export function SectionHeader({ title, actionLabel, onPressAction }: SectionHeaderProps) {
+export function SectionHeader({
+	title,
+	actionLabel,
+	onPressAction,
+	trailingText,
+}: SectionHeaderProps) {
 	return (
 		<View style={styles.row}>
 			<Text accessibilityRole="header" style={styles.title}>
 				{title}
 			</Text>
+
+			{trailingText ? <Text style={styles.trailing}>{trailingText}</Text> : null}
 
 			{actionLabel && onPressAction ? (
 				<Pressable
@@ -50,6 +59,10 @@ const styles = StyleSheet.create({
 	actionLabel: {
 		...Type.sectionLink,
 		color: Brand.purple,
+	},
+	trailing: {
+		...Type.resultCount,
+		color: Ink.meta,
 	},
 	pressed: {
 		opacity: 0.7,

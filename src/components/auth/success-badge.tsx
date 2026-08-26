@@ -13,7 +13,11 @@ const CHECK_AXIS = { x1: 71, y1: 44, x2: 39, y2: 6.5 } as const;
 
 export function SuccessBadge() {
 	return (
-		<View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={styles.halo}>
+		<View
+			accessibilityElementsHidden
+			importantForAccessibility="no-hide-descendants"
+			style={styles.halo}
+		>
 			<View style={styles.disc}>
 				<Svg height={CHECK_SIZE} width={CHECK_SIZE}>
 					<Defs>

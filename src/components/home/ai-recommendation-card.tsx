@@ -1,9 +1,5 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
-
 import SparkleIcon from "@/assets/home/sparkle.svg";
-import { Brand, BrandGradient, Gap, Ink, Radius, Type } from "@/constants/theme";
-
-const ICON_SIZE = 20;
+import { PromoCard } from "@/components/ui/promo-card";
 
 export type AiRecommendationCardProps = {
 	matchCount: number;
@@ -17,47 +13,12 @@ export function AiRecommendationCard({ matchCount, onPress }: AiRecommendationCa
 			: "We're still learning your interests. Add a few more to get matches.";
 
 	return (
-		<Pressable
+		<PromoCard
+			Icon={SparkleIcon}
 			accessibilityHint="Opens your personalised matches"
-			accessibilityLabel={`AI Recommendation. ${body}`}
-			accessibilityRole="button"
+			body={body}
 			onPress={onPress}
-			style={({ pressed }) => [styles.card, pressed && styles.pressed]}
-		>
-			<View style={styles.titleRow}>
-				<SparkleIcon color={Brand.onBrand} height={ICON_SIZE} width={ICON_SIZE} />
-
-				<Text style={styles.title}>AI Recommendation</Text>
-			</View>
-
-			<Text style={styles.body}>{body}</Text>
-		</Pressable>
+			title="AI Recommendation"
+		/>
 	);
 }
-
-const styles = StyleSheet.create({
-	card: {
-		gap: Gap.tight,
-		padding: Gap.card,
-		borderRadius: Radius.dialog,
-		backgroundColor: Brand.pink,
-		...BrandGradient,
-	},
-	titleRow: {
-		flexDirection: "row",
-		alignItems: "center",
-		gap: Gap.tight,
-	},
-	title: {
-		...Type.promoTitle,
-		flexShrink: 1,
-		color: Brand.onBrand,
-	},
-	body: {
-		...Type.promoBody,
-		color: Ink.onBrandMuted,
-	},
-	pressed: {
-		opacity: 0.85,
-	},
-});

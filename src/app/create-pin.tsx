@@ -16,7 +16,9 @@ const PIN_LENGTH = 4;
 function isTooPredictable(pin: string) {
 	const digits = [...pin].map(Number);
 	const allSame = digits.every((digit) => digit === digits[0]);
-	const ascending = digits.every((digit, index) => index === 0 || digit === digits[index - 1] + 1);
+	const ascending = digits.every(
+		(digit, index) => index === 0 || digit === digits[index - 1] + 1,
+	);
 	const descending = digits.every(
 		(digit, index) => index === 0 || digit === digits[index - 1] - 1,
 	);

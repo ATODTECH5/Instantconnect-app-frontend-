@@ -43,6 +43,10 @@ export const Ink = {
 	cardBorder: "#94A3B8",
 	/** Presence dot on avatars and people cards. */
 	online: "#41C97C",
+	/** Filled check beside a verified name in a result row. */
+	verified: "#16A34A",
+	/** Unfilled half of the distance slider track. */
+	trackInactive: "#F7EDFE",
 	/** Unread count on the notification bell. */
 	badge: "#EF4444",
 	badgeRing: "#F9FAFB",
@@ -222,6 +226,17 @@ export const Type = {
 	cardMeta: { fontFamily: UiFont.regular, fontSize: 11, lineHeight: 15 },
 	cardAction: { fontFamily: UiFont.medium, fontSize: 12, lineHeight: 16 },
 	tabLabel: { fontFamily: UiFont.regular, fontSize: 12, lineHeight: 16 },
+	screenTitle: { fontFamily: UiFont.bold, fontSize: 22, lineHeight: 28, letterSpacing: -0.3 },
+	chipLabel: { fontFamily: UiFont.regular, fontSize: 15, lineHeight: 20 },
+	chipLabelSelected: { fontFamily: UiFont.semibold, fontSize: 15, lineHeight: 20 },
+	resultName: { fontFamily: UiFont.semibold, fontSize: 16, lineHeight: 22, letterSpacing: -0.2 },
+	resultMeta: { fontFamily: UiFont.regular, fontSize: 13, lineHeight: 18 },
+	resultCount: { fontFamily: UiFont.regular, fontSize: 13, lineHeight: 18 },
+	rowLabel: { fontFamily: UiFont.regular, fontSize: 15, lineHeight: 20 },
+	filterLabel: { fontFamily: UiFont.bold, fontSize: 17, lineHeight: 24, letterSpacing: -0.2 },
+	sliderTick: { fontFamily: UiFont.regular, fontSize: 11, lineHeight: 14 },
+	emptyTitle: { fontFamily: UiFont.bold, fontSize: 24, lineHeight: 32, letterSpacing: -0.3 },
+	emptyBody: { fontFamily: UiFont.regular, fontSize: 14, lineHeight: 22 },
 } as const;
 
 export const Spacing = {

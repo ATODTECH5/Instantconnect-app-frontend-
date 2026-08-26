@@ -13,7 +13,12 @@ export type CheckboxProps = {
 	disabled?: boolean;
 };
 
-export function Checkbox({ checked, onChange, accessibilityLabel, disabled = false }: CheckboxProps) {
+export function Checkbox({
+	checked,
+	onChange,
+	accessibilityLabel,
+	disabled = false,
+}: CheckboxProps) {
 	return (
 		<Pressable
 			accessibilityLabel={accessibilityLabel}
