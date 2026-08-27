@@ -9,8 +9,8 @@ import { LoadingOverlay } from "@/components/ui/loading-overlay";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { SelectableRow } from "@/components/ui/selectable-row";
 import { Ink, MaxColumnWidth, Radius, Spacing, Type } from "@/constants/theme";
-import { saveInterests } from "@/features/auth/auth-service";
-import { INTERESTS } from "@/features/auth/interests";
+import { saveCategory } from "@/features/auth/auth-service";
+import { CATEGORIES } from "@/features/reference/categories";
 import { useDesignScale } from "@/hooks/use-design-scale";
 
 /** Vertical rhythm from the artboard, tightened on shorter screens. */
@@ -23,20 +23,18 @@ export default function InterestsScreen() {
 	const insets = useSafeAreaInsets();
 	const { vertical } = useDesignScale();
 
-	const [selected, setSelected] = useState<string[]>([]);
+	const [selected, setSelected] = useState<string | null>(null);
 	const [error, setError] = useState<string | null>(null);
 	const [isSaving, setIsSaving] = useState(false);
 
-	const toggle = useCallback((id: string) => {
+	const choose = useCallback((id: string) => {
 		setError(null);
-		setSelected((current) =>
-			current.includes(id) ? current.filter((entry) => entry !== id) : [...current, id],
-		);
+		setSelected(id);
 	}, []);
 
 	const handleConfirm = useCallback(async () => {
-		if (selected.length === 0) {
-			setError("Pick at least one category");
+		if (!selected) {
+			setError("Pick a category");
 			return;
 		}
 
@@ -44,10 +42,10 @@ export default function InterestsScreen() {
 		setIsSaving(true);
 
 		try {
-			await saveInterests(selected);
+			await saveCategory(selected);
 			router.replace("/(tabs)");
 		} catch {
-			setError("We could not save your choices. Please try again.");
+			setError("We could not save your choice. Please try again.");
 		} finally {
 			setIsSaving(false);
 		}
@@ -73,17 +71,18 @@ export default function InterestsScreen() {
 					</Text>
 
 					<Text style={[styles.subtitle, { marginTop: GAP.afterTitle * vertical }]}>
-						Pick categories that interest you so we can personalize your experience
+						Pick the one that fits you best so we can personalize your experience
 					</Text>
 
 					<View style={[styles.card, { marginTop: GAP.beforeCard * vertical }]}>
-						{INTERESTS.map(({ id, label }) => (
+						{CATEGORIES.map(({ id, label }) => (
 							<SelectableRow
 								disabled={isSaving}
 								key={id}
 								label={label}
-								onToggle={() => toggle(id)}
-								selected={selected.includes(id)}
+								onToggle={() => choose(id)}
+								selected={selected === id}
+								single
 							/>
 						))}
 					</View>

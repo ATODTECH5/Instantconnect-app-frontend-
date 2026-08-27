@@ -57,8 +57,8 @@ export async function resendVerificationCode(email: string): Promise<void> {
  */
 export async function createPin(_pin: string): Promise<void> {}
 
-export async function saveInterests(interestIds: string[]): Promise<void> {
-	await request("/users/me/interests", { method: "PUT", body: { interestIds }, auth: true });
+export async function saveCategory(categoryId: string): Promise<void> {
+	await request("/users/me/category", { method: "PUT", body: { categoryId }, auth: true });
 }
 
 export async function signIn(input: SignInInput): Promise<void> {

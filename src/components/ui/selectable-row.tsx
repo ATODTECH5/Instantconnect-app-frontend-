@@ -11,17 +11,25 @@ export type SelectableRowProps = {
 	selected: boolean;
 	onToggle: () => void;
 	disabled?: boolean;
+	/** Radio when the rows are mutually exclusive, so the tick is announced correctly. */
+	single?: boolean;
 };
 
 /**
  * The artboard keeps the tick visible when unselected, white on the pale box,
  * so the row reads as a slot waiting to be filled rather than an empty square.
  */
-export function SelectableRow({ label, selected, onToggle, disabled = false }: SelectableRowProps) {
+export function SelectableRow({
+	label,
+	selected,
+	onToggle,
+	disabled = false,
+	single = false,
+}: SelectableRowProps) {
 	return (
 		<Pressable
 			accessibilityLabel={label}
-			accessibilityRole="checkbox"
+			accessibilityRole={single ? "radio" : "checkbox"}
 			accessibilityState={{ checked: selected, disabled }}
 			disabled={disabled}
 			onPress={onToggle}

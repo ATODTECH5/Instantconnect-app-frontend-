@@ -5,7 +5,6 @@ import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import SparkleIcon from "@/assets/home/sparkle.svg";
-import EmptySearchArt from "@/assets/search/empty-search.svg";
 import { CategoryStrip } from "@/components/home/category-strip";
 import { SectionHeader } from "@/components/home/section-header";
 import { PersonRow } from "@/components/search/person-row";
@@ -34,6 +33,8 @@ import { useJoinMeetups } from "@/features/search/use-join-meetups";
 import { useSearchResults, useSearchSuggestions } from "@/features/search/use-search";
 import { isEmptyResults } from "@/features/search/search-catalog";
 import { useNavBarInset } from "@/hooks/use-nav-bar-inset";
+
+const EmptySearchArt = require("@/assets/search/empty-search.png");
 
 const EDGE_INSET = Spacing.three;
 
@@ -299,7 +300,7 @@ export default function SearchScreen() {
 					</View>
 
 					<EmptyState
-						Illustration={EmptySearchArt}
+						illustration={EmptySearchArt}
 						body={
 							(submitted ?? "").length === 0
 								? "No search has been made yet, you will see all your search result here."

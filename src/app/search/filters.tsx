@@ -10,7 +10,7 @@ import { DistanceSlider } from "@/components/ui/distance-slider";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { SelectField } from "@/components/ui/select-field";
 import { Brand, Gap, Ink, MaxColumnWidth, Spacing, Type } from "@/constants/theme";
-import { HOME_CATEGORIES } from "@/features/home/categories";
+import { CATEGORY_OPTIONS } from "@/features/reference/categories";
 import {
 	decodeFilters,
 	DISTANCE_STEPS,
@@ -25,7 +25,7 @@ import {
 
 const EDGE_INSET = Spacing.three;
 
-const CATEGORY_OPTIONS = HOME_CATEGORIES.map(({ id, label }) => ({ id, label }));
+
 
 export default function FiltersScreen() {
 	const params = useLocalSearchParams<{ filters?: string }>();

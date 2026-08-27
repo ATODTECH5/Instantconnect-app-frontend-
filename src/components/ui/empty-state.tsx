@@ -1,15 +1,13 @@
-import type { FC } from "react";
+import { Image, type ImageSource } from "expo-image";
 import { StyleSheet, Text, View, useWindowDimensions } from "react-native";
-import type { SvgProps } from "react-native-svg";
 
 import { Gap, Ink, MaxColumnWidth, Spacing, Type } from "@/constants/theme";
 
-const ART_FRACTION = 0.55;
-const ART_MAX = 260;
-const ART_ASPECT = 220 / 200;
+const ART_FRACTION = 0.62;
+const ART_MAX = 280;
 
 export type EmptyStateProps = {
-	Illustration: FC<SvgProps>;
+	illustration: number | ImageSource;
 	title: string;
 	body: string;
 };
@@ -18,13 +16,18 @@ export type EmptyStateProps = {
  * Illustrated counterpart to `state-message`, which stays the text only option
  * for empty sections inside an otherwise populated screen.
  */
-export function EmptyState({ Illustration, title, body }: EmptyStateProps) {
+export function EmptyState({ illustration, title, body }: EmptyStateProps) {
 	const { width } = useWindowDimensions();
-	const artWidth = Math.min(width * ART_FRACTION, ART_MAX);
+	const artSize = Math.min(width * ART_FRACTION, ART_MAX);
 
 	return (
 		<View accessibilityLiveRegion="polite" style={styles.box}>
-			<Illustration height={artWidth / ART_ASPECT} width={artWidth} />
+			<Image
+				accessibilityIgnoresInvertColors
+				contentFit="contain"
+				source={illustration}
+				style={{ width: artSize, height: artSize }}
+			/>
 
 			<View style={styles.copy}>
 				<Text accessibilityRole="header" style={styles.title}>
