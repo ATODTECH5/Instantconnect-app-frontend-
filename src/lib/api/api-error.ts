@@ -1,6 +1,6 @@
 /**
- * The `code` field of the server's error envelope, plus the two failures that
- * never reach the server. Screens switch on these; the message is only ever
+ * The `code` field of the server's error envelope, plus the failures that never
+ * reach the server. Screens switch on these; the message is only ever
  * displayed, since the server writes it to be safe to show as written.
  */
 export type ApiErrorCode =
@@ -32,7 +32,9 @@ export type ApiErrorCode =
 	| "INTERNAL_SERVER_ERROR"
 	| "NETWORK_UNAVAILABLE"
 	| "TIMEOUT"
-	| "MALFORMED_RESPONSE";
+	| "MALFORMED_RESPONSE"
+	| "UPLOAD_REJECTED"
+	| "UPLOAD_TRANSPORT_FAILED";
 
 export type ApiErrorEnvelope = {
 	statusCode: number;
@@ -94,6 +96,31 @@ export function timeoutError(): ApiError {
 
 export function malformedResponseError(): ApiError {
 	return new ApiError({ code: "MALFORMED_RESPONSE", message: UNEXPECTED_MESSAGE });
+}
+
+/**
+ * The storage provider answered and refused. Its own wording is carried through
+ * because it names the actual cause (a stale signature, a rejected file), which
+ * a generic message would hide from both the user and the logs.
+ */
+export function uploadRejectedError(status: number, detail: string | null): ApiError {
+	return new ApiError({
+		code: "UPLOAD_REJECTED",
+		message: detail
+			? `The photo service refused the upload: ${detail}`
+			: `The photo service refused the upload (status ${status}).`,
+		status,
+	});
+}
+
+/** The upload never reached the provider: no response, so nothing to read. */
+export function uploadTransportError(detail: string | null): ApiError {
+	return new ApiError({
+		code: "UPLOAD_TRANSPORT_FAILED",
+		message: detail
+			? `The photo could not be sent: ${detail}`
+			: "The photo could not be sent. Check your connection and try again.",
+	});
 }
 
 function isEnvelope(value: unknown): value is ApiErrorEnvelope {

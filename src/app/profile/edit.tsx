@@ -76,6 +76,18 @@ function saveErrorMessage(cause: unknown): string {
 	return "We could not save your changes. Please try again.";
 }
 
+/**
+ * An upload crosses three hops (our signature, the provider, our confirmation)
+ * and each fails for its own reason, so the reason is shown rather than
+ * discarded. Swallowing it leaves a broken slot with nothing to act on, which
+ * is indistinguishable from the network being down.
+ */
+function photoErrorMessage(cause: unknown): string {
+	if (isApiError(cause)) return cause.message;
+
+	return "That photo could not be uploaded. Please try again.";
+}
+
 function draftFrom(profile: ApiProfile): Draft {
 	return {
 		fullName: profile.fullName,
@@ -169,8 +181,8 @@ function EditProfileForm({ profile }: { profile: ApiProfile }) {
 
 			try {
 				await uploadPhoto.mutateAsync({ position, photo });
-			} catch {
-				setNotice({ message: "That photo could not be uploaded.", tone: "error" });
+			} catch (cause) {
+				setNotice({ message: photoErrorMessage(cause), tone: "error" });
 			} finally {
 				setBusyPosition(null);
 			}
@@ -185,8 +197,8 @@ function EditProfileForm({ profile }: { profile: ApiProfile }) {
 
 			try {
 				await removePhoto.mutateAsync(position);
-			} catch {
-				setNotice({ message: "That photo could not be removed.", tone: "error" });
+			} catch (cause) {
+				setNotice({ message: photoErrorMessage(cause), tone: "error" });
 			} finally {
 				setBusyPosition(null);
 			}
