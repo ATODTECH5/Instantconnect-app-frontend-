@@ -31,6 +31,13 @@ export const Ink = {
 	borderStrong: "#C9C8D3",
 	danger: "#D94949",
 	dangerSurface: "#F9E3E3",
+	/** Saved confirmation banner on the edit screens. */
+	success: "#16A34A",
+	successSurface: "#F0FDF4",
+	successBorder: "#BBF7D0",
+	/** Chip on a step the user has started but not finished, such as KYC. */
+	pending: "#B45309",
+	pendingSurface: "#FEF3C7",
 	/** Circular control sitting on a white screen rather than the gradient. */
 	glassOnLight: "#FCF9FF",
 	scrollTrack: "#DFD7D7",
@@ -237,6 +244,12 @@ export const Type = {
 	sliderTick: { fontFamily: UiFont.regular, fontSize: 11, lineHeight: 14 },
 	emptyTitle: { fontFamily: UiFont.bold, fontSize: 24, lineHeight: 32, letterSpacing: -0.3 },
 	emptyBody: { fontFamily: UiFont.regular, fontSize: 14, lineHeight: 22 },
+	profileName: { fontFamily: UiFont.bold, fontSize: 20, lineHeight: 26, letterSpacing: -0.3 },
+	profileMeta: { fontFamily: UiFont.regular, fontSize: 14, lineHeight: 20 },
+	statValue: { fontFamily: UiFont.bold, fontSize: 20, lineHeight: 26, letterSpacing: -0.3 },
+	statLabel: { fontFamily: UiFont.regular, fontSize: 12, lineHeight: 16 },
+	menuLabel: { fontFamily: UiFont.regular, fontSize: 16, lineHeight: 22 },
+	toastLabel: { fontFamily: UiFont.medium, fontSize: 14, lineHeight: 20 },
 } as const;
 
 export const Spacing = {

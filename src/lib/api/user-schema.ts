@@ -1,10 +1,6 @@
 import { z } from "zod";
 
-/** Mirrors `InterestResponseDto` on the server. */
-export const interestSchema = z.object({
-	id: z.string().min(1),
-	label: z.string().min(1),
-});
+import { lookupSchema } from "@/lib/api/profile-schema";
 
 /**
  * Mirrors `UserResponseDto` on the server, including its enums rather than
@@ -22,9 +18,9 @@ export const userSchema = z.object({
 	isEmailVerified: z.boolean(),
 	pinEnabled: z.boolean(),
 	biometricsEnabled: z.boolean(),
-	interests: z.array(interestSchema),
+	/** What the account is here for. Null until onboarding sets it. */
+	category: lookupSchema.nullable(),
 	createdAt: z.string().min(1),
 });
 
 export type ApiUser = z.infer<typeof userSchema>;
-export type ApiInterest = z.infer<typeof interestSchema>;

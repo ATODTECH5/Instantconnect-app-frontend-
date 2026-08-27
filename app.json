@@ -28,6 +28,10 @@
 				"android.permission.USE_FINGERPRINT",
 				"android.permission.ACCESS_COARSE_LOCATION",
 				"android.permission.ACCESS_FINE_LOCATION"
+			],
+			"blockedPermissions": [
+				"android.permission.RECORD_AUDIO",
+				"android.permission.CAMERA"
 			]
 		},
 		"web": {
@@ -59,6 +63,12 @@
 				"expo-location",
 				{
 					"locationWhenInUsePermission": "Your location will be used to discover events and people near you."
+				}
+			],
+			[
+				"expo-image-picker",
+				{
+					"photosPermission": "Choose photos from your library to use on your Instant Connect profile."
 				}
 			],
 			"expo-maps"

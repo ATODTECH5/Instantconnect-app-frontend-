@@ -2,13 +2,13 @@ import { memo } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { Brand, CategoryTone, Gap, Ink, Radius, Spacing, Type } from "@/constants/theme";
-import { HOME_CATEGORIES, type HomeCategory } from "@/features/home/categories";
+import { CATEGORIES, type Category } from "@/features/reference/categories";
 
 const DISC_SIZE = 37;
 const ICON_SIZE = 20;
 
 type CategoryButtonProps = {
-	category: HomeCategory;
+	category: Category;
 	onPress: (id: string) => void;
 };
 
@@ -48,7 +48,7 @@ export function CategoryStrip({ onSelect, title = "Categories" }: CategoryStripP
 			</Text>
 
 			<View style={styles.row}>
-				{HOME_CATEGORIES.map((category) => (
+				{CATEGORIES.map((category) => (
 					<CategoryButton category={category} key={category.id} onPress={onSelect} />
 				))}
 			</View>
