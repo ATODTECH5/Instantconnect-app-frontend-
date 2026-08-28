@@ -18,6 +18,7 @@ import { Brand, Gap, Ink, MaxColumnWidth, Spacing, Type } from "@/constants/them
 import type { NearbyEvent, NearbyPerson } from "@/features/home/home-feed";
 import { useConnectRequests } from "@/features/home/use-connect-requests";
 import { useHomeFeed } from "@/features/home/use-home-feed";
+import { useProfile } from "@/features/profile/use-profile";
 import { useCurrentUser } from "@/features/user/use-current-user";
 import { useDesignScale } from "@/hooks/use-design-scale";
 import { useNavBarInset } from "@/hooks/use-nav-bar-inset";
@@ -48,6 +49,7 @@ function greetingFor(hour: number) {
 export default function HomeScreen() {
 	const { status, feed, error, refreshing, reload, refresh } = useHomeFeed();
 	const { data: user } = useCurrentUser();
+	const { data: profile } = useProfile();
 	const { stateFor, connect } = useConnectRequests();
 	const { horizontal, vertical } = useDesignScale();
 	const navInset = useNavBarInset();
@@ -61,6 +63,10 @@ export default function HomeScreen() {
 	// own until it does rather than showing a placeholder that then changes.
 	const greeting = greetingFor(new Date().getHours());
 	const greetingLine = user ? `${greeting}, ${user.firstName}` : greeting;
+
+	// The avatar is the profile's own photo rather than anything the feed
+	// carries, so changing it in Edit Profile is reflected here immediately.
+	const avatarName = profile?.fullName ?? user?.fullName ?? "";
 
 	const openSearch = useCallback(
 		(params?: Record<string, string>) => router.push({ pathname: "/search", params }),
@@ -143,7 +149,8 @@ export default function HomeScreen() {
 				<View style={styles.column}>
 					<View style={styles.padded}>
 						<HomeHeader
-							avatar={feed.avatar}
+							avatarUrl={profile?.avatarUrl ?? null}
+							fullName={avatarName}
 							isOnline={feed.isOnline}
 							onChangePlace={() => router.push("/location")}
 							onOpenNotifications={() => router.push("/notifications")}

@@ -64,6 +64,9 @@ export const Ink = {
 	onMediaMuted: "#E6E5EA",
 	mediaScrim: "rgba(0, 0, 0, 0.35)",
 	mediaControl: "rgba(255, 255, 255, 0.1)",
+	/** Bio panel and hobby tags on Profile Details, which sit over the photo. */
+	mediaGlass: "rgba(255, 255, 255, 0.02)",
+	mediaGlassBorder: "rgba(244, 243, 245, 0.19)",
 	/** Floating tab bar, which sits over scrolling content. */
 	navGlass: "rgba(255, 255, 255, 0.07)",
 	navBorder: "rgba(255, 255, 255, 0.4)",
@@ -232,7 +235,7 @@ export const Type = {
 	cardName: { fontFamily: UiFont.semibold, fontSize: 13, lineHeight: 18 },
 	cardMeta: { fontFamily: UiFont.regular, fontSize: 11, lineHeight: 15 },
 	cardAction: { fontFamily: UiFont.medium, fontSize: 12, lineHeight: 16 },
-	tabLabel: { fontFamily: UiFont.regular, fontSize: 12, lineHeight: 16 },
+	tabLabel: { fontFamily: UiFont.medium, fontSize: 12, lineHeight: 16 },
 	screenTitle: { fontFamily: UiFont.bold, fontSize: 22, lineHeight: 28, letterSpacing: -0.3 },
 	chipLabel: { fontFamily: UiFont.regular, fontSize: 15, lineHeight: 20 },
 	chipLabelSelected: { fontFamily: UiFont.semibold, fontSize: 15, lineHeight: 20 },
@@ -249,6 +252,18 @@ export const Type = {
 	statValue: { fontFamily: UiFont.bold, fontSize: 20, lineHeight: 26, letterSpacing: -0.3 },
 	statLabel: { fontFamily: UiFont.regular, fontSize: 12, lineHeight: 16 },
 	menuLabel: { fontFamily: UiFont.regular, fontSize: 16, lineHeight: 22 },
+	/**
+	 * Profile Details, read straight off the frame. Unlike the card captions
+	 * above, every size here is already large enough to ship unchanged.
+	 */
+	detailName: { fontFamily: UiFont.bold, fontSize: 30, lineHeight: 40 },
+	/** The frame's Subtitle/2, used where a title shares a row with a control. */
+	subtitle: { fontFamily: UiFont.semibold, fontSize: 18, lineHeight: 24 },
+	detailCategory: { fontFamily: UiFont.medium, fontSize: 16, lineHeight: 24 },
+	detailRole: { fontFamily: UiFont.regular, fontSize: 14, lineHeight: 22 },
+	detailBio: { fontFamily: UiFont.regular, fontSize: 12, lineHeight: 18 },
+	/** The frame sets the hobby tag at 12/12, which clips Inter's descenders. */
+	hobbyLabel: { fontFamily: UiFont.regular, fontSize: 12, lineHeight: 16 },
 	toastLabel: { fontFamily: UiFont.medium, fontSize: 14, lineHeight: 20 },
 } as const;
 

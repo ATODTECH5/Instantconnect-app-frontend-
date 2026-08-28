@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text, View, type ImageSourcePropType } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import BellIcon from "@/assets/home/bell.svg";
 import PinIcon from "@/assets/home/pin.svg";
@@ -12,7 +12,8 @@ const BELL_CHIP = 32;
 const SIDE_SLOT = MinTapTarget;
 
 export type HomeHeaderProps = {
-	avatar: ImageSourcePropType;
+	avatarUrl: string | null;
+	fullName: string;
 	isOnline: boolean;
 	place: string;
 	unreadCount: number;
@@ -22,7 +23,8 @@ export type HomeHeaderProps = {
 };
 
 export function HomeHeader({
-	avatar,
+	avatarUrl,
+	fullName,
 	isOnline,
 	place,
 	unreadCount,
@@ -41,7 +43,12 @@ export function HomeHeader({
 					onPress={onOpenProfile}
 					style={({ pressed }) => pressed && styles.pressed}
 				>
-					<PresenceAvatar isOnline={isOnline} size={AVATAR_SIZE} source={avatar} />
+					<PresenceAvatar
+						fullName={fullName}
+						isOnline={isOnline}
+						size={AVATAR_SIZE}
+						uri={avatarUrl}
+					/>
 				</Pressable>
 			</View>
 

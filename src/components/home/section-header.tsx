@@ -6,6 +6,8 @@ export type SectionHeaderProps = {
 	title: string;
 	actionLabel?: string;
 	onPressAction?: () => void;
+	/** Overrides the default "Shows everything under ..." hint. */
+	actionHint?: string;
 	/** Inert counterpart to the action, for a result count. */
 	trailingText?: string;
 };
@@ -14,6 +16,7 @@ export function SectionHeader({
 	title,
 	actionLabel,
 	onPressAction,
+	actionHint,
 	trailingText,
 }: SectionHeaderProps) {
 	return (
@@ -26,7 +29,7 @@ export function SectionHeader({
 
 			{actionLabel && onPressAction ? (
 				<Pressable
-					accessibilityHint={`Shows everything under ${title}`}
+					accessibilityHint={actionHint ?? `Shows everything under ${title}`}
 					accessibilityLabel={`${actionLabel}, ${title}`}
 					accessibilityRole="button"
 					hitSlop={Spacing.two}

@@ -1,20 +1,22 @@
-import { Image } from "expo-image";
-import { StyleSheet, View, type ImageSourcePropType } from "react-native";
+import { StyleSheet, View } from "react-native";
 
+import { AvatarImage } from "@/components/ui/avatar-image";
 import { Ink } from "@/constants/theme";
 
 const DOT_RATIO = 0.325;
 const RING_WIDTH = 2;
 
 export type PresenceAvatarProps = {
-	source: ImageSourcePropType;
+	uri: string | null;
+	fullName: string;
 	size: number;
 	isOnline?: boolean;
 	accessibilityLabel?: string;
 };
 
 export function PresenceAvatar({
-	source,
+	uri,
+	fullName,
 	size,
 	isOnline = false,
 	accessibilityLabel,
@@ -23,13 +25,11 @@ export function PresenceAvatar({
 
 	return (
 		<View style={{ width: size, height: size }}>
-			<Image
-				accessibilityIgnoresInvertColors
-				accessible={accessibilityLabel !== undefined}
-				alt={accessibilityLabel}
-				contentFit="cover"
-				source={source}
-				style={[styles.photo, { borderRadius: size / 2 }]}
+			<AvatarImage
+				accessibilityLabel={accessibilityLabel}
+				fullName={fullName}
+				size={size}
+				uri={uri}
 			/>
 
 			{isOnline ? (
@@ -45,11 +45,6 @@ export function PresenceAvatar({
 }
 
 const styles = StyleSheet.create({
-	photo: {
-		width: "100%",
-		height: "100%",
-		backgroundColor: Ink.border,
-	},
 	dot: {
 		position: "absolute",
 		right: 0,
