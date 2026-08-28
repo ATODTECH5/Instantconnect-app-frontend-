@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, Text } from "react-native";
 
 import { GradientSpinner } from "@/components/ui/gradient-spinner";
-import { Brand, MinTapTarget, Radius, Spacing, Type } from "@/constants/theme";
+import { Brand, BrandGradient, MinTapTarget, Radius, Spacing, Type } from "@/constants/theme";
 
 const SPINNER_SIZE = 18;
 
@@ -10,6 +10,8 @@ export type PrimaryButtonProps = {
 	onPress: () => void;
 	disabled?: boolean;
 	loading?: boolean;
+	/** The gradient fill is the frame's treatment wherever the button sits on a photo. */
+	tone?: "solid" | "gradient";
 	accessibilityHint?: string;
 };
 
@@ -18,6 +20,7 @@ export function PrimaryButton({
 	onPress,
 	disabled = false,
 	loading = false,
+	tone = "solid",
 	accessibilityHint,
 }: PrimaryButtonProps) {
 	const isInert = disabled || loading;
@@ -32,6 +35,7 @@ export function PrimaryButton({
 			onPress={onPress}
 			style={({ pressed }) => [
 				styles.button,
+				tone === "gradient" ? styles.gradient : styles.solid,
 				disabled && styles.disabled,
 				pressed && !isInert && styles.pressed,
 			]}
@@ -51,9 +55,14 @@ const styles = StyleSheet.create({
 		paddingVertical: Spacing.two,
 		paddingHorizontal: Spacing.four,
 		borderRadius: Radius.control,
-		backgroundColor: Brand.purple,
 		alignItems: "center",
 		justifyContent: "center",
+	},
+	solid: {
+		backgroundColor: Brand.purple,
+	},
+	gradient: {
+		...BrandGradient,
 	},
 	disabled: {
 		opacity: 0.45,

@@ -1,5 +1,7 @@
 import type { ImageSourcePropType } from "react-native";
 
+import { PEOPLE } from "@/features/discover/discover-feed";
+
 export type NearbyPerson = {
 	id: string;
 	name: string;
@@ -22,7 +24,6 @@ export type NearbyEvent = {
 };
 
 export type HomeFeed = {
-	avatar: ImageSourcePropType;
 	isOnline: boolean;
 	place: string;
 	unreadCount: number;
@@ -41,64 +42,6 @@ const MOCK_LATENCY_MS = 900;
 export class HomeFeedError extends Error {}
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-const PEOPLE: NearbyPerson[] = [
-	{
-		id: "iyan-filani",
-		name: "Iyan Filani",
-		age: 27,
-		category: "Business",
-		role: "Product Manager",
-		distanceKm: 250,
-		photo: require("@/assets/onboarding/avatar-1.jpg"),
-		isVerified: true,
-		isOnline: true,
-	},
-	{
-		id: "zainab-okoro",
-		name: "Zainab Okoro",
-		age: 24,
-		category: "Talents",
-		role: "Sound Engineer",
-		distanceKm: 12,
-		photo: require("@/assets/onboarding/avatar-2.jpg"),
-		isVerified: true,
-		isOnline: true,
-	},
-	{
-		id: "tunde-bakare",
-		name: "Tunde Bakare",
-		age: 31,
-		category: "Friendship",
-		role: "Physiotherapist",
-		distanceKm: 4,
-		photo: require("@/assets/onboarding/avatar-3.jpg"),
-		isVerified: false,
-		isOnline: false,
-	},
-	{
-		id: "amara-eze",
-		name: "Amara Eze",
-		age: 29,
-		category: "Social",
-		role: "Event Curator",
-		distanceKm: 38,
-		photo: require("@/assets/onboarding/avatar-4.jpg"),
-		isVerified: true,
-		isOnline: false,
-	},
-	{
-		id: "kelechi-nwosu",
-		name: "Kelechi Nwosu",
-		age: 26,
-		category: "Business",
-		role: "Brand Strategist",
-		distanceKm: 61,
-		photo: require("@/assets/onboarding/card-front.jpg"),
-		isVerified: false,
-		isOnline: true,
-	},
-];
 
 const EVENTS: NearbyEvent[] = [
 	{
@@ -135,7 +78,6 @@ export async function fetchHomeFeed(): Promise<HomeFeed> {
 	await delay(MOCK_LATENCY_MS);
 
 	return {
-		avatar: require("@/assets/onboarding/avatar-5.png"),
 		isOnline: true,
 		place: "Lagos, Ikeja",
 		unreadCount: 3,

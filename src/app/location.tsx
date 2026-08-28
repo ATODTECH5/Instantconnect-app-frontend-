@@ -8,6 +8,7 @@ import PinIcon from "@/assets/map/pin.svg";
 import { LocationCard } from "@/components/map/location-card";
 import { MapSearchBar } from "@/components/map/map-search-bar";
 import { MapSurface } from "@/components/map/map-surface";
+import { FormErrorBanner } from "@/components/ui/form-error-banner";
 import { LoadingOverlay } from "@/components/ui/loading-overlay";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { SecondaryButton } from "@/components/ui/secondary-button";
@@ -21,6 +22,8 @@ import {
 	type Coordinates,
 	type ResolvedAddress,
 } from "@/features/location/geocoding";
+import { useUpdateProfile } from "@/features/profile/use-profile";
+import { describeError } from "@/lib/api/api-error";
 
 const PIN_WIDTH = 28;
 const PIN_HEIGHT = 36;
@@ -29,6 +32,7 @@ type Phase = "requesting" | "ready" | "denied" | "blocked";
 
 export default function LocationScreen() {
 	const insets = useSafeAreaInsets();
+	const updateProfile = useUpdateProfile();
 
 	const [phase, setPhase] = useState<Phase>("requesting");
 	const [center, setCenter] = useState<Coordinates>(FALLBACK_COORDINATES);
@@ -38,6 +42,7 @@ export default function LocationScreen() {
 	const [addressError, setAddressError] = useState<string | null>(null);
 	const [isSearching, setIsSearching] = useState(false);
 	const [searchError, setSearchError] = useState<string | null>(null);
+	const [saveError, setSaveError] = useState<string | null>(null);
 
 	// Guards against a slow geocode for an old pin overwriting a newer one.
 	const requestIdRef = useRef(0);
@@ -153,17 +158,26 @@ export default function LocationScreen() {
 		Linking.openSettings().catch(() => {});
 	}, []);
 
-	const handleSelect = useCallback(() => {
-		// The chosen point belongs on the account, which the API does not accept
-		// yet, so it is carried into the app rather than dropped here.
-		router.replace({
-			pathname: "/(tabs)",
-			params: {
-				latitude: String(pin.latitude),
-				longitude: String(pin.longitude),
-			},
-		});
-	}, [pin]);
+	/**
+	 * Only the point is written. `locationLabel` stays whatever the user typed in
+	 * Edit Profile, since the resolved street line is a long one-off address
+	 * rather than the short area label that field renders.
+	 */
+	const handleSelect = useCallback(async () => {
+		setSaveError(null);
+
+		try {
+			await updateProfile.mutateAsync({
+				latitude: pin.latitude,
+				longitude: pin.longitude,
+			});
+		} catch (cause) {
+			if (isMountedRef.current) setSaveError(describeError(cause));
+			return;
+		}
+
+		router.replace("/(tabs)");
+	}, [pin, updateProfile]);
 
 	const handleSkip = useCallback(() => router.replace("/(tabs)"), []);
 
@@ -221,13 +235,16 @@ export default function LocationScreen() {
 						{ paddingBottom: insets.bottom + Spacing.three },
 					]}
 				>
+					{saveError ? <FormErrorBanner message={saveError} /> : null}
+
 					<LocationCard address={address} error={addressError} loading={isResolving} />
 
 					<PrimaryButton
 						accessibilityHint="Uses the pinned spot to find events and people near you"
 						disabled={isResolving}
 						label="Select Location"
-						onPress={handleSelect}
+						loading={updateProfile.isPending}
+						onPress={() => void handleSelect()}
 					/>
 				</View>
 			</View>

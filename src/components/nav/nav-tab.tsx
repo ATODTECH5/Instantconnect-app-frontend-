@@ -3,12 +3,14 @@ import type { FC } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { SvgProps } from "react-native-svg";
 
-import { Brand, BrandGradient, Gap, Ink, MinTapTarget, Type } from "@/constants/theme";
+import { Brand, BrandGradient, Ink, MinTapTarget, Type } from "@/constants/theme";
 
-const ICON_SIZE = 22;
-const FAB_SIZE = 56;
+const ICON_SIZE = 24;
+const FAB_SIZE = 60;
 const FAB_RING = 4;
 const FAB_ICON = 24;
+/** The frame sets 3pt between a tab's icon and its label, off the 4pt scale. */
+const LABEL_GAP = 3;
 
 export type NavTabProps = TabTriggerSlotProps & {
 	Icon: FC<SvgProps>;
@@ -51,7 +53,7 @@ export function NavTab({
 			style={({ pressed }) => [styles.slot, pressed && styles.pressed]}
 		>
 			<Icon
-				color={isFocused ? Brand.purple : Ink.label}
+				color={isFocused ? Brand.purple : Ink.meta}
 				height={ICON_SIZE}
 				width={ICON_SIZE}
 			/>
@@ -68,7 +70,7 @@ const styles = StyleSheet.create({
 		flex: 1,
 		alignItems: "center",
 		justifyContent: "center",
-		gap: Gap.tight,
+		gap: LABEL_GAP,
 		minHeight: MinTapTarget,
 	},
 	floatingSlot: {
@@ -89,10 +91,12 @@ const styles = StyleSheet.create({
 	},
 	label: {
 		...Type.tabLabel,
-		color: Ink.label,
+		color: Ink.meta,
 	},
+	// The frame darkens the active label rather than tinting it; only the icon
+	// carries the brand colour.
 	labelFocused: {
-		color: Brand.purple,
+		color: Ink.body,
 	},
 	pressed: {
 		opacity: 0.7,

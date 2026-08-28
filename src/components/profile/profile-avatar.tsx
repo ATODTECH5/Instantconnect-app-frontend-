@@ -1,8 +1,8 @@
-import { Image } from "expo-image";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 
 import CameraIcon from "@/assets/profile/camera.svg";
-import { Brand, BrandGradient, Ink, Radius, Type } from "@/constants/theme";
+import { AvatarImage } from "@/components/ui/avatar-image";
+import { Brand, BrandGradient, Ink, Radius } from "@/constants/theme";
 
 const RING_WIDTH = 3;
 const BADGE_SIZE = 32;
@@ -10,23 +10,11 @@ const BADGE_ICON = 18;
 
 export type ProfileAvatarProps = {
 	uri: string | null;
-	/** Falls back to initials, so a profile without a photo still reads as a person. */
 	fullName: string;
 	size: number;
 	onPressCamera?: () => void;
 	isBusy?: boolean;
 };
-
-function initialsOf(fullName: string): string {
-	const initials = fullName
-		.split(" ")
-		.filter(Boolean)
-		.slice(0, 2)
-		.map((part) => part[0]?.toUpperCase() ?? "")
-		.join("");
-
-	return initials || "?";
-}
 
 export function ProfileAvatar({
 	uri,
@@ -39,29 +27,8 @@ export function ProfileAvatar({
 
 	return (
 		<View style={{ width: size, height: size }}>
-			<View
-				style={[styles.ring, { width: size, height: size, borderRadius: size / 2 }]}
-			>
-				{uri ? (
-					<Image
-						accessibilityIgnoresInvertColors
-						contentFit="cover"
-						source={{ uri }}
-						style={{ width: inner, height: inner, borderRadius: inner / 2 }}
-						transition={150}
-					/>
-				) : (
-					<View
-						style={[
-							styles.fallback,
-							{ width: inner, height: inner, borderRadius: inner / 2 },
-						]}
-					>
-						<Text style={[styles.initials, { fontSize: inner * 0.34 }]}>
-							{initialsOf(fullName)}
-						</Text>
-					</View>
-				)}
+			<View style={[styles.ring, { width: size, height: size, borderRadius: size / 2 }]}>
+				<AvatarImage fullName={fullName} size={inner} uri={uri} />
 			</View>
 
 			{onPressCamera ? (
@@ -87,15 +54,6 @@ const styles = StyleSheet.create({
 		alignItems: "center",
 		justifyContent: "center",
 		...BrandGradient,
-	},
-	fallback: {
-		alignItems: "center",
-		justifyContent: "center",
-		backgroundColor: Brand.purpleSurface,
-	},
-	initials: {
-		fontFamily: Type.profileName.fontFamily,
-		color: Brand.purple,
 	},
 	badge: {
 		position: "absolute",
