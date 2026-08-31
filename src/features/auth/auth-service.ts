@@ -21,6 +21,7 @@ export async function createAccount(input: SignUpInput): Promise<{ email: string
 			fullName: input.fullName,
 			email: input.email,
 			phone: toE164(input.phone),
+			dateOfBirth: input.dateOfBirth,
 			password: input.password,
 			termsAccepted: input.termsAccepted,
 		},

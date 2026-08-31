@@ -11,9 +11,10 @@ import { GradientSpinner } from "@/components/ui/gradient-spinner";
 import { SearchField } from "@/components/ui/search-field";
 import { StateMessage } from "@/components/ui/state-message";
 import { Gap, Ink, MaxColumnWidth, Spacing, Type } from "@/constants/theme";
-import { type PersonProfile } from "@/features/discover/discover-feed";
+import type { ApiNearbyPerson } from "@/lib/api/discovery-schema";
+import { connectActionFor } from "@/features/discover/connect-action";
+import { useConnectRequests } from "@/features/discover/use-connect-requests";
 import { useDiscoverPeople } from "@/features/discover/use-discover";
-import { useConnectRequests } from "@/features/home/use-connect-requests";
 import { CATEGORIES, findCategory } from "@/features/reference/categories";
 import { useNavBarInset } from "@/hooks/use-nav-bar-inset";
 
@@ -25,7 +26,7 @@ const COLUMNS = 2;
 export default function DiscoverScreen() {
 	const navInset = useNavBarInset();
 	const { width } = useWindowDimensions();
-	const { stateFor, connect } = useConnectRequests();
+	const { attemptFor, connect } = useConnectRequests();
 
 	const [categoryId, setCategoryId] = useState("general");
 	const [isPickingCategory, setIsPickingCategory] = useState(false);
@@ -53,16 +54,16 @@ export default function DiscoverScreen() {
 	const openPerson = useCallback((id: string) => router.push(`/person/${id}`), []);
 
 	const renderPerson = useCallback(
-		({ item }: { item: PersonProfile }) => (
+		({ item }: { item: ApiNearbyPerson }) => (
 			<PersonCard
-				connectionState={stateFor(item.id)}
+				action={connectActionFor(item.connectionState, attemptFor(item.id))}
 				onConnect={connect}
 				onOpen={openPerson}
 				person={item}
 				width={columnWidth}
 			/>
 		),
-		[columnWidth, connect, openPerson, stateFor],
+		[attemptFor, columnWidth, connect, openPerson],
 	);
 
 	function renderBody() {
@@ -101,7 +102,7 @@ export default function DiscoverScreen() {
 					styles.list,
 					{ paddingBottom: navInset + Spacing.four },
 				]}
-				data={people.data}
+				data={people.data.items}
 				keyExtractor={(person) => person.id}
 				numColumns={COLUMNS}
 				onRefresh={() => void people.refetch()}

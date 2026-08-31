@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { dateOfBirthSchema } from "@/features/auth/date-of-birth";
 import { passwordSchema } from "@/features/auth/password-rules";
 
 /** Local 0XXXXXXXXXX or international +234XXXXXXXXXX, spaces and dashes allowed. */
@@ -19,6 +20,7 @@ export const signUpSchema = z.object({
 		.string()
 		.transform(stripSeparators)
 		.pipe(z.string().regex(NIGERIAN_PHONE, "Enter a valid Nigerian phone number")),
+	dateOfBirth: dateOfBirthSchema,
 	password: passwordSchema,
 	termsAccepted: z.boolean().refine((accepted) => accepted, "Accept the terms to continue"),
 });

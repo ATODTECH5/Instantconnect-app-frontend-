@@ -5,7 +5,7 @@ import { MeetupCard } from "@/components/search/meetup-card";
 import { PersonRow } from "@/components/search/person-row";
 import { PlaceRow } from "@/components/search/place-row";
 import { Gap, MaxColumnWidth, Spacing } from "@/constants/theme";
-import type { ConnectionState } from "@/features/home/use-connect-requests";
+import type { SearchConnectState } from "@/features/search/use-search-connect";
 import type {
 	SearchMeetup,
 	SearchPerson,
@@ -61,7 +61,7 @@ export function buildSections(results: SearchResults, showCounts: boolean): Resu
 
 export type ResultSectionsProps = {
 	sections: ResultSection[];
-	connectionFor: (id: string) => ConnectionState;
+	connectionFor: (id: string) => SearchConnectState;
 	joinStateFor: (id: string) => JoinState;
 	onOpenPerson: (id: string) => void;
 	onConnect: (id: string) => void;

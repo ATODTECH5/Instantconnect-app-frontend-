@@ -14,29 +14,35 @@ import {
 	Spacing,
 	Type,
 } from "@/constants/theme";
-import type { NearbyPerson } from "@/features/home/home-feed";
-import type { ConnectionState } from "@/features/home/use-connect-requests";
+import {
+	CONNECT_LABEL,
+	isConnectPressable,
+	type ConnectAction,
+} from "@/features/discover/connect-action";
+import type { ApiNearbyPerson } from "@/lib/api/discovery-schema";
 import { formatDistance } from "@/utils/format";
 
 export const PERSON_CARD_ASPECT = 171 / 212;
 
 const BADGE_ICON = 12;
-const DOT_SIZE = 8;
-const DOT_RING = 1.5;
 const CONNECT_MIN_HEIGHT = 32;
 const CONNECT_HIT_SLOP = 8;
 
-const CONNECT_LABEL: Record<ConnectionState, string> = {
-	idle: "Connect",
-	pending: "Sending",
-	sent: "Requested",
-	failed: "Try again",
-};
+function initialsOf(fullName: string): string {
+	const initials = fullName
+		.split(" ")
+		.filter(Boolean)
+		.slice(0, 2)
+		.map((part) => part[0]?.toUpperCase() ?? "")
+		.join("");
+
+	return initials || "?";
+}
 
 export type PersonCardProps = {
-	person: NearbyPerson;
+	person: ApiNearbyPerson;
 	width: number;
-	connectionState: ConnectionState;
+	action: ConnectAction;
 	onOpen: (id: string) => void;
 	onConnect: (id: string) => void;
 };
@@ -44,30 +50,41 @@ export type PersonCardProps = {
 export const PersonCard = memo(function PersonCard({
 	person,
 	width,
-	connectionState,
+	action,
 	onOpen,
 	onConnect,
 }: PersonCardProps) {
-	const { id, name, age, category, role, distanceKm, photo, isVerified, isOnline } = person;
-	const meta = `${category} • ${formatDistance(distanceKm)}`;
-	const isConnectInert = connectionState === "pending" || connectionState === "sent";
+	const { id, fullName, age, category, occupation, distanceKm, avatarUrl, isVerified } = person;
+
+	const heading = age === null ? fullName : `${fullName}, ${age}`;
+	const meta = [category?.label, formatDistance(distanceKm)].filter(Boolean).join(" • ");
+	const role = occupation?.label ?? "";
+	const canPress = isConnectPressable(action);
 
 	return (
 		<GradientFrame radius={Radius.media} style={{ width, aspectRatio: PERSON_CARD_ASPECT }}>
 			<Pressable
 				accessibilityHint="Opens this profile"
-				accessibilityLabel={`${name}, ${age}. ${meta}. ${role}${isVerified ? ". Verified" : ""}`}
+				accessibilityLabel={[heading, meta, role, isVerified ? "Verified" : ""]
+					.filter(Boolean)
+					.join(". ")}
 				accessibilityRole="button"
 				onPress={() => onOpen(id)}
 				style={styles.pressable}
 			>
-				<Image
-					accessibilityIgnoresInvertColors
-					contentFit="cover"
-					source={photo}
-					style={AbsoluteFill}
-					transition={200}
-				/>
+				{avatarUrl ? (
+					<Image
+						accessibilityIgnoresInvertColors
+						contentFit="cover"
+						source={{ uri: avatarUrl }}
+						style={AbsoluteFill}
+						transition={200}
+					/>
+				) : (
+					<View style={[AbsoluteFill, styles.placeholder]}>
+						<Text style={styles.initials}>{initialsOf(fullName)}</Text>
+					</View>
+				)}
 
 				<View style={[AbsoluteFill, styles.scrim]} />
 
@@ -82,45 +99,41 @@ export const PersonCard = memo(function PersonCard({
 
 							<Text style={styles.badgeLabel}>User Verified</Text>
 						</View>
-					) : (
-						<View />
-					)}
-
-					{isOnline ? <View style={styles.dot} /> : null}
+					) : null}
 				</View>
 
 				<View style={styles.caption}>
 					<Text numberOfLines={1} style={styles.name}>
-						{name}, {age}
+						{heading}
 					</Text>
 
-					<Text numberOfLines={1} style={styles.meta}>
-						{meta}
-					</Text>
+					{meta.length > 0 ? (
+						<Text numberOfLines={1} style={styles.meta}>
+							{meta}
+						</Text>
+					) : null}
 
-					<Text numberOfLines={1} style={styles.meta}>
-						{role}
-					</Text>
+					{role.length > 0 ? (
+						<Text numberOfLines={1} style={styles.meta}>
+							{role}
+						</Text>
+					) : null}
 				</View>
 			</Pressable>
 
 			<Pressable
-				accessibilityHint={`Sends ${name} a connection request`}
-				accessibilityLabel={`${CONNECT_LABEL[connectionState]}, ${name}`}
+				accessibilityHint={
+					canPress ? `Sends ${fullName} a connection request` : undefined
+				}
+				accessibilityLabel={`${CONNECT_LABEL[action]}, ${fullName}`}
 				accessibilityRole="button"
-				accessibilityState={{
-					disabled: isConnectInert,
-					busy: connectionState === "pending",
-				}}
-				disabled={isConnectInert}
+				accessibilityState={{ disabled: !canPress, busy: action === "sending" }}
+				disabled={!canPress}
 				hitSlop={CONNECT_HIT_SLOP}
 				onPress={() => onConnect(id)}
-				style={({ pressed }) => [
-					styles.connect,
-					pressed && !isConnectInert && styles.pressed,
-				]}
+				style={({ pressed }) => [styles.connect, pressed && canPress && styles.pressed]}
 			>
-				<Text style={styles.connectLabel}>{CONNECT_LABEL[connectionState]}</Text>
+				<Text style={styles.connectLabel}>{CONNECT_LABEL[action]}</Text>
 			</Pressable>
 		</GradientFrame>
 	);
@@ -131,6 +144,15 @@ const styles = StyleSheet.create({
 		flex: 1,
 		justifyContent: "space-between",
 		padding: Gap.card,
+	},
+	placeholder: {
+		alignItems: "center",
+		justifyContent: "center",
+		backgroundColor: Brand.purpleSurface,
+	},
+	initials: {
+		...Type.profileName,
+		color: Brand.purple,
 	},
 	scrim: {
 		...MediaScrim,
@@ -154,14 +176,6 @@ const styles = StyleSheet.create({
 	badgeLabel: {
 		...Type.badgeLabel,
 		color: Brand.onBrand,
-	},
-	dot: {
-		width: DOT_SIZE,
-		height: DOT_SIZE,
-		borderRadius: DOT_SIZE / 2,
-		backgroundColor: Ink.online,
-		borderWidth: DOT_RING,
-		borderColor: Ink.surface,
 	},
 	caption: {
 		gap: Spacing.half,
