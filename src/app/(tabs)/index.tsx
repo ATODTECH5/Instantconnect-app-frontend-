@@ -15,8 +15,10 @@ import { SectionHeader } from "@/components/home/section-header";
 import { GradientSpinner } from "@/components/ui/gradient-spinner";
 import { StateMessage } from "@/components/ui/state-message";
 import { Brand, Gap, Ink, MaxColumnWidth, Spacing, Type } from "@/constants/theme";
-import type { NearbyEvent, NearbyPerson } from "@/features/home/home-feed";
-import { useConnectRequests } from "@/features/home/use-connect-requests";
+import { connectActionFor } from "@/features/discover/connect-action";
+import { useConnectRequests } from "@/features/discover/use-connect-requests";
+import type { NearbyEvent } from "@/features/home/home-feed";
+import type { ApiNearbyPerson } from "@/lib/api/discovery-schema";
 import { useHomeFeed } from "@/features/home/use-home-feed";
 import { useProfile } from "@/features/profile/use-profile";
 import { useCurrentUser } from "@/features/user/use-current-user";
@@ -50,7 +52,7 @@ export default function HomeScreen() {
 	const { status, feed, error, refreshing, reload, refresh } = useHomeFeed();
 	const { data: user } = useCurrentUser();
 	const { data: profile } = useProfile();
-	const { stateFor, connect } = useConnectRequests();
+	const { attemptFor, connect } = useConnectRequests();
 	const { horizontal, vertical } = useDesignScale();
 	const navInset = useNavBarInset();
 
@@ -83,16 +85,16 @@ export default function HomeScreen() {
 	const openPerson = useCallback((id: string) => router.push(`/person/${id}`), []);
 
 	const renderPerson = useCallback(
-		(person: NearbyPerson) => (
+		(person: ApiNearbyPerson) => (
 			<PersonCard
-				connectionState={stateFor(person.id)}
+				action={connectActionFor(person.connectionState, attemptFor(person.id))}
 				onConnect={connect}
 				onOpen={openPerson}
 				person={person}
 				width={personWidth}
 			/>
 		),
-		[connect, openPerson, personWidth, stateFor],
+		[attemptFor, connect, openPerson, personWidth],
 	);
 
 	const renderEvent = useCallback(
@@ -151,11 +153,11 @@ export default function HomeScreen() {
 						<HomeHeader
 							avatarUrl={profile?.avatarUrl ?? null}
 							fullName={avatarName}
-							isOnline={feed.isOnline}
+							isOnline
 							onChangePlace={() => router.push("/location")}
 							onOpenNotifications={() => router.push("/notifications")}
 							onOpenProfile={() => router.push("/profile")}
-							place={feed.place}
+							place={feed.place ?? "Set your location"}
 							unreadCount={feed.unreadCount}
 						/>
 

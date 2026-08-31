@@ -1,19 +1,30 @@
 import { useQuery, type UseQueryResult } from "@tanstack/react-query";
 
 import {
-	fetchDiscoverPeople,
+	fetchNearbyPeople,
 	fetchPersonProfile,
-	type PersonProfile,
-} from "@/features/discover/discover-feed";
+	type NearbyQuery,
+} from "@/features/discover/discovery-service";
+import type { ApiDiscoveryPage, ApiPersonProfile } from "@/lib/api/discovery-schema";
 
-export function useDiscoverPeople(categoryId: string): UseQueryResult<PersonProfile[]> {
+/** The grid asks for a whole category at once rather than paging. */
+const GRID_PAGE_SIZE = 50;
+
+export function useDiscoverPeople(categoryId: string): UseQueryResult<ApiDiscoveryPage> {
 	return useQuery({
-		queryKey: ["discovery", categoryId],
-		queryFn: () => fetchDiscoverPeople(categoryId),
+		queryKey: ["discovery", "people", { categoryId }],
+		queryFn: () => fetchNearbyPeople({ categoryId, limit: GRID_PAGE_SIZE }),
 	});
 }
 
-export function usePersonProfile(id: string): UseQueryResult<PersonProfile> {
+export function useNearbyPeople(query: NearbyQuery): UseQueryResult<ApiDiscoveryPage> {
+	return useQuery({
+		queryKey: ["discovery", "people", query],
+		queryFn: () => fetchNearbyPeople(query),
+	});
+}
+
+export function usePersonProfile(id: string): UseQueryResult<ApiPersonProfile> {
 	return useQuery({
 		queryKey: ["discovery", "person", id],
 		queryFn: () => fetchPersonProfile(id),

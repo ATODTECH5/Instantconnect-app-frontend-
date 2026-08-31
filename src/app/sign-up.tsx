@@ -12,6 +12,7 @@ import { FormField } from "@/components/ui/form-field";
 import { LabelledDivider } from "@/components/ui/labelled-divider";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { Brand, Ink, Spacing, Type } from "@/constants/theme";
+import { maskDateOfBirth } from "@/features/auth/date-of-birth";
 import { useSignUpDraft } from "@/features/auth/sign-up-draft";
 import { signUpSchema, type SignUpInput, type SignUpValues } from "@/features/auth/sign-up-schema";
 
@@ -21,6 +22,7 @@ const DEFAULT_VALUES: SignUpValues = {
 	fullName: "",
 	email: "",
 	phone: "",
+	dateOfBirth: "",
 	password: "",
 	termsAccepted: false,
 };
@@ -29,6 +31,7 @@ export default function SignUpScreen() {
 	const { setDraft } = useSignUpDraft();
 	const emailRef = useRef<TextInput>(null);
 	const phoneRef = useRef<TextInput>(null);
+	const dateOfBirthRef = useRef<TextInput>(null);
 	const passwordRef = useRef<TextInput>(null);
 
 	const {
@@ -129,11 +132,32 @@ export default function SignUpScreen() {
 								label="Phone No"
 								onBlur={onBlur}
 								onChangeText={onChange}
-								onSubmitEditing={() => passwordRef.current?.focus()}
+								onSubmitEditing={() => dateOfBirthRef.current?.focus()}
 								placeholder="Enter phone no"
 								ref={phoneRef}
 								returnKeyType="next"
 								textContentType="telephoneNumber"
+								value={value}
+							/>
+						)}
+					/>
+
+					<Controller
+						control={control}
+						name="dateOfBirth"
+						render={({ field: { onChange, onBlur, value } }) => (
+							<FormField
+								error={errors.dateOfBirth?.message}
+								inputMode="numeric"
+								keyboardType="number-pad"
+								label="Date of Birth"
+								maxLength={10}
+								onBlur={onBlur}
+								onChangeText={(entry) => onChange(maskDateOfBirth(entry))}
+								onSubmitEditing={() => passwordRef.current?.focus()}
+								placeholder="DD/MM/YYYY"
+								ref={dateOfBirthRef}
+								returnKeyType="next"
 								value={value}
 							/>
 						)}

@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import VerifiedSolidIcon from "@/assets/search/verified-solid.svg";
 import { Brand, Gap, Ink, MinTapTarget, Radius, Spacing, Type } from "@/constants/theme";
-import type { ConnectionState } from "@/features/home/use-connect-requests";
+import type { SearchConnectState } from "@/features/search/use-search-connect";
 import type { SearchPerson } from "@/features/search/search-catalog";
 import { formatDistance } from "@/utils/format";
 
@@ -12,7 +12,7 @@ const AVATAR = 52;
 const BADGE = 16;
 const CONNECT_MIN_HEIGHT = 40;
 
-const CONNECT_LABEL: Record<ConnectionState, string> = {
+const CONNECT_LABEL: Record<SearchConnectState, string> = {
 	idle: "Connect",
 	pending: "Sending",
 	sent: "Requested",
@@ -21,7 +21,7 @@ const CONNECT_LABEL: Record<ConnectionState, string> = {
 
 export type PersonRowProps = {
 	person: SearchPerson;
-	connectionState: ConnectionState;
+	connectionState: SearchConnectState;
 	onOpen: (id: string) => void;
 	onConnect: (id: string) => void;
 };

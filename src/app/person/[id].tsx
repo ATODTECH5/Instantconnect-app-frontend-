@@ -21,13 +21,13 @@ import {
 	Spacing,
 	Type,
 } from "@/constants/theme";
-import type { PersonProfile } from "@/features/discover/discover-feed";
+import type { ApiPersonProfile } from "@/lib/api/discovery-schema";
 import { usePersonProfile } from "@/features/discover/use-discover";
 import { formatDistance } from "@/utils/format";
 
 const VERIFIED_SIZE = 24;
-const DOT_SIZE = 14;
 const SCRIM_HEIGHT = 325;
+const PHOTO_INITIALS_SIZE = 96;
 
 export default function PersonScreen() {
 	const { id } = useLocalSearchParams<{ id: string }>();
@@ -66,9 +66,20 @@ export default function PersonScreen() {
 }
 
 type PersonDetailsProps = {
-	person: PersonProfile;
+	person: ApiPersonProfile;
 	onBack: () => void;
 };
+
+function initialsOf(fullName: string): string {
+	const initials = fullName
+		.split(" ")
+		.filter(Boolean)
+		.slice(0, 2)
+		.map((part) => part[0]?.toUpperCase() ?? "")
+		.join("");
+
+	return initials || "?";
+}
 
 function PersonDetails({ person, onBack }: PersonDetailsProps) {
 	const distance = formatDistance(person.distanceKm);
@@ -77,14 +88,20 @@ function PersonDetails({ person, onBack }: PersonDetailsProps) {
 		<View style={styles.screen}>
 			<StatusBar style="light" />
 
-			<Image
-				accessibilityIgnoresInvertColors
-				alt={`${person.name}'s photo`}
-				contentFit="cover"
-				source={person.photo}
-				style={AbsoluteFill}
-				transition={200}
-			/>
+			{person.avatarUrl ? (
+				<Image
+					accessibilityIgnoresInvertColors
+					alt={`${person.fullName}'s photo`}
+					contentFit="cover"
+					source={{ uri: person.avatarUrl }}
+					style={AbsoluteFill}
+					transition={200}
+				/>
+			) : (
+				<View style={[AbsoluteFill, styles.photoFallback]}>
+					<Text style={styles.photoInitials}>{initialsOf(person.fullName)}</Text>
+				</View>
+			)}
 
 			<View pointerEvents="none" style={styles.scrim} />
 
@@ -100,11 +117,7 @@ function PersonDetails({ person, onBack }: PersonDetailsProps) {
 						Discover
 					</Text>
 
-					<View style={styles.headerEnd}>
-						{person.isOnline ? (
-							<View accessibilityLabel="Online now" style={styles.dot} />
-						) : null}
-					</View>
+					<View style={styles.headerEnd} />
 				</View>
 
 				<ScrollView
@@ -117,18 +130,22 @@ function PersonDetails({ person, onBack }: PersonDetailsProps) {
 						<View style={styles.identity}>
 							<View style={styles.tags}>
 								<Text style={styles.name}>
-									{person.name}, {person.age}
+									{person.age === null
+										? person.fullName
+										: `${person.fullName}, ${person.age}`}
 								</Text>
 
 								<View style={styles.metaRow}>
-									<Text style={styles.category}>{person.category}</Text>
+									<Text style={styles.category}>{person.category?.label ?? ""}</Text>
 
 									<View style={styles.metaDot} />
 
 									<Text style={styles.distance}>{distance}</Text>
 								</View>
 
-								<Text style={styles.role}>{person.role}</Text>
+								{person.occupation ? (
+									<Text style={styles.role}>{person.occupation.label}</Text>
+								) : null}
 							</View>
 
 							{person.isVerified ? (
@@ -141,22 +158,24 @@ function PersonDetails({ person, onBack }: PersonDetailsProps) {
 							) : null}
 						</View>
 
-						<View style={styles.bio}>
-							<Text style={styles.bioText}>{person.bio}</Text>
-						</View>
+						{person.bio ? (
+							<View style={styles.bio}>
+								<Text style={styles.bioText}>{person.bio}</Text>
+							</View>
+						) : null}
 
 						{person.hobbies.length > 0 ? (
 							<View style={styles.hobbies}>
 								{person.hobbies.map((hobby) => (
-									<View key={hobby} style={styles.hobby}>
-										<Text style={styles.hobbyLabel}>{hobby}</Text>
+									<View key={hobby.id} style={styles.hobby}>
+										<Text style={styles.hobbyLabel}>{hobby.label}</Text>
 									</View>
 								))}
 							</View>
 						) : null}
 
 						<PrimaryButton
-							accessibilityHint={`Opens a conversation with ${person.name}`}
+							accessibilityHint={`Opens a conversation with ${person.fullName}`}
 							label="Send Message"
 							onPress={() => router.push("/chat")}
 							tone="gradient"
@@ -189,6 +208,22 @@ const styles = StyleSheet.create({
 	},
 	// The frame blurs the foot of the photo. A gradient scrim is what the cards
 	// already use for the same job, and it costs no native blur pass.
+	/**
+	 * Deliberately the dark brand purple rather than the pale surface the cards
+	 * use: this screen lays white type and a darkening scrim straight over the
+	 * photo, so a light stand-in would leave the name unreadable.
+	 */
+	photoFallback: {
+		alignItems: "center",
+		justifyContent: "center",
+		backgroundColor: Brand.purple,
+	},
+	photoInitials: {
+		...Type.profileName,
+		fontSize: PHOTO_INITIALS_SIZE,
+		lineHeight: PHOTO_INITIALS_SIZE * 1.1,
+		color: Brand.onBrand,
+	},
 	scrim: {
 		position: "absolute",
 		left: 0,
@@ -217,14 +252,6 @@ const styles = StyleSheet.create({
 	headerEnd: {
 		flex: 1,
 		alignItems: "flex-end",
-	},
-	dot: {
-		width: DOT_SIZE,
-		height: DOT_SIZE,
-		borderRadius: DOT_SIZE / 2,
-		backgroundColor: Ink.online,
-		borderWidth: 2,
-		borderColor: Ink.surface,
 	},
 	content: {
 		flexGrow: 1,

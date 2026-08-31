@@ -19,7 +19,7 @@ import { PromoCard } from "@/components/ui/promo-card";
 import { SearchField } from "@/components/ui/search-field";
 import { StateMessage } from "@/components/ui/state-message";
 import { Gap, Ink, MaxColumnWidth, Spacing, Type } from "@/constants/theme";
-import { useConnectRequests } from "@/features/home/use-connect-requests";
+import { useSearchConnect } from "@/features/search/use-search-connect";
 import {
 	countActiveFilters,
 	decodeFilters,
@@ -50,7 +50,7 @@ export default function SearchScreen() {
 
 	const navInset = useNavBarInset();
 	const { recents, remember, forget, clear } = useSearchHistory();
-	const { stateFor: connectionFor, connect } = useConnectRequests();
+	const { stateFor: connectionFor, connect } = useSearchConnect();
 	const { stateFor: joinStateFor, join } = useJoinMeetups();
 
 	const [query, setQuery] = useState(params.q ?? "");

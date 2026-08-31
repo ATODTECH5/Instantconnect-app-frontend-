@@ -1,19 +1,5 @@
 import type { ImageSourcePropType } from "react-native";
 
-import { PEOPLE } from "@/features/discover/discover-feed";
-
-export type NearbyPerson = {
-	id: string;
-	name: string;
-	age: number;
-	category: string;
-	role: string;
-	distanceKm: number;
-	photo: ImageSourcePropType;
-	isVerified: boolean;
-	isOnline: boolean;
-};
-
 export type NearbyEvent = {
 	id: string;
 	title: string;
@@ -23,27 +9,13 @@ export type NearbyEvent = {
 	photo: ImageSourcePropType;
 };
 
-export type HomeFeed = {
-	isOnline: boolean;
-	place: string;
-	unreadCount: number;
-	matchCount: number;
-	people: NearbyPerson[];
-	events: NearbyEvent[];
-};
-
 /**
- * Stand-in for the discovery API, mirroring `auth-service` so the screen's
- * loading, empty and error paths are exercisable before the backend exists.
- * Swapping this body for a real request is the only change the screen needs.
+ * Events are the last part of this screen with no endpoint behind them: there
+ * is no events table yet, so these stay a stand-in rather than an empty rail
+ * that would read as a bug. Delete this list the moment the events module
+ * lands; nothing else on Home is mocked any more.
  */
-const MOCK_LATENCY_MS = 900;
-
-export class HomeFeedError extends Error {}
-
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-const EVENTS: NearbyEvent[] = [
+export const EVENTS: NearbyEvent[] = [
 	{
 		id: "startup-founders",
 		title: "Startup Founders Meeting",
@@ -69,20 +41,3 @@ const EVENTS: NearbyEvent[] = [
 		photo: require("@/assets/onboarding/card-front.jpg"),
 	},
 ];
-
-export async function sendConnectionRequest(_personId: string): Promise<void> {
-	await delay(MOCK_LATENCY_MS);
-}
-
-export async function fetchHomeFeed(): Promise<HomeFeed> {
-	await delay(MOCK_LATENCY_MS);
-
-	return {
-		isOnline: true,
-		place: "Lagos, Ikeja",
-		unreadCount: 3,
-		matchCount: 18,
-		people: PEOPLE,
-		events: EVENTS,
-	};
-}
