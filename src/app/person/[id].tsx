@@ -26,6 +26,8 @@ import { usePersonProfile } from "@/features/discover/use-discover";
 import { formatDistance } from "@/utils/format";
 
 const VERIFIED_SIZE = 24;
+const DOT_SIZE = 14;
+const DOT_RING = 2;
 const SCRIM_HEIGHT = 325;
 const PHOTO_INITIALS_SIZE = 96;
 
@@ -117,7 +119,11 @@ function PersonDetails({ person, onBack }: PersonDetailsProps) {
 						Discover
 					</Text>
 
-					<View style={styles.headerEnd} />
+					<View style={styles.headerEnd}>
+						{person.isOnline ? (
+							<View accessibilityLabel="Online now" style={styles.dot} />
+						) : null}
+					</View>
 				</View>
 
 				<ScrollView
@@ -252,6 +258,14 @@ const styles = StyleSheet.create({
 	headerEnd: {
 		flex: 1,
 		alignItems: "flex-end",
+	},
+	dot: {
+		width: DOT_SIZE,
+		height: DOT_SIZE,
+		borderRadius: DOT_SIZE / 2,
+		backgroundColor: Ink.online,
+		borderWidth: DOT_RING,
+		borderColor: Ink.surface,
 	},
 	content: {
 		flexGrow: 1,

@@ -1,7 +1,7 @@
 import Constants from "expo-constants";
 
 const API_PREFIX = "/api/v1";
-const DEV_SERVER_PORT = 3000;
+const DEV_SERVER_PORT = 5001;
 
 export const API_TIMEOUT_MS = 15_000;
 
