@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import ArrowLeftIcon from "@/assets/auth/arrow-left.svg";
@@ -6,18 +7,21 @@ import { Gap, Ink, Radius, Type } from "@/constants/theme";
 const BUTTON_SIZE = 44;
 const ICON_SIZE = 24;
 
-export type SearchScreenHeaderProps = {
+export type ScreenHeaderProps = {
 	title: string;
 	onBack: () => void;
 	backLabel?: string;
+	/** Trailing control, such as the add button on Connections or Map on Visited Places. */
+	trailing?: ReactNode;
 };
 
-/** Circular back control plus screen title, on every search and filter frame. */
-export function SearchScreenHeader({
+/** Circular back control plus screen title, on every pushed frame. */
+export function ScreenHeader({
 	title,
 	onBack,
 	backLabel = "Go back",
-}: SearchScreenHeaderProps) {
+	trailing,
+}: ScreenHeaderProps) {
 	return (
 		<View style={styles.row}>
 			<Pressable
@@ -32,6 +36,8 @@ export function SearchScreenHeader({
 			<Text accessibilityRole="header" numberOfLines={1} style={styles.title}>
 				{title}
 			</Text>
+
+			{trailing ? <View style={styles.trailing}>{trailing}</View> : null}
 		</View>
 	);
 }
@@ -54,6 +60,9 @@ const styles = StyleSheet.create({
 		...Type.screenTitle,
 		flexShrink: 1,
 		color: Ink.title,
+	},
+	trailing: {
+		marginLeft: "auto",
 	},
 	pressed: {
 		opacity: 0.7,

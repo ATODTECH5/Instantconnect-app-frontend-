@@ -10,7 +10,7 @@ import { SectionHeader } from "@/components/home/section-header";
 import { PersonRow } from "@/components/search/person-row";
 import { PlaceRow } from "@/components/search/place-row";
 import { buildSections, ResultSections } from "@/components/search/result-sections";
-import { SearchScreenHeader } from "@/components/search/search-screen-header";
+import { ScreenHeader } from "@/components/nav/screen-header";
 import { SearchTermRow } from "@/components/search/search-term-row";
 import { ChipGroup } from "@/components/ui/chip-group";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -114,7 +114,7 @@ export default function SearchScreen() {
 
 	const header = (
 		<View style={styles.padded}>
-			<SearchScreenHeader onBack={goBack} title="Search" />
+			<ScreenHeader onBack={goBack} title="Search" />
 
 			<View style={styles.field}>
 				<SearchField

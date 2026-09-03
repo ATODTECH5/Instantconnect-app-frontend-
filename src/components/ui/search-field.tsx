@@ -13,7 +13,8 @@ export type SearchFieldProps = {
 	value: string;
 	onChangeText: (value: string) => void;
 	onSubmit: () => void;
-	onOpenFilters: () => void;
+	/** Omit on screens whose design has no filter control, such as Safety Connections. */
+	onOpenFilters?: () => void;
 	placeholder: string;
 	accessibilityLabel: string;
 	autoFocus?: boolean;
@@ -51,17 +52,19 @@ export function SearchField({
 				/>
 			</View>
 
-			<IconButton
-				Icon={SlidersIcon}
-				accessibilityHint="Opens filters for the results below"
-				accessibilityLabel="Filters"
-				badgeCount={filterCount}
-				height={FIELD_HEIGHT}
-				onPress={onOpenFilters}
-				radius={Radius.dialog}
-				tone="brand"
-				width={FILTER_WIDTH}
-			/>
+			{onOpenFilters ? (
+				<IconButton
+					Icon={SlidersIcon}
+					accessibilityHint="Opens filters for the results below"
+					accessibilityLabel="Filters"
+					badgeCount={filterCount}
+					height={FIELD_HEIGHT}
+					onPress={onOpenFilters}
+					radius={Radius.dialog}
+					tone="brand"
+					width={FILTER_WIDTH}
+				/>
+			) : null}
 		</View>
 	);
 }
