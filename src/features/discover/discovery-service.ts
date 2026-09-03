@@ -14,6 +14,7 @@ export type NearbyQuery = {
 	categoryId?: string;
 	radiusKm?: number;
 	verifiedOnly?: boolean;
+	onlineOnly?: boolean;
 	limit?: number;
 	offset?: number;
 };
@@ -24,6 +25,7 @@ function toSearch(query: NearbyQuery): string {
 	if (query.categoryId) params.set("categoryId", query.categoryId);
 	if (query.radiusKm !== undefined) params.set("radiusKm", String(query.radiusKm));
 	if (query.verifiedOnly) params.set("verifiedOnly", "true");
+	if (query.onlineOnly) params.set("onlineOnly", "true");
 	if (query.limit !== undefined) params.set("limit", String(query.limit));
 	if (query.offset !== undefined) params.set("offset", String(query.offset));
 

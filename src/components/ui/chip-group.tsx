@@ -45,6 +45,7 @@ export function ChipGroup({
 				contentContainerStyle={[styles.strip, { paddingHorizontal: edgeInset }]}
 				horizontal
 				showsHorizontalScrollIndicator={false}
+				style={styles.scroller}
 			>
 				{chips}
 			</ScrollView>
@@ -59,6 +60,13 @@ export function ChipGroup({
 }
 
 const styles = StyleSheet.create({
+	/**
+	 * A chip strip is one row tall. Without pinning its growth it absorbs the
+	 * leftover height of any flex parent and opens a gap above and below.
+	 */
+	scroller: {
+		flexGrow: 0,
+	},
 	wrap: {
 		flexDirection: "row",
 		flexWrap: "wrap",

@@ -25,6 +25,8 @@ import { formatDistance } from "@/utils/format";
 export const PERSON_CARD_ASPECT = 171 / 212;
 
 const BADGE_ICON = 12;
+const DOT_SIZE = 8;
+const DOT_RING = 1.5;
 const CONNECT_MIN_HEIGHT = 32;
 const CONNECT_HIT_SLOP = 8;
 
@@ -54,7 +56,8 @@ export const PersonCard = memo(function PersonCard({
 	onOpen,
 	onConnect,
 }: PersonCardProps) {
-	const { id, fullName, age, category, occupation, distanceKm, avatarUrl, isVerified } = person;
+	const { id, fullName, age, category, occupation, distanceKm, avatarUrl, isVerified, isOnline } =
+		person;
 
 	const heading = age === null ? fullName : `${fullName}, ${age}`;
 	const meta = [category?.label, formatDistance(distanceKm)].filter(Boolean).join(" • ");
@@ -65,7 +68,13 @@ export const PersonCard = memo(function PersonCard({
 		<GradientFrame radius={Radius.media} style={{ width, aspectRatio: PERSON_CARD_ASPECT }}>
 			<Pressable
 				accessibilityHint="Opens this profile"
-				accessibilityLabel={[heading, meta, role, isVerified ? "Verified" : ""]
+				accessibilityLabel={[
+					heading,
+					meta,
+					role,
+					isVerified ? "Verified" : "",
+					isOnline ? "Online now" : "",
+				]
 					.filter(Boolean)
 					.join(". ")}
 				accessibilityRole="button"
@@ -99,7 +108,11 @@ export const PersonCard = memo(function PersonCard({
 
 							<Text style={styles.badgeLabel}>User Verified</Text>
 						</View>
-					) : null}
+					) : (
+						<View />
+					)}
+
+					{isOnline ? <View style={styles.dot} /> : null}
 				</View>
 
 				<View style={styles.caption}>
@@ -176,6 +189,14 @@ const styles = StyleSheet.create({
 	badgeLabel: {
 		...Type.badgeLabel,
 		color: Brand.onBrand,
+	},
+	dot: {
+		width: DOT_SIZE,
+		height: DOT_SIZE,
+		borderRadius: DOT_SIZE / 2,
+		backgroundColor: Ink.online,
+		borderWidth: DOT_RING,
+		borderColor: Ink.surface,
 	},
 	caption: {
 		gap: Spacing.half,

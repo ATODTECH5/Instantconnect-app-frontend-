@@ -4,7 +4,7 @@ import { useCallback, useState } from "react";
 import { ScrollView, StyleSheet, Switch, Text, View } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { SearchScreenHeader } from "@/components/search/search-screen-header";
+import { ScreenHeader } from "@/components/nav/screen-header";
 import { ChipGroup } from "@/components/ui/chip-group";
 import { DistanceSlider } from "@/components/ui/distance-slider";
 import { PrimaryButton } from "@/components/ui/primary-button";
@@ -59,7 +59,7 @@ export default function FiltersScreen() {
 				showsVerticalScrollIndicator={false}
 			>
 				<View style={styles.column}>
-					<SearchScreenHeader onBack={goBack} title="Filter" />
+					<ScreenHeader onBack={goBack} title="Filter" />
 
 					<Field label="I'm looking for">
 						<ChipGroup

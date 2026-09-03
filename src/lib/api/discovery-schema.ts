@@ -27,6 +27,7 @@ export const nearbyPersonSchema = z.object({
 	avatarUrl: z.string().nullable(),
 	distanceKm: z.number(),
 	isVerified: z.boolean(),
+	isOnline: z.boolean(),
 	connectionState: connectionStateSchema,
 });
 
@@ -48,6 +49,7 @@ export const personProfileSchema = z.object({
 	photoUrls: z.array(z.string()),
 	distanceKm: z.number(),
 	isVerified: z.boolean(),
+	isOnline: z.boolean(),
 	connectionState: connectionStateSchema,
 });
 
