@@ -1,4 +1,4 @@
-name: Build on push to main
+name: Build and update on push to main
 
 on:
   push:
@@ -6,16 +6,34 @@ on:
       - main
 
 jobs:
+  fingerprint:
+    name: Fingerprint
+    type: fingerprint
+
+  get_android_build:
+    name: Check for existing Android build
+    needs: [fingerprint]
+    type: get-build
+    params:
+      fingerprint_hash: ${{ needs.fingerprint.outputs.android_fingerprint_hash }}
+      profile: preview
+
+  # Skipped when a build already matches the fingerprint, so JS only pushes do
+  # not spend ~45 minutes of build minutes producing an identical binary.
   build_android:
-    name: Build Android
+    name: Build Android APK
+    needs: [get_android_build]
+    if: ${{ !needs.get_android_build.outputs.build_id }}
     type: build
     params:
       platform: android
-      profile: production
+      profile: preview
 
-  build_ios:
-    name: Build iOS
-    type: build
+  # No `needs` on purpose: this must publish on every push, including the ones
+  # where build_android is skipped, since it is what reaches installed APKs.
+  publish_update:
+    name: Publish OTA update
+    type: update
     params:
-      platform: ios
-      profile: production
+      platform: android
+      branch: preview
