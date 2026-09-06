@@ -3,7 +3,12 @@ import Constants from "expo-constants";
 const API_PREFIX = "/api/v1";
 const DEV_SERVER_PORT = 5001;
 
-export const API_TIMEOUT_MS = 15_000;
+/**
+ * Render's free tier sleeps the API after ~15 minutes idle, and waking it was
+ * measured at 43s. A 15s timeout turned every cold start into a misleading
+ * "could not reach the server" error, so allow for the wake-up.
+ */
+export const API_TIMEOUT_MS = 60_000;
 
 /**
  * Refresh this far ahead of the access token's expiry so a request never leaves
