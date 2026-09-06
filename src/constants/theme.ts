@@ -11,6 +11,8 @@ export const Brand = {
 	violet: "#A136DD",
 	purple: "#9333EA",
 	purpleLight: "#A855F7",
+	/** Primary/200. Fills the small count badges, such as "6 Visits". */
+	purpleTint: "#E9D5FF",
 	purpleSoft: "#C084FC",
 	purpleSurface: "#F3E8FF",
 	purpleSurfaceSubtle: "#FAF5FF",
@@ -33,6 +35,12 @@ export const Ink = {
 	dangerSurface: "#F9E3E3",
 	/** Saved confirmation banner on the edit screens. */
 	success: "#16A34A",
+	/**
+	 * The safety indicator on a visited place, deliberately a different green
+	 * from `success`: one reports an outcome, the other reports a standing
+	 * safety rating.
+	 */
+	secure: "#10B981",
 	successSurface: "#F0FDF4",
 	successBorder: "#BBF7D0",
 	/** Chip on a step the user has started but not finished, such as KYC. */
