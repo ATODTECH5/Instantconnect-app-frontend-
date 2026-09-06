@@ -147,10 +147,16 @@ function AvatarOrbit({ avatar, progress }: { avatar: Avatar; progress: { value: 
 			[0, 360],
 			"clamp",
 		);
-		const heading = `${angle + swept}deg`;
+		const heading = angle + swept;
 		// Rotate out to the orbit position, then unwind so the face stays upright.
+		// Negate the number, not the string: a negative heading would otherwise
+		// build "--170deg", which Reanimated's native std::stod cannot parse.
 		return {
-			transform: [{ rotate: heading }, { translateX: radius }, { rotate: `-${heading}` }],
+			transform: [
+				{ rotate: `${heading}deg` },
+				{ translateX: radius },
+				{ rotate: `${-heading}deg` },
+			],
 		};
 	});
 
