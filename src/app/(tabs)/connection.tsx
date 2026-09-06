@@ -6,7 +6,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import PlusIcon from "@/assets/connections/plus-filled.svg";
 import { ConnectionRow } from "@/components/connections/connection-row";
+import { RegisteredEventCard } from "@/components/connections/registered-event-card";
 import { StoryRail } from "@/components/connections/story-rail";
+import { VisitedPlaceCard } from "@/components/connections/visited-place-card";
 import { SectionHeader } from "@/components/home/section-header";
 import { IconButton } from "@/components/ui/icon-button";
 import { ChipGroup, type ChipOption } from "@/components/ui/chip-group";
@@ -14,7 +16,9 @@ import { GradientSpinner } from "@/components/ui/gradient-spinner";
 import { StateMessage } from "@/components/ui/state-message";
 import { Gap, Ink, MaxColumnWidth, Spacing, Type } from "@/constants/theme";
 import { connectionMeta } from "@/features/connections/connection-meta";
+import { REGISTERED_EVENTS, eventsForTab } from "@/features/connections/registered-events";
 import { useConnections } from "@/features/connections/use-connections";
+import { VISITED_PLACES } from "@/features/connections/visited-places";
 import { useNavBarInset } from "@/hooks/use-nav-bar-inset";
 import { isApiError } from "@/lib/api/api-error";
 
@@ -29,11 +33,8 @@ const TABS: ChipOption[] = [
 	{ id: "community", label: "Community" },
 ];
 
-const PENDING_BACKEND: Record<string, string> = {
-	places: "Places you have visited will appear here once meetups are recorded.",
-	events: "Events you register for will appear here once events are built.",
-	community: "Communities will appear here once the community module is built.",
-};
+/** How many cards each tab previews before its See All takes over. */
+const TAB_PREVIEW_COUNT = 2;
 
 export default function ConnectionScreen() {
 	const navInset = useNavBarInset();
@@ -153,13 +154,57 @@ export default function ConnectionScreen() {
 					selectedId={tab}
 				/>
 
-				{tab === "people" ? (
-					renderPeople()
-				) : (
+				{tab === "people" ? renderPeople() : null}
+
+				{tab === "places" ? (
 					<View style={styles.padded}>
-						<StateMessage message={PENDING_BACKEND[tab] ?? ""} />
+						<SectionHeader
+							actionHint="Opens every visited place"
+							actionLabel="See All"
+							onPressAction={() => router.push("/connections/places")}
+							title="Visited Places"
+						/>
+
+						<View style={styles.cards}>
+							{VISITED_PLACES.slice(0, TAB_PREVIEW_COUNT).map((place) => (
+								<VisitedPlaceCard
+									key={place.id}
+									onOpen={() => router.push("/connections/places")}
+									place={place}
+								/>
+							))}
+						</View>
 					</View>
-				)}
+				) : null}
+
+				{tab === "events" ? (
+					<View style={styles.padded}>
+						<SectionHeader
+							actionHint="Opens every registered event"
+							actionLabel="See All"
+							onPressAction={() => router.push("/connections/events")}
+							title="Upcoming Events"
+						/>
+
+						<View style={styles.cards}>
+							{eventsForTab(REGISTERED_EVENTS, "upcoming")
+								.slice(0, TAB_PREVIEW_COUNT)
+								.map((event) => (
+									<RegisteredEventCard
+										event={event}
+										key={event.id}
+										onOpen={(eventId) => router.push(`/events/${eventId}`)}
+									/>
+								))}
+						</View>
+					</View>
+				) : null}
+
+				{tab === "community" ? (
+					<View style={styles.padded}>
+						<StateMessage message="Communities will appear here once the community module is built." />
+					</View>
+				) : null}
 			</ScrollView>
 		</SafeAreaView>
 	);
@@ -199,6 +244,9 @@ const styles = StyleSheet.create({
 	},
 	list: {
 		gap: Spacing.two,
+	},
+	cards: {
+		gap: Gap.card,
 	},
 	centre: {
 		flexGrow: 1,
