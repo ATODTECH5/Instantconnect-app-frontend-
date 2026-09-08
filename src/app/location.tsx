@@ -1,9 +1,10 @@
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AppState, Linking, StyleSheet, Text, View } from "react-native";
+import { AppState, Linking, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import ArrowLeftIcon from "@/assets/auth/arrow-left.svg";
 import PinIcon from "@/assets/map/pin.svg";
 import { LocationCard } from "@/components/map/location-card";
 import { MapSearchBar } from "@/components/map/map-search-bar";
@@ -12,7 +13,16 @@ import { FormErrorBanner } from "@/components/ui/form-error-banner";
 import { LoadingOverlay } from "@/components/ui/loading-overlay";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { SecondaryButton } from "@/components/ui/secondary-button";
-import { AbsoluteFill, Brand, Ink, MaxColumnWidth, Radius, Spacing, Type } from "@/constants/theme";
+import {
+	AbsoluteFill,
+	Brand,
+	Ink,
+	MaxColumnWidth,
+	MinTapTarget,
+	Radius,
+	Spacing,
+	Type,
+} from "@/constants/theme";
 import {
 	FALLBACK_COORDINATES,
 	getCurrentCoordinates,
@@ -27,12 +37,15 @@ import { describeError } from "@/lib/api/api-error";
 
 const PIN_WIDTH = 28;
 const PIN_HEIGHT = 36;
+const BACK_ICON = 24;
 
 type Phase = "requesting" | "ready" | "denied" | "blocked";
 
 export default function LocationScreen() {
 	const insets = useSafeAreaInsets();
 	const updateProfile = useUpdateProfile();
+	const { mode } = useLocalSearchParams<{ mode?: string }>();
+	const isEditing = mode === "edit";
 
 	const [phase, setPhase] = useState<Phase>("requesting");
 	const [center, setCenter] = useState<Coordinates>(FALLBACK_COORDINATES);
@@ -159,6 +172,19 @@ export default function LocationScreen() {
 	}, []);
 
 	/**
+	 * Onboarding replaces this screen with the app, since nothing above it is
+	 * worth returning to. Changing a saved place is pushed from Home, so it
+	 * returns to whoever pushed it. The stack cannot answer this on its own:
+	 * `get-started` pushes `sign-up`, which replaces itself with `sign-in`, so
+	 * `canGoBack()` is true on the onboarding pass too and would send a
+	 * first-time user back to Get Started instead of into the app.
+	 */
+	const dismiss = useCallback(() => {
+		if (isEditing && router.canGoBack()) router.back();
+		else router.replace("/(tabs)");
+	}, [isEditing]);
+
+	/**
 	 * Only the point is written. `locationLabel` stays whatever the user typed in
 	 * Edit Profile, since the resolved street line is a long one-off address
 	 * rather than the short area label that field renders.
@@ -176,10 +202,10 @@ export default function LocationScreen() {
 			return;
 		}
 
-		router.replace("/(tabs)");
-	}, [pin, updateProfile]);
+		dismiss();
+	}, [dismiss, pin, updateProfile]);
 
-	const handleSkip = useCallback(() => router.replace("/(tabs)"), []);
+	const handleSkip = useCallback(() => dismiss(), [dismiss]);
 
 	if (phase === "denied" || phase === "blocked") {
 		return (
@@ -215,7 +241,25 @@ export default function LocationScreen() {
 
 			<View pointerEvents="box-none" style={[styles.overlay, { paddingTop: insets.top }]}>
 				<View style={styles.column}>
-					<MapSearchBar busy={isSearching} onSearch={handleSearch} />
+					<View style={styles.topRow}>
+						{/* Only when changing a saved place. Onboarding has no earlier screen
+						    to return to, and its own way out is the notice's Not now. */}
+						{isEditing ? (
+							<Pressable
+								accessibilityHint="Returns without changing your saved location"
+								accessibilityLabel="Cancel"
+								accessibilityRole="button"
+								onPress={dismiss}
+								style={({ pressed }) => [styles.back, pressed && styles.pressed]}
+							>
+								<ArrowLeftIcon color={Ink.title} height={BACK_ICON} width={BACK_ICON} />
+							</Pressable>
+						) : null}
+
+						<View style={styles.searchFill}>
+							<MapSearchBar busy={isSearching} onSearch={handleSearch} />
+						</View>
+					</View>
 
 					{searchError ? (
 						<View style={styles.searchError}>
@@ -323,6 +367,29 @@ const styles = StyleSheet.create({
 		maxWidth: MaxColumnWidth,
 		paddingHorizontal: Spacing.three,
 		paddingTop: Spacing.two,
+	},
+	topRow: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: Spacing.two,
+	},
+	searchFill: {
+		flex: 1,
+	},
+	/**
+	 * The map swallows the iOS back swipe, so without this the edit path could
+	 * only be left by saving. Matches the circular control on pushed frames.
+	 */
+	back: {
+		width: MinTapTarget,
+		height: MinTapTarget,
+		alignItems: "center",
+		justifyContent: "center",
+		borderRadius: Radius.pill,
+		backgroundColor: Ink.glassOnLight,
+	},
+	pressed: {
+		opacity: 0.7,
 	},
 	spacer: {
 		flex: 1,

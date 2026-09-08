@@ -154,7 +154,9 @@ export default function HomeScreen() {
 							avatarUrl={profile?.avatarUrl ?? null}
 							fullName={avatarName}
 							isOnline
-							onChangePlace={() => router.push("/location")}
+							onChangePlace={() =>
+								router.push({ pathname: "/location", params: { mode: "edit" } })
+							}
 							onOpenNotifications={() => router.push("/notifications")}
 							onOpenProfile={() => router.push("/profile")}
 							place={feed.place ?? "Set your location"}

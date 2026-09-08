@@ -12,7 +12,12 @@ const DOT = 5;
 
 export type VisitedPlaceCardProps = {
 	place: VisitedPlace;
-	onOpen: (id: string) => void;
+	/**
+	 * Omitted while there is nowhere for a place to open. The card then renders
+	 * as plain content rather than a button that announces "Opens this place"
+	 * and does nothing, or worse, lands somewhere unrelated.
+	 */
+	onOpen?: (id: string) => void;
 };
 
 export const VisitedPlaceCard = memo(function VisitedPlaceCard({
@@ -21,16 +26,12 @@ export const VisitedPlaceCard = memo(function VisitedPlaceCard({
 }: VisitedPlaceCardProps) {
 	const visits = `${place.visitCount} ${place.visitCount === 1 ? "Visit" : "Visits"}`;
 
-	return (
-		<Pressable
-			accessibilityHint="Opens this place"
-			accessibilityLabel={`${place.name}. ${place.address}. ${visits}. Last visited ${place.lastVisitedLabel}${
-				place.isHighlySecure ? ". Highly secure" : ""
-			}`}
-			accessibilityRole="button"
-			onPress={() => onOpen(place.id)}
-			style={({ pressed }) => [styles.card, pressed && styles.pressed]}
-		>
+	const label = `${place.name}. ${place.address}. ${visits}. Last visited ${place.lastVisitedLabel}${
+		place.isHighlySecure ? ". Highly secure" : ""
+	}`;
+
+	const body = (
+		<>
 			<View style={styles.media}>
 				<Image
 					accessibilityIgnoresInvertColors
@@ -78,6 +79,26 @@ export const VisitedPlaceCard = memo(function VisitedPlaceCard({
 					) : null}
 				</View>
 			</View>
+		</>
+	);
+
+	if (!onOpen) {
+		return (
+			<View accessible accessibilityLabel={label} style={styles.card}>
+				{body}
+			</View>
+		);
+	}
+
+	return (
+		<Pressable
+			accessibilityHint="Opens this place"
+			accessibilityLabel={label}
+			accessibilityRole="button"
+			onPress={() => onOpen(place.id)}
+			style={({ pressed }) => [styles.card, pressed && styles.pressed]}
+		>
+			{body}
 		</Pressable>
 	);
 });
