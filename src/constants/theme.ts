@@ -55,6 +55,10 @@ export const Ink = {
 	keypad: "#F9F9F9",
 	keypadPressed: "#EDECEF",
 	rowBorder: "#EDF1F3",
+	/** Bubble behind a message the other party sent. */
+	bubbleIncoming: "#F4F3F5",
+	/** Timestamp under a bubble, darker than the chat list's own stamp. */
+	stamp: "#9E9E9E",
 	cardBorder: "#94A3B8",
 	/** Presence dot on avatars and people cards. */
 	online: "#41C97C",
@@ -292,6 +296,8 @@ export const Radius = {
 	dialog: 12,
 	codeBox: 4,
 	media: 16,
+	/** Message bubble, with the corner nearest its sender left square. */
+	bubble: 12,
 	pill: 999,
 } as const;
 
