@@ -10,6 +10,7 @@ import { SearchField } from "@/components/ui/search-field";
 import { StateMessage } from "@/components/ui/state-message";
 import { Gap, Ink, MaxColumnWidth, Spacing, Type } from "@/constants/theme";
 import type { ConversationFilter } from "@/features/chat/chat-service";
+import { useChatListSocket } from "@/features/chat/use-chat-socket";
 import { useConversations } from "@/features/chat/use-conversations";
 import { useNavBarInset } from "@/hooks/use-nav-bar-inset";
 import { describeError } from "@/lib/api/api-error";
@@ -29,6 +30,8 @@ export default function ChatScreen() {
 	const [term, setTerm] = useState("");
 
 	const conversations = useConversations(filter);
+
+	useChatListSocket();
 
 	const unreadThreads = conversations.data?.unreadThreads ?? 0;
 	const favourites = useConversations("favourites");

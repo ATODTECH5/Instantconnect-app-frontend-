@@ -16,6 +16,12 @@ export type MessageBubbleProps = {
 	partyAvatarUrl: string | null;
 	/** Hidden on a run of messages from the same person, as the frame shows. */
 	showAvatar: boolean;
+	/**
+	 * How far the other party has read. Until this exists the tick can only
+	 * honestly claim delivery, so it renders muted rather than confirming a
+	 * read that may not have happened.
+	 */
+	partyLastReadAt: string | null;
 };
 
 export const MessageBubble = memo(function MessageBubble({
@@ -23,9 +29,13 @@ export const MessageBubble = memo(function MessageBubble({
 	partyName,
 	partyAvatarUrl,
 	showAvatar,
+	partyLastReadAt,
 }: MessageBubbleProps) {
 	const mine = message.isMine;
 	const stamp = clockTime(message.createdAt);
+	const seen =
+		partyLastReadAt !== null &&
+		new Date(message.createdAt) <= new Date(partyLastReadAt);
 
 	return (
 		<View style={[styles.row, mine ? styles.rowMine : styles.rowTheirs]}>
@@ -47,8 +57,14 @@ export const MessageBubble = memo(function MessageBubble({
 				<View style={styles.meta}>
 					<Text style={styles.stamp}>{stamp}</Text>
 
-					{/* Only your own message can report having been delivered. */}
-					{mine ? <CheckReadIcon color={Ink.stamp} height={TICK} width={TICK} /> : null}
+					{/* Only your own message has a delivery state worth reporting. */}
+					{mine ? (
+						<CheckReadIcon
+							color={seen ? Brand.purple : Ink.placeholder}
+							height={TICK}
+							width={TICK}
+						/>
+					) : null}
 				</View>
 			</View>
 		</View>

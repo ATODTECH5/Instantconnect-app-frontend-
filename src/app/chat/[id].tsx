@@ -17,7 +17,8 @@ import { MessageBubble } from "@/components/chat/message-bubble";
 import { MessageComposer } from "@/components/chat/message-composer";
 import { PresenceAvatar } from "@/components/ui/presence-avatar";
 import { StateMessage } from "@/components/ui/state-message";
-import { Ink, MinTapTarget, Radius, Spacing, Type } from "@/constants/theme";
+import { Brand, Ink, MinTapTarget, Radius, Spacing, Type } from "@/constants/theme";
+import { useChatThreadSocket } from "@/features/chat/use-chat-socket";
 import {
 	useConversationSummary,
 	useMarkReadOnOpen,
@@ -36,6 +37,7 @@ export default function ChatThreadScreen() {
 	const messages = useMessages(id);
 	const { send, isSending, isError: sendFailed } = useSendMessage(id);
 
+	const { isPartyTyping, setTyping } = useChatThreadSocket(id);
 	useMarkReadOnOpen(id, messages.isSuccess);
 
 	const party = conversation?.party;
@@ -57,11 +59,12 @@ export default function ChatThreadScreen() {
 			<MessageBubble
 				message={item}
 				partyAvatarUrl={party?.avatarUrl ?? null}
+				partyLastReadAt={messages.data?.partyLastReadAt ?? null}
 				partyName={party?.fullName ?? ""}
 				showAvatar={index === 0 || items[index - 1].isMine !== item.isMine}
 			/>
 		),
-		[items, party],
+		[items, party, messages.data?.partyLastReadAt],
 	);
 
 	return (
@@ -90,7 +93,11 @@ export default function ChatThreadScreen() {
 						{party?.fullName ?? "Conversation"}
 					</Text>
 
-					{party ? (
+					{isPartyTyping ? (
+						<Text style={[styles.presence, styles.presenceTyping]}>
+							typing…
+						</Text>
+					) : party ? (
 						<Text style={[styles.presence, party.isOnline && styles.presenceOnline]}>
 							{party.isOnline ? "Online" : "Offline"}
 						</Text>
@@ -138,7 +145,7 @@ export default function ChatThreadScreen() {
 					</Text>
 				) : null}
 
-				<MessageComposer isSending={isSending} onSend={send} />
+				<MessageComposer isSending={isSending} onSend={send} onTyping={setTyping} />
 			</KeyboardAvoidingView>
 		</SafeAreaView>
 	);
@@ -179,6 +186,9 @@ const styles = StyleSheet.create({
 	},
 	presenceOnline: {
 		color: Ink.online,
+	},
+	presenceTyping: {
+		color: Brand.purple,
 	},
 	body: {
 		flex: 1,

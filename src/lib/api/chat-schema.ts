@@ -25,6 +25,8 @@ export const conversationSchema = z.object({
 	unreadCount: z.number(),
 	isFavourite: z.boolean(),
 	lastMessageAt: z.string().nullable(),
+	/** How far the other party has read, which is what makes a tick honest. */
+	partyLastReadAt: z.string().nullable(),
 });
 
 export const conversationPageSchema = z.object({
@@ -52,6 +54,7 @@ export const messageSchema = z.object({
 export const messagePageSchema = z.object({
 	items: z.array(messageSchema),
 	page: pageInfoSchema,
+	partyLastReadAt: z.string().nullable(),
 });
 
 export const readReceiptSchema = z.object({

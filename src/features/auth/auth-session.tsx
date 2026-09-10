@@ -14,6 +14,7 @@ import {
 import { revokeRefreshToken } from "@/features/auth/auth-service";
 import { restoreSession } from "@/lib/api/api-client";
 import { describeError } from "@/lib/api/api-error";
+import { closeChatSocket } from "@/features/chat/chat-socket";
 import { clearSession, getSession, subscribeToSession } from "@/lib/api/session-store";
 
 export type AuthStatus = "restoring" | "authenticated" | "unauthenticated";
@@ -88,6 +89,11 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
 			// Deliberately not surfaced. Signing out has to succeed on the device
 			// whatever the network did, and the server expires the token regardless.
 		}
+
+		// A socket authenticated as the account being signed out must not
+		// outlive it: the server checks the token at the handshake only, so an
+		// open socket would keep delivering that account's messages.
+		closeChatSocket();
 
 		await clearSession();
 	}, []);

@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Pressable, StyleSheet, TextInput, View } from "react-native";
 
 import SendIcon from "@/assets/chat/send.svg";
@@ -11,6 +11,7 @@ const ICON = 24;
 export type MessageComposerProps = {
 	onSend: (body: string) => void;
 	isSending: boolean;
+	onTyping: (isTyping: boolean) => void;
 };
 
 /**
@@ -19,17 +20,65 @@ export type MessageComposerProps = {
  * model for a voice note at all. They arrive with media messages rather than
  * sitting here doing nothing.
  */
-export function MessageComposer({ onSend, isSending }: MessageComposerProps) {
+/**
+ * Silence for this long counts as having stopped, without needing a keystroke
+ * to say so. Long enough that pausing to think does not flicker the other
+ * party's indicator off and straight back on.
+ */
+const TYPING_IDLE_MS = 4000;
+
+export function MessageComposer({
+	onSend,
+	isSending,
+	onTyping,
+}: MessageComposerProps) {
 	const [draft, setDraft] = useState("");
+	const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const isTypingRef = useRef(false);
 	const body = draft.trim();
 	const canSend = body.length > 0 && !isSending;
+
+	/**
+	 * One event per state change rather than one per keystroke: the socket only
+	 * needs to know that typing started or stopped, and a message per character
+	 * would be a burst of traffic saying the same thing.
+	 */
+	const announce = useCallback(
+		(typing: boolean) => {
+			if (isTypingRef.current === typing) return;
+
+			isTypingRef.current = typing;
+			onTyping(typing);
+		},
+		[onTyping],
+	);
+
+	const handleChange = useCallback(
+		(next: string) => {
+			setDraft(next);
+			announce(next.trim().length > 0);
+
+			if (idleTimer.current) clearTimeout(idleTimer.current);
+			idleTimer.current = setTimeout(() => announce(false), TYPING_IDLE_MS);
+		},
+		[announce],
+	);
+
+	useEffect(
+		() => () => {
+			if (idleTimer.current) clearTimeout(idleTimer.current);
+		},
+		[],
+	);
 
 	const handleSend = useCallback(() => {
 		if (!canSend) return;
 
+		if (idleTimer.current) clearTimeout(idleTimer.current);
+		announce(false);
 		onSend(body);
 		setDraft("");
-	}, [body, canSend, onSend]);
+	}, [announce, body, canSend, onSend]);
 
 	return (
 		<View style={styles.row}>
@@ -37,7 +86,7 @@ export function MessageComposer({ onSend, isSending }: MessageComposerProps) {
 				accessibilityLabel="Message"
 				maxLength={MAX_MESSAGE_LENGTH}
 				multiline
-				onChangeText={setDraft}
+				onChangeText={handleChange}
 				placeholder="Type a message..."
 				placeholderTextColor={Ink.placeholder}
 				style={styles.field}
