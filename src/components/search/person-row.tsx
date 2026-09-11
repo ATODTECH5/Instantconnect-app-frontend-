@@ -1,10 +1,15 @@
-import { Image } from "expo-image";
 import { memo } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import VerifiedSolidIcon from "@/assets/search/verified-solid.svg";
+import { AvatarImage } from "@/components/ui/avatar-image";
 import { Brand, Gap, Ink, MinTapTarget, Radius, Spacing, Type } from "@/constants/theme";
-import type { SearchConnectState } from "@/features/search/use-search-connect";
+import {
+	CONNECT_LABEL,
+	connectActionFor,
+	isConnectPressable,
+	type ConnectAttempt,
+} from "@/features/discover/connect-action";
 import type { SearchPerson } from "@/features/search/search-catalog";
 import { formatDistance } from "@/utils/format";
 
@@ -12,16 +17,9 @@ const AVATAR = 52;
 const BADGE = 16;
 const CONNECT_MIN_HEIGHT = 40;
 
-const CONNECT_LABEL: Record<SearchConnectState, string> = {
-	idle: "Connect",
-	pending: "Sending",
-	sent: "Requested",
-	failed: "Try again",
-};
-
 export type PersonRowProps = {
 	person: SearchPerson;
-	connectionState: SearchConnectState;
+	attempt: ConnectAttempt;
 	onOpen: (id: string) => void;
 	onConnect: (id: string) => void;
 };
@@ -32,35 +30,32 @@ export type PersonRowProps = {
  */
 export const PersonRow = memo(function PersonRow({
 	person,
-	connectionState,
+	attempt,
 	onOpen,
 	onConnect,
 }: PersonRowProps) {
-	const { id, name, age, category, distanceKm, photo, isVerified } = person;
-	const meta = `${category} • ${formatDistance(distanceKm)}`;
-	const isConnectInert = connectionState === "pending" || connectionState === "sent";
+	const { id, fullName, age, category, distanceKm, avatarUrl, isVerified } = person;
+	const name = fullName;
+	const meta = [category?.label, formatDistance(distanceKm)].filter(Boolean).join(" • ");
+	const action = connectActionFor(person.connectionState, attempt);
+	const isConnectInert = !isConnectPressable(action);
 
 	return (
 		<View style={styles.row}>
 			<Pressable
 				accessibilityHint="Opens this profile"
-				accessibilityLabel={`${name}, ${age}. ${meta}${isVerified ? ". Verified" : ""}`}
+				accessibilityLabel={`${name}${age === null ? "" : `, ${age}`}. ${meta}${isVerified ? ". Verified" : ""}`}
 				accessibilityRole="button"
 				onPress={() => onOpen(id)}
 				style={({ pressed }) => [styles.identity, pressed && styles.pressed]}
 			>
-				<Image
-					accessibilityIgnoresInvertColors
-					contentFit="cover"
-					source={photo}
-					style={styles.avatar}
-					transition={200}
-				/>
+				<AvatarImage fullName={name} size={AVATAR} uri={avatarUrl} />
 
 				<View style={styles.copy}>
 					<View style={styles.nameRow}>
 						<Text numberOfLines={1} style={styles.name}>
-							{name}, {age}.
+							{name}
+							{age === null ? "" : `, ${age}`}.
 						</Text>
 
 						{isVerified ? (
@@ -76,11 +71,11 @@ export const PersonRow = memo(function PersonRow({
 
 			<Pressable
 				accessibilityHint={`Sends ${name} a connection request`}
-				accessibilityLabel={`${CONNECT_LABEL[connectionState]}, ${name}`}
+				accessibilityLabel={`${CONNECT_LABEL[action]}, ${name}`}
 				accessibilityRole="button"
 				accessibilityState={{
 					disabled: isConnectInert,
-					busy: connectionState === "pending",
+					busy: action === "sending",
 				}}
 				disabled={isConnectInert}
 				onPress={() => onConnect(id)}
@@ -91,7 +86,7 @@ export const PersonRow = memo(function PersonRow({
 				]}
 			>
 				<Text numberOfLines={1} style={styles.connectLabel}>
-					{CONNECT_LABEL[connectionState]}
+					{CONNECT_LABEL[action]}
 				</Text>
 			</Pressable>
 		</View>
@@ -110,12 +105,6 @@ const styles = StyleSheet.create({
 		flexDirection: "row",
 		alignItems: "center",
 		gap: Gap.card,
-	},
-	avatar: {
-		width: AVATAR,
-		height: AVATAR,
-		borderRadius: AVATAR / 2,
-		backgroundColor: Ink.border,
 	},
 	copy: {
 		flex: 1,

@@ -1,5 +1,6 @@
-import { memo } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Image, type ImageLoadEventData } from "expo-image";
+import { memo, useCallback, useState } from "react";
+import { Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 
 import CheckReadIcon from "@/assets/chat/check-read.svg";
 import { AvatarImage } from "@/components/ui/avatar-image";
@@ -9,6 +10,23 @@ import type { ApiMessage } from "@/lib/api/chat-schema";
 
 const AVATAR = 36;
 const TICK = 12;
+
+/**
+ * The bubble is capped as a share of the screen rather than a fixed width, so
+ * an image reads the same on an SE and a Pro Max. The server stores at most
+ * 1600px and serves a 900px derivative, so this only ever scales down.
+ */
+const IMAGE_WIDTH_RATIO = 0.62;
+
+/**
+ * Only until the image reports its own shape. The message carries no
+ * dimensions, so the first paint has to guess; guessing 4:3 and correcting on
+ * load is less jarring than collapsing to nothing and pushing the thread down.
+ */
+const FALLBACK_ASPECT = 4 / 3;
+
+/** A very tall photo is bounded rather than allowed to fill the whole thread. */
+const MIN_ASPECT = 0.6;
 
 export type MessageBubbleProps = {
 	message: ApiMessage;
@@ -22,6 +40,8 @@ export type MessageBubbleProps = {
 	 * read that may not have happened.
 	 */
 	partyLastReadAt: string | null;
+	/** Absent while there is nowhere to open an image full screen. */
+	onOpenImage?: (url: string) => void;
 };
 
 export const MessageBubble = memo(function MessageBubble({
@@ -30,7 +50,22 @@ export const MessageBubble = memo(function MessageBubble({
 	partyAvatarUrl,
 	showAvatar,
 	partyLastReadAt,
+	onOpenImage,
 }: MessageBubbleProps) {
+	const { width } = useWindowDimensions();
+	const [aspect, setAspect] = useState(FALLBACK_ASPECT);
+	const imageWidth = Math.round(width * IMAGE_WIDTH_RATIO);
+
+	/**
+	 * `contain` would letterbox against the bubble's own background, so the box
+	 * is resized to the image instead and the fit stays `cover`, which then
+	 * crops nothing.
+	 */
+	const fitToImage = useCallback((event: ImageLoadEventData) => {
+		const { width: w, height: h } = event.source;
+
+		if (w > 0 && h > 0) setAspect(Math.max(w / h, MIN_ASPECT));
+	}, []);
 	const mine = message.isMine;
 	const stamp = clockTime(message.createdAt);
 	const seen =
@@ -48,11 +83,38 @@ export const MessageBubble = memo(function MessageBubble({
 			) : null}
 
 			<View style={[styles.stack, mine ? styles.stackMine : styles.stackTheirs]}>
-				<View style={[styles.bubble, mine ? styles.bubbleMine : styles.bubbleTheirs]}>
-					<Text style={[styles.body, mine ? styles.bodyMine : styles.bodyTheirs]}>
-						{message.body}
-					</Text>
-				</View>
+				{message.kind === "image" && message.mediaUrl !== null ? (
+					<Pressable
+						accessibilityHint={
+							onOpenImage ? "Opens this photo" : undefined
+						}
+						accessibilityLabel={`Photo from ${mine ? "you" : partyName}`}
+						accessibilityRole={onOpenImage ? "button" : "image"}
+						disabled={!onOpenImage}
+						onPress={() => onOpenImage?.(message.mediaUrl as string)}
+					>
+						<Image
+							accessibilityIgnoresInvertColors
+							contentFit="cover"
+							onLoad={fitToImage}
+							source={{ uri: message.mediaUrl }}
+							style={[
+								styles.image,
+								{
+									width: imageWidth,
+									height: Math.round(imageWidth / aspect),
+								},
+							]}
+							transition={150}
+						/>
+					</Pressable>
+				) : (
+					<View style={[styles.bubble, mine ? styles.bubbleMine : styles.bubbleTheirs]}>
+						<Text style={[styles.body, mine ? styles.bodyMine : styles.bodyTheirs]}>
+							{message.body}
+						</Text>
+					</View>
+				)}
 
 				<View style={styles.meta}>
 					<Text style={styles.stamp}>{stamp}</Text>
@@ -121,6 +183,10 @@ const styles = StyleSheet.create({
 	},
 	bodyTheirs: {
 		color: Ink.body,
+	},
+	image: {
+		borderRadius: Radius.sheet,
+		backgroundColor: Ink.border,
 	},
 	meta: {
 		flexDirection: "row",

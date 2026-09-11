@@ -20,6 +20,10 @@ import { StateMessage } from "@/components/ui/state-message";
 import { Brand, Ink, MinTapTarget, Radius, Spacing, Type } from "@/constants/theme";
 import { useChatThreadSocket } from "@/features/chat/use-chat-socket";
 import {
+	CHAT_IMAGE_OPTIONS,
+	usePickPhoto,
+} from "@/features/profile/use-pick-photo";
+import {
 	useConversationSummary,
 	useMarkReadOnOpen,
 	useMessages,
@@ -35,13 +39,26 @@ export default function ChatThreadScreen() {
 	const { id } = useLocalSearchParams<{ id: string }>();
 	const conversation = useConversationSummary(id);
 	const messages = useMessages(id);
-	const { send, isSending, isError: sendFailed } = useSendMessage(id);
+	const {
+		send,
+		sendImage,
+		isSending,
+		isError: sendFailed,
+		error: sendError,
+	} = useSendMessage(id);
+	const pickImage = usePickPhoto(CHAT_IMAGE_OPTIONS);
 
 	const { isPartyTyping, setTyping } = useChatThreadSocket(id);
 	useMarkReadOnOpen(id, messages.isSuccess);
 
 	const party = conversation?.party;
 	const items = useMemo(() => messages.data?.items ?? [], [messages.data]);
+
+	const handleAttachImage = useCallback(() => {
+		void pickImage().then((image) => {
+			if (image) sendImage(image);
+		});
+	}, [pickImage, sendImage]);
 
 	const goBack = useCallback(() => {
 		if (router.canGoBack()) router.back();
@@ -141,11 +158,16 @@ export default function ChatThreadScreen() {
 
 				{sendFailed ? (
 					<Text role="alert" style={styles.sendError}>
-						That message did not send. Check your connection and try again.
+						{describeError(sendError)}
 					</Text>
 				) : null}
 
-				<MessageComposer isSending={isSending} onSend={send} onTyping={setTyping} />
+				<MessageComposer
+					isSending={isSending}
+					onAttachImage={handleAttachImage}
+					onSend={send}
+					onTyping={setTyping}
+				/>
 			</KeyboardAvoidingView>
 		</SafeAreaView>
 	);

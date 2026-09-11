@@ -29,6 +29,9 @@ export function useConnectRequests(): ConnectRequests {
 			setAttempt(personId, "idle");
 			void client.invalidateQueries({ queryKey: ["discovery"] });
 			void client.invalidateQueries({ queryKey: ["connections"] });
+			// Search reads the same discovery endpoint under its own key, so it
+			// needs telling too or its Connect button reverts on the next render.
+			void client.invalidateQueries({ queryKey: ["search"] });
 		},
 		onError: (_error, personId) => setAttempt(personId, "failed"),
 	});

@@ -9,12 +9,14 @@ import { useEffect } from "react";
 import {
 	fetchMessages,
 	markThreadRead,
+	sendImageMessage,
 	sendMessage,
 } from "@/features/chat/chat-service";
 import {
 	CONVERSATIONS_KEY,
 	useConversations,
 } from "@/features/chat/use-conversations";
+import type { PickedFile } from "@/lib/api/direct-upload";
 import type { ApiConversation, ApiMessagePage } from "@/lib/api/chat-schema";
 
 export const MESSAGES_KEY = ["messages"] as const;
@@ -46,11 +48,22 @@ export function useConversationSummary(
 	return conversations.data?.items.find((item) => item.id === conversationId);
 }
 
+type Outgoing = { kind: "text"; body: string } | { kind: "image"; image: PickedFile };
+
+/**
+ * Text and images share one mutation so the thread has a single sending and
+ * failure state. An image takes noticeably longer, since it uploads to the
+ * provider before the message is created, and the composer stays disabled for
+ * the whole of it rather than only the last leg.
+ */
 export function useSendMessage(conversationId: string) {
 	const client = useQueryClient();
 
 	const mutation = useMutation({
-		mutationFn: (body: string) => sendMessage(conversationId, body),
+		mutationFn: (outgoing: Outgoing) =>
+			outgoing.kind === "text"
+				? sendMessage(conversationId, outgoing.body)
+				: sendImageMessage(conversationId, outgoing.image),
 		onSuccess: () => {
 			void client.invalidateQueries({ queryKey: [...MESSAGES_KEY, conversationId] });
 			// The list orders by last message and previews it, so both move.
@@ -59,9 +72,11 @@ export function useSendMessage(conversationId: string) {
 	});
 
 	return {
-		send: (body: string) => mutation.mutate(body),
+		send: (body: string) => mutation.mutate({ kind: "text", body }),
+		sendImage: (image: PickedFile) => mutation.mutate({ kind: "image", image }),
 		isSending: mutation.isPending,
 		isError: mutation.isError,
+		error: mutation.error,
 	};
 }
 

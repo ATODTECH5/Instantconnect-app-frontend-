@@ -7,6 +7,7 @@ import { getAccessToken } from "@/lib/api/session-store";
 export const MESSAGE_CREATED = "message.created";
 export const TYPING = "conversation.typing";
 export const READ = "conversation.read";
+export const NOTIFICATION_CREATED = "notification.created";
 
 let socket: Socket | null = null;
 

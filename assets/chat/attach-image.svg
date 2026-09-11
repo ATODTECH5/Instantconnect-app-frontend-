@@ -1,0 +1,7 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="attach-image">
+<path id="Frame" fill-rule="evenodd" clip-rule="evenodd" d="M5 3H19C20.1046 3 21 3.89543 21 5V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V5C3 3.89543 3.89543 3 5 3ZM5 4.5C4.72386 4.5 4.5 4.72386 4.5 5V19C4.5 19.2761 4.72386 19.5 5 19.5H19C19.2761 19.5 19.5 19.2761 19.5 19V5C19.5 4.72386 19.2761 4.5 19 4.5H5Z" fill="currentColor"/>
+<path id="Sun" d="M9 9.5C9 10.3284 8.32843 11 7.5 11C6.67157 11 6 10.3284 6 9.5C6 8.67157 6.67157 8 7.5 8C8.32843 8 9 8.67157 9 9.5Z" fill="currentColor"/>
+<path id="Hill" d="M4.5 16.4142L9.29289 11.6213C9.68342 11.2308 10.3166 11.2308 10.7071 11.6213L14.0858 15L15.7929 13.2929C16.1834 12.9024 16.8166 12.9024 17.2071 13.2929L19.5 15.5858V19C19.5 19.2761 19.2761 19.5 19 19.5H5C4.72386 19.5 4.5 19.2761 4.5 19V16.4142Z" fill="currentColor"/>
+</g>
+</svg>

@@ -19,7 +19,7 @@ import { PromoCard } from "@/components/ui/promo-card";
 import { SearchField } from "@/components/ui/search-field";
 import { StateMessage } from "@/components/ui/state-message";
 import { Gap, Ink, MaxColumnWidth, Spacing, Type } from "@/constants/theme";
-import { useSearchConnect } from "@/features/search/use-search-connect";
+import { useConnectRequests } from "@/features/discover/use-connect-requests";
 import {
 	countActiveFilters,
 	decodeFilters,
@@ -50,7 +50,7 @@ export default function SearchScreen() {
 
 	const navInset = useNavBarInset();
 	const { recents, remember, forget, clear } = useSearchHistory();
-	const { stateFor: connectionFor, connect } = useSearchConnect();
+	const { attemptFor, connect } = useConnectRequests();
 	const { stateFor: joinStateFor, join } = useJoinMeetups();
 
 	const [query, setQuery] = useState(params.q ?? "");
@@ -255,7 +255,7 @@ export default function SearchScreen() {
 							<View style={styles.rows}>
 								{results.data.people.map((person) => (
 									<PersonRow
-										connectionState={connectionFor(person.id)}
+										attempt={attemptFor(person.id)}
 										key={person.id}
 										onConnect={connect}
 										onOpen={openPerson}
@@ -314,7 +314,7 @@ export default function SearchScreen() {
 
 		return (
 			<ResultSections
-				connectionFor={connectionFor}
+				attemptFor={attemptFor}
 				contentInset={navInset + Spacing.four}
 				joinStateFor={joinStateFor}
 				onConnect={connect}

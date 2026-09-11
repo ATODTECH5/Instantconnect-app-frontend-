@@ -9,6 +9,7 @@ import { LoadingOverlay } from "@/components/ui/loading-overlay";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { Ink, Spacing, Type } from "@/constants/theme";
 import { createPin } from "@/features/auth/auth-service";
+import { describeError } from "@/lib/api/api-error";
 
 const PIN_LENGTH = 4;
 
@@ -58,8 +59,8 @@ export default function CreatePinScreen() {
 		try {
 			await createPin(pin);
 			router.replace("/interests");
-		} catch {
-			setError("We could not save your PIN. Please try again.");
+		} catch (cause) {
+			setError(describeError(cause));
 		} finally {
 			setIsSaving(false);
 		}

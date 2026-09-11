@@ -75,7 +75,7 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Choose photos from your library to use on your Instant Connect profile."
+          "photosPermission": "Choose photos from your library to use on your profile and to send in your chats."
         }
       ],
       "expo-maps"

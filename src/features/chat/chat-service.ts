@@ -1,4 +1,6 @@
 import { request } from "@/lib/api/api-client";
+import { uploadToProvider, type PickedFile } from "@/lib/api/direct-upload";
+import { uploadSignatureSchema } from "@/lib/api/upload-signature-schema";
 import {
 	conversationPageSchema,
 	messagePageSchema,
@@ -62,6 +64,31 @@ export function sendMessage(conversationId: string, body: string): Promise<ApiMe
 	return request(`/conversations/${conversationId}/messages`, {
 		method: "POST",
 		body: { body },
+		schema: messageSchema,
+		auth: true,
+	});
+}
+
+/**
+ * Three legs: the server signs an id it chose, the device uploads straight to
+ * the provider, and only then does the message reference it. The image never
+ * travels through our API, and the server confirms the upload landed before it
+ * will store a bubble pointing at it.
+ */
+export async function sendImageMessage(
+	conversationId: string,
+	image: PickedFile,
+): Promise<ApiMessage> {
+	const signature = await request(
+		`/conversations/${conversationId}/messages/upload-signature`,
+		{ method: "POST", schema: uploadSignatureSchema, auth: true },
+	);
+
+	const mediaStorageId = await uploadToProvider(signature, image);
+
+	return request(`/conversations/${conversationId}/messages`, {
+		method: "POST",
+		body: { mediaStorageId },
 		schema: messageSchema,
 		auth: true,
 	});

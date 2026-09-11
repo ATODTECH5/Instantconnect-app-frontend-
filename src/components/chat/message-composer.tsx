@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Pressable, StyleSheet, TextInput, View } from "react-native";
 
+import AttachImageIcon from "@/assets/chat/attach-image.svg";
 import SendIcon from "@/assets/chat/send.svg";
 import { Brand, Ink, MinTapTarget, Radius, Spacing, Type } from "@/constants/theme";
 import { MAX_MESSAGE_LENGTH } from "@/features/chat/chat-service";
@@ -10,15 +11,15 @@ const ICON = 24;
 
 export type MessageComposerProps = {
 	onSend: (body: string) => void;
+	onAttachImage: () => void;
 	isSending: boolean;
 	onTyping: (isTyping: boolean) => void;
 };
 
 /**
- * The frame also has an attach button and a voice note control. Neither is
- * built: `POST /conversations/:id/messages` takes text only, and there is no
- * model for a voice note at all. They arrive with media messages rather than
- * sitting here doing nothing.
+ * The frame also has a voice note control. There is no model for a voice note
+ * on the server and recording needs a native module the app does not carry, so
+ * it is left out rather than shipped dead.
  */
 /**
  * Silence for this long counts as having stopped, without needing a keystroke
@@ -29,6 +30,7 @@ const TYPING_IDLE_MS = 4000;
 
 export function MessageComposer({
 	onSend,
+	onAttachImage,
 	isSending,
 	onTyping,
 }: MessageComposerProps) {
@@ -82,6 +84,18 @@ export function MessageComposer({
 
 	return (
 		<View style={styles.row}>
+			<Pressable
+				accessibilityHint="Choose a photo to send"
+				accessibilityLabel="Attach a photo"
+				accessibilityRole="button"
+				accessibilityState={{ disabled: isSending }}
+				disabled={isSending}
+				onPress={onAttachImage}
+				style={({ pressed }) => [styles.attach, pressed && styles.pressed]}
+			>
+				<AttachImageIcon color={Ink.meta} height={ICON} width={ICON} />
+			</Pressable>
+
 			<TextInput
 				accessibilityLabel="Message"
 				maxLength={MAX_MESSAGE_LENGTH}
@@ -133,6 +147,14 @@ const styles = StyleSheet.create({
 		borderColor: Ink.border,
 		...Type.resultMeta,
 		color: Ink.body,
+	},
+	attach: {
+		width: BUTTON,
+		height: BUTTON,
+		minWidth: MinTapTarget,
+		minHeight: MinTapTarget,
+		alignItems: "center",
+		justifyContent: "center",
 	},
 	send: {
 		width: BUTTON,
