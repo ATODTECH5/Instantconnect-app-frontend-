@@ -50,3 +50,13 @@ export function getApiBaseUrl(): string {
 
 	return cachedBaseUrl;
 }
+
+/**
+ * Origin without the versioned prefix. The WebSocket namespace hangs off the
+ * server root rather than the REST path, so it cannot reuse the base URL.
+ */
+export function getApiOrigin(): string {
+	const base = getApiBaseUrl();
+
+	return base.endsWith(API_PREFIX) ? base.slice(0, -API_PREFIX.length) : base;
+}

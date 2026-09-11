@@ -2,6 +2,7 @@ import { useCallback } from "react";
 
 import { useNearbyPeople } from "@/features/discover/use-discover";
 import { EVENTS, type NearbyEvent } from "@/features/home/home-feed";
+import { useUnreadNotificationCount } from "@/features/notifications/use-notifications";
 import { useProfile } from "@/features/profile/use-profile";
 import { isApiError } from "@/lib/api/api-error";
 import type { ApiNearbyPerson } from "@/lib/api/discovery-schema";
@@ -35,6 +36,7 @@ const GENERIC_ERROR = "We could not load your feed. Check your connection and tr
 export function useHomeFeed(): HomeFeedState {
 	const people = useNearbyPeople({ limit: HOME_CARD_COUNT });
 	const profile = useProfile();
+	const unreadCount = useUnreadNotificationCount();
 
 	const refetch = useCallback(() => {
 		void people.refetch();
@@ -46,8 +48,7 @@ export function useHomeFeed(): HomeFeedState {
 	const feed: HomeFeed | null = people.data
 		? {
 				place: profile.data?.locationLabel ?? null,
-				// Chat is not modelled yet, so the badge stays hidden rather than inventing a count.
-				unreadCount: 0,
+				unreadCount,
 				matchCount: people.data.page.total,
 				people: people.data.items,
 				events: EVENTS,

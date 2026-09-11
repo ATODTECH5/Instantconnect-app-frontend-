@@ -1,21 +1,18 @@
 import type { ImageSourcePropType } from "react-native";
 
+import { fetchNearbyPeople } from "@/features/discover/discovery-service";
 import {
 	ratingFloor,
 	type SearchFilters,
 	type SearchTabId,
 } from "@/features/search/search-filters";
+import type { ApiNearbyPerson } from "@/lib/api/discovery-schema";
 
-export type SearchPerson = {
-	id: string;
-	name: string;
-	age: number;
-	category: string;
-	distanceKm: number;
-	photo: ImageSourcePropType;
-	isVerified: boolean;
-	isOnline: boolean;
-};
+/**
+ * People come from `GET /discovery/people`, so the row reads the server's shape
+ * directly rather than a local one that would have to be kept in step with it.
+ */
+export type SearchPerson = ApiNearbyPerson;
 
 export type PlaceKind = "restaurant" | "workspace";
 
@@ -54,69 +51,15 @@ export function isEmptyResults(results: SearchResults) {
 }
 
 /**
- * Stand-in for the discovery API, mirroring `home-feed` so the screen's
- * loading, empty and error paths are exercisable before the backend exists.
- * The server has no search, places or events module yet. Swapping these two
- * functions for real requests is the only change the screens need.
+ * People are real: the People tab and the All tab's people section both read
+ * `GET /discovery/people`. Places and events are still fixtures, because the
+ * server has no module for either. Delete each array as its endpoint lands.
  */
 const MOCK_LATENCY_MS = 650;
 
 export class SearchError extends Error {}
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-const PEOPLE: SearchPerson[] = [
-	{
-		id: "halima",
-		name: "Halima",
-		age: 26,
-		category: "Talent",
-		distanceKm: 250,
-		photo: require("@/assets/onboarding/avatar-2.jpg"),
-		isVerified: true,
-		isOnline: true,
-	},
-	{
-		id: "iyan-filani",
-		name: "Iyan Filani",
-		age: 27,
-		category: "Business",
-		distanceKm: 250,
-		photo: require("@/assets/onboarding/avatar-1.jpg"),
-		isVerified: true,
-		isOnline: true,
-	},
-	{
-		id: "eva-rose",
-		name: "Eva Rose",
-		age: 29,
-		category: "Talent",
-		distanceKm: 250,
-		photo: require("@/assets/onboarding/avatar-4.jpg"),
-		isVerified: true,
-		isOnline: false,
-	},
-	{
-		id: "calvin-osa",
-		name: "Calvin Osa",
-		age: 31,
-		category: "Talent",
-		distanceKm: 250,
-		photo: require("@/assets/onboarding/avatar-3.jpg"),
-		isVerified: true,
-		isOnline: false,
-	},
-	{
-		id: "lola-aziz",
-		name: "Lola Aziz",
-		age: 28,
-		category: "Talent",
-		distanceKm: 250,
-		photo: require("@/assets/onboarding/avatar-5.png"),
-		isVerified: true,
-		isOnline: true,
-	},
-];
 
 const PLACES: SearchPlace[] = [
 	{
@@ -240,12 +183,33 @@ export async function fetchSuggestions(query: string): Promise<string[]> {
 	return SUGGESTIONS.filter((entry) => matches(entry, trimmed));
 }
 
-function keepPerson(person: SearchPerson, query: string, filters: SearchFilters) {
-	if (filters.verifiedOnly && !person.isVerified) return false;
-	if (filters.onlineStatus === "online" && !person.isOnline) return false;
-	if (query.length > 0 && !matches(`${person.name} ${person.category}`, query)) return false;
+/**
+ * Category, distance, verified and online are query parameters the server
+ * applies, so only the free text term is left to narrow here. Discovery has no
+ * name search of its own yet; when it grows one, this goes too.
+ */
+function keepPerson(person: SearchPerson, query: string) {
+	if (query.length === 0) return true;
 
-	return true;
+	return matches(`${person.fullName} ${person.category?.label ?? ""}`, query);
+}
+
+/**
+ * `rating` has no server support and no source for people, so it is not sent.
+ * `lookingFor` is a search hint rather than a filter and has nowhere to go yet.
+ */
+async function searchPeople(
+	query: string,
+	filters: SearchFilters,
+): Promise<SearchPerson[]> {
+	const page = await fetchNearbyPeople({
+		categoryId: filters.categoryId ?? undefined,
+		radiusKm: filters.distanceKm,
+		verifiedOnly: filters.verifiedOnly || undefined,
+		onlineOnly: filters.onlineStatus === "online" || undefined,
+	});
+
+	return page.items.filter((person) => keepPerson(person, query));
 }
 
 function keepPlace(place: SearchPlace, query: string, filters: SearchFilters) {
@@ -267,16 +231,23 @@ export type SearchRequest = {
 	filters: SearchFilters;
 };
 
+/** Tabs that show no people at all, and so should not spend a request on them. */
+const PLACE_ONLY_TABS: SearchTabId[] = ["events", "restaurant", "workspace"];
+
 export async function fetchSearchResults({
 	query,
 	tab,
 	filters,
 }: SearchRequest): Promise<SearchResults> {
-	await delay(MOCK_LATENCY_MS);
-
 	const term = query.trim();
 
-	const people = PEOPLE.filter((person) => keepPerson(person, term, filters));
+	const people = PLACE_ONLY_TABS.includes(tab)
+		? []
+		: await searchPeople(term, filters);
+
+	// Still fixtures, so still faked latency. People no longer wait on it.
+	if (PLACE_ONLY_TABS.includes(tab)) await delay(MOCK_LATENCY_MS);
+
 	const places = PLACES.filter((place) => keepPlace(place, term, filters));
 	const meetups = MEETUPS.filter((meetup) => keepMeetup(meetup, term));
 

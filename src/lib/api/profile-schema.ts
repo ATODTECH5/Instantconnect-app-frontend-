@@ -1,5 +1,10 @@
 import { z } from "zod";
 
+export {
+	uploadSignatureSchema,
+	type ApiUploadSignature,
+} from "@/lib/api/upload-signature-schema";
+
 /** Mirrors `LookupResponseDto` on the server: categories, occupations and hobbies. */
 export const lookupSchema = z.object({
 	id: z.string().min(1),
@@ -40,17 +45,7 @@ export const profileSchema = z.object({
 	stats: profileStatsSchema,
 });
 
-export const uploadSignatureSchema = z.object({
-	uploadUrl: z.string().min(1),
-	apiKey: z.string().min(1),
-	timestamp: z.number(),
-	signature: z.string().min(1),
-	storageId: z.string().min(1),
-	transformation: z.string().min(1),
-});
-
 export type ApiLookup = z.infer<typeof lookupSchema>;
 export type ApiProfile = z.infer<typeof profileSchema>;
 export type ApiProfilePhoto = z.infer<typeof profilePhotoSchema>;
-export type ApiUploadSignature = z.infer<typeof uploadSignatureSchema>;
 export type KycStatus = ApiProfile["kycStatus"];

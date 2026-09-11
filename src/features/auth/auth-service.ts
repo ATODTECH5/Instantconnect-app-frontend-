@@ -9,6 +9,9 @@ import { getRefreshToken, setSession, toSession } from "@/lib/api/session-store"
 /** Mirrors `RegistrationResponseDto` on the server. */
 const registrationSchema = z.object({ email: z.string().min(1) });
 
+/** Mirrors `PinVerificationResponseDto`. */
+const pinVerificationSchema = z.object({ verified: z.boolean() });
+
 /**
  * The body is spelled out field by field rather than spread from the form,
  * because the server validates with `forbidNonWhitelisted` and rejects the whole
@@ -50,13 +53,26 @@ export async function resendVerificationCode(email: string): Promise<void> {
 }
 
 /**
- * A PIN is a device unlock, not a credential the account has, so it stays on the
- * phone. The keychain write lands with the `expo-secure-store` rebuild; until
- * then nothing is kept, and `pinEnabled` is deliberately not reported to the
- * server, since a flag saying a PIN exists when the device has none is worse
- * than no flag at all.
+ * Stored server side as an argon2id hash, so the PIN survives a reinstall and a
+ * new device rather than living only on the phone that set it. `pinEnabled` is
+ * written by the server alongside the hash and is never asserted from here, so
+ * the flag cannot claim a PIN that does not exist.
  */
-export async function createPin(_pin: string): Promise<void> {}
+export async function createPin(pin: string): Promise<void> {
+	await request("/users/me/pin", { method: "PUT", body: { pin }, auth: true });
+}
+
+/** False also covers an account with no PIN, which the server will not distinguish. */
+export async function verifyPin(pin: string): Promise<boolean> {
+	const { verified } = await request("/users/me/pin/verify", {
+		method: "POST",
+		body: { pin },
+		schema: pinVerificationSchema,
+		auth: true,
+	});
+
+	return verified;
+}
 
 export async function saveCategory(categoryId: string): Promise<void> {
 	await request("/users/me/category", { method: "PUT", body: { categoryId }, auth: true });

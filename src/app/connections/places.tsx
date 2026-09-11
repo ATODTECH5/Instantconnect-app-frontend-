@@ -1,7 +1,7 @@
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useCallback } from "react";
-import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { FlatList, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import MapIcon from "@/assets/connections/map.svg";
@@ -20,20 +20,16 @@ export default function VisitedPlacesScreen() {
 		else router.replace("/connection");
 	}, []);
 
-	const openPlace = useCallback(
-		() =>
-			router.push({
-				pathname: "/location",
-				params: { source: "visited-places" },
-			}),
-		[],
-	);
-
+	/**
+	 * No `onOpen`. A place has nowhere to open until Places & Reviews lands:
+	 * this used to push `/location`, which is the onboarding coordinate picker,
+	 * so tapping a place offered a Select Location that wrote those coordinates
+	 * to the signed in account's own profile. Wire this to the place detail
+	 * route when it exists, not to the picker.
+	 */
 	const renderPlace = useCallback(
-		({ item }: { item: VisitedPlace }) => (
-			<VisitedPlaceCard onOpen={openPlace} place={item} />
-		),
-		[openPlace],
+		({ item }: { item: VisitedPlace }) => <VisitedPlaceCard place={item} />,
+		[],
 	);
 
 	return (
@@ -45,17 +41,15 @@ export default function VisitedPlacesScreen() {
 					onBack={goBack}
 					title="Visited Places"
 					trailing={
-						<Pressable
-							accessibilityHint="Shows your visited places on a map"
-							accessibilityLabel="Map"
-							accessibilityRole="button"
-							onPress={openPlace}
-							style={({ pressed }) => [styles.mapPill, pressed && styles.pressed]}
+						<View
+							accessible
+							accessibilityLabel="Map view, available once places are on the map"
+							style={[styles.mapPill, styles.unavailable]}
 						>
 							<MapIcon color={Brand.purple} height={MAP_ICON} width={MAP_ICON} />
 
 							<Text style={styles.mapLabel}>Map</Text>
-						</Pressable>
+						</View>
 					}
 				/>
 
@@ -106,7 +100,7 @@ const styles = StyleSheet.create({
 		gap: Gap.card,
 		paddingBottom: Spacing.four,
 	},
-	pressed: {
-		opacity: 0.7,
+	unavailable: {
+		opacity: 0.4,
 	},
 });

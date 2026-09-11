@@ -11,10 +11,20 @@ import { Alert, Linking } from "react-native";
  * Quality is trimmed here as well as at the server, which saves the upload
  * rather than only the stored file.
  */
-const PICKER_OPTIONS: ImagePickerOptions = {
+const AVATAR_OPTIONS: ImagePickerOptions = {
 	mediaTypes: ["images"],
 	allowsEditing: true,
 	aspect: [1, 1],
+	quality: 0.85,
+};
+
+/**
+ * A chat image keeps its own shape: cropping someone's screenshot to a square
+ * would cut the part they meant to send.
+ */
+export const CHAT_IMAGE_OPTIONS: ImagePickerOptions = {
+	mediaTypes: ["images"],
+	allowsEditing: false,
 	quality: 0.85,
 };
 
@@ -27,7 +37,7 @@ export type PickedPhoto = {
 
 export type PickPhoto = () => Promise<PickedPhoto | null>;
 
-export function usePickPhoto(): PickPhoto {
+export function usePickPhoto(options: ImagePickerOptions = AVATAR_OPTIONS): PickPhoto {
 	return useCallback(async () => {
 		const permission = await requestMediaLibraryPermissionsAsync();
 
@@ -38,7 +48,7 @@ export function usePickPhoto(): PickPhoto {
 
 			Alert.alert(
 				"Photo access is off",
-				"Turn on photo access in Settings to choose a profile photo.",
+				"Turn on photo access in Settings to choose a photo.",
 				[
 					{ text: "Not now", style: "cancel" },
 					{ text: "Open Settings", onPress: () => void Linking.openSettings() },
@@ -48,7 +58,7 @@ export function usePickPhoto(): PickPhoto {
 			return null;
 		}
 
-		const result = await launchImageLibraryAsync(PICKER_OPTIONS);
+		const result = await launchImageLibraryAsync(options);
 
 		if (result.canceled) return null;
 
@@ -63,5 +73,5 @@ export function usePickPhoto(): PickPhoto {
 			mimeType,
 			fileName: asset.fileName ?? `photo.${mimeType.split("/")[1] ?? "jpg"}`,
 		};
-	}, []);
+	}, [options]);
 }
