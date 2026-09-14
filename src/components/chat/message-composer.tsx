@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Pressable, StyleSheet, TextInput, View } from "react-native";
 
 import AttachImageIcon from "@/assets/chat/attach-image.svg";
+import ClockIcon from "@/assets/search/clock.svg";
 import SendIcon from "@/assets/chat/send.svg";
 import { Brand, Ink, MinTapTarget, Radius, Spacing, Type } from "@/constants/theme";
 import { MAX_MESSAGE_LENGTH } from "@/features/chat/chat-service";
@@ -12,6 +13,8 @@ const ICON = 24;
 export type MessageComposerProps = {
 	onSend: (body: string) => void;
 	onAttachImage: () => void;
+	/** Absent while a meetup is already open in this thread. */
+	onProposeTime?: () => void;
 	isSending: boolean;
 	onTyping: (isTyping: boolean) => void;
 };
@@ -31,6 +34,7 @@ const TYPING_IDLE_MS = 4000;
 export function MessageComposer({
 	onSend,
 	onAttachImage,
+	onProposeTime,
 	isSending,
 	onTyping,
 }: MessageComposerProps) {
@@ -95,6 +99,20 @@ export function MessageComposer({
 			>
 				<AttachImageIcon color={Ink.meta} height={ICON} width={ICON} />
 			</Pressable>
+
+			{onProposeTime ? (
+				<Pressable
+					accessibilityHint="Suggest times to meet in person"
+					accessibilityLabel="Propose a time"
+					accessibilityRole="button"
+					accessibilityState={{ disabled: isSending }}
+					disabled={isSending}
+					onPress={onProposeTime}
+					style={({ pressed }) => [styles.attach, pressed && styles.pressed]}
+				>
+					<ClockIcon color={Ink.meta} height={ICON} width={ICON} />
+				</Pressable>
+			) : null}
 
 			<TextInput
 				accessibilityLabel="Message"

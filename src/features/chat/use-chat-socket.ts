@@ -8,6 +8,7 @@ import {
 } from "react";
 
 import {
+	MEETUP_UPDATED,
 	MESSAGE_CREATED,
 	READ,
 	TYPING,
@@ -15,6 +16,7 @@ import {
 } from "@/features/chat/chat-socket";
 import { CONVERSATIONS_KEY } from "@/features/chat/use-conversations";
 import { MESSAGES_KEY } from "@/features/chat/use-thread";
+import { OPEN_MEETUP_KEY } from "@/features/meetups/meetup-keys";
 import type { ApiMessage, ApiMessagePage } from "@/lib/api/chat-schema";
 import { getAccessToken, subscribeToSession } from "@/lib/api/session-store";
 
@@ -137,6 +139,19 @@ export function useChatThreadSocket(conversationId: string): ThreadSocket {
 
 			// The list previews and orders by the last message, so it moves too.
 			void client.invalidateQueries({ queryKey: CONVERSATIONS_KEY });
+
+			// A new card means the meetup changed, and every older card for it
+			// carries a stale embedded state until the page is re-read.
+			if (event.message.kind === "meetup" || event.message.kind === "system") {
+				void client.invalidateQueries({ queryKey: [...MESSAGES_KEY, conversationId] });
+				void client.invalidateQueries({ queryKey: [...OPEN_MEETUP_KEY, conversationId] });
+			}
+		};
+
+		/** Travel-state changes post no card, so this is the only signal for them. */
+		const onMeetup = () => {
+			void client.invalidateQueries({ queryKey: [...OPEN_MEETUP_KEY, conversationId] });
+			void client.invalidateQueries({ queryKey: [...MESSAGES_KEY, conversationId] });
 		};
 
 		const onRead = (event: ReadEvent) => {
@@ -160,12 +175,14 @@ export function useChatThreadSocket(conversationId: string): ThreadSocket {
 		};
 
 		socket.on(MESSAGE_CREATED, onMessage);
+		socket.on(MEETUP_UPDATED, onMeetup);
 		socket.on(READ, onRead);
 		socket.on(TYPING, onTyping);
 
 		return () => {
 			socket.off("connect", join);
 			socket.off(MESSAGE_CREATED, onMessage);
+			socket.off(MEETUP_UPDATED, onMeetup);
 			socket.off(READ, onRead);
 			socket.off(TYPING, onTyping);
 			socket.emit("conversation.leave", conversationId);
