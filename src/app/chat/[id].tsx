@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
 	FlatList,
 	KeyboardAvoidingView,
@@ -13,8 +13,11 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import ArrowLeftIcon from "@/assets/auth/arrow-left.svg";
+import { MeetupCard } from "@/components/chat/meetup-card";
 import { MessageBubble } from "@/components/chat/message-bubble";
 import { MessageComposer } from "@/components/chat/message-composer";
+import { ProposeTimeSheet } from "@/components/chat/propose-time-sheet";
+import { SystemMessage } from "@/components/chat/system-message";
 import { PresenceAvatar } from "@/components/ui/presence-avatar";
 import { StateMessage } from "@/components/ui/state-message";
 import { Brand, Ink, MinTapTarget, Radius, Spacing, Type } from "@/constants/theme";
@@ -29,6 +32,7 @@ import {
 	useMessages,
 	useSendMessage,
 } from "@/features/chat/use-thread";
+import { useMeetupAction, useOpenMeetup } from "@/features/meetups/use-meetup";
 import { describeError } from "@/lib/api/api-error";
 import type { ApiMessage } from "@/lib/api/chat-schema";
 
@@ -51,8 +55,30 @@ export default function ChatThreadScreen() {
 	const { isPartyTyping, setTyping } = useChatThreadSocket(id);
 	useMarkReadOnOpen(id, messages.isSuccess);
 
+	const openMeetup = useOpenMeetup(id);
+	const meetupAction = useMeetupAction(id);
+	// Null: sheet closed. A string: the meetup being countered. "new": a fresh proposal.
+	const [proposing, setProposing] = useState<string | null>(null);
+
 	const party = conversation?.party;
+	const partyName = party?.fullName ?? "";
 	const items = useMemo(() => messages.data?.items ?? [], [messages.data]);
+
+	// Every transition posts a card and every card re-reads the same live
+	// state, so a negotiation would otherwise show its final face several
+	// times over, each with its own buttons. Only the newest card per meetup
+	// renders; the list is newest first, so the first id seen wins.
+	const newestCardFor = useMemo(() => {
+		const byMeetup = new Map<string, string>();
+
+		for (const item of items) {
+			if (item.kind === "meetup" && item.meetup && !byMeetup.has(item.meetup.id)) {
+				byMeetup.set(item.meetup.id, item.id);
+			}
+		}
+
+		return byMeetup;
+	}, [items]);
 
 	const handleAttachImage = useCallback(() => {
 		void pickImage().then((image) => {
@@ -72,16 +98,59 @@ export default function ChatThreadScreen() {
 	 * bubble sitting at the bottom of that person's group, not the top of it.
 	 */
 	const renderMessage = useCallback(
-		({ item, index }: { item: ApiMessage; index: number }) => (
-			<MessageBubble
-				message={item}
-				partyAvatarUrl={party?.avatarUrl ?? null}
-				partyLastReadAt={messages.data?.partyLastReadAt ?? null}
-				partyName={party?.fullName ?? ""}
-				showAvatar={index === 0 || items[index - 1].isMine !== item.isMine}
-			/>
-		),
-		[items, party, messages.data?.partyLastReadAt],
+		({ item, index }: { item: ApiMessage; index: number }) => {
+			if (item.kind === "system" && item.body) {
+				return <SystemMessage body={item.body} />;
+			}
+
+			if (item.kind === "meetup" && item.meetup) {
+				const meetup = item.meetup;
+
+				if (newestCardFor.get(meetup.id) !== item.id) return null;
+
+				return (
+					<MeetupCard
+						isPending={meetupAction.isPending}
+						meetup={meetup}
+						onAccept={(scheduledAt) =>
+							meetupAction.mutate({ type: "accept", id: meetup.id, scheduledAt })
+						}
+						onCancel={() => meetupAction.mutate({ type: "cancel", id: meetup.id })}
+						onCounter={() => setProposing(meetup.id)}
+						onDecline={() => meetupAction.mutate({ type: "decline", id: meetup.id })}
+						onOpen={() => router.push(`/meetup/${meetup.id}`)}
+						partyName={partyName}
+					/>
+				);
+			}
+
+			return (
+				<MessageBubble
+					message={item}
+					partyAvatarUrl={party?.avatarUrl ?? null}
+					partyLastReadAt={messages.data?.partyLastReadAt ?? null}
+					partyName={partyName}
+					showAvatar={index === 0 || items[index - 1].isMine !== item.isMine}
+				/>
+			);
+		},
+		[items, meetupAction, newestCardFor, party, partyName, messages.data?.partyLastReadAt],
+	);
+
+	const sendProposal = useCallback(
+		(proposedTimes: string[]) => {
+			const target = proposing;
+
+			if (target === null) return;
+
+			meetupAction.mutate(
+				target === "new"
+					? { type: "propose", proposedTimes }
+					: { type: "counter", id: target, proposedTimes },
+				{ onSuccess: () => setProposing(null) },
+			);
+		},
+		[meetupAction, proposing],
 	);
 
 	return (
@@ -156,19 +225,30 @@ export default function ChatThreadScreen() {
 					/>
 				)}
 
-				{sendFailed ? (
+				{sendFailed || meetupAction.isError ? (
 					<Text role="alert" style={styles.sendError}>
-						{describeError(sendError)}
+						{describeError(sendFailed ? sendError : meetupAction.error)}
 					</Text>
 				) : null}
 
 				<MessageComposer
 					isSending={isSending}
 					onAttachImage={handleAttachImage}
+					onProposeTime={
+						openMeetup.data === null ? () => setProposing("new") : undefined
+					}
 					onSend={send}
 					onTyping={setTyping}
 				/>
 			</KeyboardAvoidingView>
+
+			<ProposeTimeSheet
+				isSending={meetupAction.isPending}
+				onDismiss={() => setProposing(null)}
+				onSend={sendProposal}
+				title={proposing === "new" ? "Propose a Time" : "Suggest other time"}
+				visible={proposing !== null}
+			/>
 		</SafeAreaView>
 	);
 }

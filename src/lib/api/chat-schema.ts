@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { pageInfoSchema } from "@/lib/api/discovery-schema";
+import { meetupSchema } from "@/lib/api/meetup-schema";
 
 export const conversationPartySchema = z.object({
 	id: z.string(),
@@ -48,6 +49,12 @@ export const messageSchema = z.object({
 	mediaUrl: z.string().nullable(),
 	/** Decides which side of the thread the bubble sits on. */
 	isMine: z.boolean(),
+	/**
+	 * On `meetup` cards: the meetup as it is now, not as it was when the card
+	 * was posted. Optional so a socket event from before this field shipped
+	 * still parses.
+	 */
+	meetup: meetupSchema.nullable().optional(),
 	createdAt: z.string(),
 });
 
