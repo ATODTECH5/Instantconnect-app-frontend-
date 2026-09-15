@@ -1,11 +1,13 @@
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { useState } from "react";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import ArrowLeftIcon from "@/assets/auth/arrow-left.svg";
 import VerifiedIcon from "@/assets/search/verified-solid.svg";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { GlassIconButton } from "@/components/ui/glass-icon-button";
 import { GradientSpinner } from "@/components/ui/gradient-spinner";
 import { PrimaryButton } from "@/components/ui/primary-button";
@@ -22,6 +24,7 @@ import {
 	Type,
 } from "@/constants/theme";
 import type { ApiPersonProfile } from "@/lib/api/discovery-schema";
+import { useBlockAction } from "@/features/blocks/use-blocks";
 import { usePersonProfile } from "@/features/discover/use-discover";
 import { formatDistance } from "@/utils/format";
 
@@ -85,6 +88,9 @@ function initialsOf(fullName: string): string {
 
 function PersonDetails({ person, onBack }: PersonDetailsProps) {
 	const distance = formatDistance(person.distanceKm);
+	const firstName = person.fullName.split(" ")[0];
+	const block = useBlockAction();
+	const [isBlocking, setIsBlocking] = useState(false);
 
 	return (
 		<View style={styles.screen}>
@@ -142,7 +148,9 @@ function PersonDetails({ person, onBack }: PersonDetailsProps) {
 								</Text>
 
 								<View style={styles.metaRow}>
-									<Text style={styles.category}>{person.category?.label ?? ""}</Text>
+									<Text style={styles.category}>
+										{person.category?.label ?? ""}
+									</Text>
 
 									<View style={styles.metaDot} />
 
@@ -186,9 +194,35 @@ function PersonDetails({ person, onBack }: PersonDetailsProps) {
 							onPress={() => router.push("/chat")}
 							tone="gradient"
 						/>
+
+						{/* Not on the frame. Blocked Users needs a way in, and a person's
+						    profile is where a report or block belongs; a quiet text link
+						    keeps it out of the way until the design settles on one. */}
+						<Pressable
+							accessibilityLabel={`Block ${firstName}`}
+							accessibilityRole="button"
+							hitSlop={Spacing.two}
+							onPress={() => setIsBlocking(true)}
+							style={styles.blockLink}
+						>
+							<Text style={styles.blockLabel}>Block {firstName}</Text>
+						</Pressable>
 					</View>
 				</ScrollView>
 			</SafeAreaView>
+
+			<ConfirmDialog
+				cancelLabel="Keep"
+				confirmLabel="Block"
+				message={`${firstName} will no longer see your profile, appear in your Discover feed or be able to message you. You can undo this from Blocked Users in your profile.`}
+				onCancel={() => setIsBlocking(false)}
+				onConfirm={() => {
+					setIsBlocking(false);
+					block.mutate({ type: "block", userId: person.id }, { onSuccess: onBack });
+				}}
+				title={`Block ${firstName}?`}
+				visible={isBlocking}
+			/>
 		</View>
 	);
 }
@@ -197,6 +231,14 @@ const styles = StyleSheet.create({
 	screen: {
 		flex: 1,
 		backgroundColor: Ink.title,
+	},
+	blockLink: {
+		alignSelf: "center",
+		paddingVertical: Spacing.one,
+	},
+	blockLabel: {
+		...Type.cardAction,
+		color: Ink.onMediaMuted,
 	},
 	plain: {
 		flex: 1,

@@ -18,6 +18,7 @@ export const userSchema = z.object({
 	isEmailVerified: z.boolean(),
 	pinEnabled: z.boolean(),
 	biometricsEnabled: z.boolean(),
+	twoFactorEnabled: z.boolean(),
 	/** What the account is here for. Null until onboarding sets it. */
 	category: lookupSchema.nullable(),
 	createdAt: z.string().min(1),

@@ -11,7 +11,8 @@ export type BottomSheetProps = {
 	visible: boolean;
 	title: string;
 	message: ReactNode;
-	icon: ReactNode;
+	/** Omitted on the Settings sheets, which open straight on their title. */
+	icon?: ReactNode;
 	/** Fill behind the icon, so a sheet can read as danger, success or brand. */
 	badgeColor?: string;
 	/** Reason chips and anything else between the message and the actions. */
@@ -54,11 +55,16 @@ export function BottomSheet({
 				<View accessibilityRole="alert" accessibilityViewIsModal style={styles.sheet}>
 					<View style={styles.handle} />
 
-					<View
-						style={[styles.badge, badgeColor ? { backgroundColor: badgeColor } : null]}
-					>
-						{icon}
-					</View>
+					{icon ? (
+						<View
+							style={[
+								styles.badge,
+								badgeColor ? { backgroundColor: badgeColor } : null,
+							]}
+						>
+							{icon}
+						</View>
+					) : null}
 
 					<Text accessibilityRole="header" style={styles.title}>
 						{title}
