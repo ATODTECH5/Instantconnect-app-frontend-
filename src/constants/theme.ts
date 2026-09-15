@@ -46,6 +46,13 @@ export const Ink = {
 	/** Chip on a step the user has started but not finished, such as KYC. */
 	pending: "#B45309",
 	pendingSurface: "#FEF3C7",
+	/**
+	 * The "do not close this page" caution while a payment is processing. The
+	 * frame's Message/Warning pair, distinct from `pending`, which is a status.
+	 */
+	warning: "#CF9C00",
+	warningBorder: "#FCE399",
+	warningSurface: "#FFF7ED",
 	/** Circular control sitting on a white screen rather than the gradient. */
 	glassOnLight: "#FCF9FF",
 	scrollTrack: "#DFD7D7",
@@ -277,6 +284,15 @@ export const Type = {
 	/** The frame sets the hobby tag at 12/12, which clips Inter's descenders. */
 	hobbyLabel: { fontFamily: UiFont.regular, fontSize: 12, lineHeight: 16 },
 	toastLabel: { fontFamily: UiFont.medium, fontSize: 14, lineHeight: 20 },
+	/** Subscription frames. The plan card price and the plan details price. */
+	planPrice: { fontFamily: UiFont.bold, fontSize: 22, lineHeight: 28, letterSpacing: -0.3 },
+	priceLarge: { fontFamily: UiFont.bold, fontSize: 24, lineHeight: 30, letterSpacing: -0.3 },
+	/** "CURRENT PLAN", "SELECT METHOD": tracked capitals above a value. */
+	overline: { fontFamily: UiFont.regular, fontSize: 12, lineHeight: 16, letterSpacing: 1 },
+	/** The card form sets its labels at 11pt; 12 is the floor this app ships. */
+	inputLabel: { fontFamily: UiFont.semibold, fontSize: 12, lineHeight: 16, letterSpacing: 0.4 },
+	/** "Save 20%", "ACTIVE CHOICE", "MONTHLY": the smallest pills, raised from 10. */
+	tagLabel: { fontFamily: UiFont.semibold, fontSize: 11, lineHeight: 14, letterSpacing: 0.3 },
 } as const;
 
 export const Spacing = {
