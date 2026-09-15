@@ -12,11 +12,26 @@ export const meetupStatusSchema = z.enum([
 
 export const arrivalStateSchema = z.enum(["pending", "en_route", "arrived"]);
 
-const meetupPartySchema = z.object({
+export const meetupPartySchema = z.object({
 	userId: z.string(),
 	arrivalState: arrivalStateSchema,
 	arrivedAt: z.string().nullable(),
 	isVerified: z.boolean(),
+	/** Null until a code is issued, and again once it is consumed or expired. */
+	codeExpiresAt: z.string().nullable(),
+	isSharingLocation: z.boolean(),
+	/** Null unless sharing is on and a fix has been reported. */
+	location: z.object({ latitude: z.number(), longitude: z.number() }).nullable(),
+	locationAt: z.string().nullable(),
+	distanceToVenueM: z.number().nullable(),
+	isInSafeZone: z.boolean().nullable(),
+});
+
+export type ApiMeetupParty = z.infer<typeof meetupPartySchema>;
+
+export const meetupLocationEventSchema = z.object({
+	meetupId: z.string(),
+	party: meetupPartySchema,
 });
 
 const meetupVenueSchema = z.object({
@@ -41,6 +56,7 @@ export const meetupSchema = z.object({
 	isAwaitingMe: z.boolean(),
 	me: meetupPartySchema,
 	party: meetupPartySchema,
+	safeZoneRadiusM: z.number(),
 	createdAt: z.string(),
 	endedAt: z.string().nullable(),
 });
@@ -48,5 +64,19 @@ export const meetupSchema = z.object({
 /** Null is a normal answer, so it travels inside an object. */
 export const openMeetupSchema = z.object({ meetup: meetupSchema.nullable() });
 
+export const arrivalCodeSchema = z.object({
+	code: z.string(),
+	expiresAt: z.string(),
+	meetup: meetupSchema,
+});
+
+export const verifyCodeSchema = z.object({
+	verified: z.boolean(),
+	attemptsLeft: z.number(),
+	meetup: meetupSchema,
+});
+
 export type ApiMeetup = z.infer<typeof meetupSchema>;
+export type ApiArrivalCode = z.infer<typeof arrivalCodeSchema>;
+export type ApiVerifyCode = z.infer<typeof verifyCodeSchema>;
 export type MeetupStatus = z.infer<typeof meetupStatusSchema>;

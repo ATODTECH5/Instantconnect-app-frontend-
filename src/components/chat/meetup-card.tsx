@@ -14,6 +14,7 @@ export type MeetupCardProps = {
 	onDecline: () => void;
 	onCounter: () => void;
 	onCancel: () => void;
+	onOpen: () => void;
 };
 
 const ICON = 18;
@@ -37,6 +38,7 @@ function MeetupCardComponent({
 	onDecline,
 	onCounter,
 	onCancel,
+	onOpen,
 }: MeetupCardProps) {
 	const [chosen, setChosen] = useState<string | null>(
 		meetup.proposedTimes.length === 1 ? meetup.proposedTimes[0] : null,
@@ -113,11 +115,10 @@ function MeetupCardComponent({
 
 				<Actions
 					primary={{
-						label: "Get Your Arrival Code",
-						// Arrival codes are Phase 3 step 11. The control is in the
-						// design and in the card, and reads as coming rather than dead.
-						disabled: true,
-						onPress: () => undefined,
+						label:
+							meetup.status === "active" ? "Open meetup" : "Get Your Arrival Code",
+						disabled: false,
+						onPress: onOpen,
 					}}
 					tertiary={
 						meetup.status === "scheduled"

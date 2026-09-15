@@ -6,6 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import PinIcon from "@/assets/home/pin-solid.svg";
 import VerifiedIcon from "@/assets/search/verified-solid.svg";
 import BlockedIcon from "@/assets/profile/blocked.svg";
+import CirclesIcon from "@/assets/home/cat-friendship.svg";
 import CreateEventIcon from "@/assets/profile/create-event.svg";
 import CrownIcon from "@/assets/profile/crown.svg";
 import EditProfileIcon from "@/assets/profile/edit-profile.svg";
@@ -150,9 +151,14 @@ export default function ProfileScreen() {
 
 					<ProfileMenuRow
 						Icon={BlockedIcon}
-						isLast
 						label="Blocked Users"
 						onPress={() => router.push("/profile/blocked")}
+					/>
+					<ProfileMenuRow
+						Icon={CirclesIcon}
+						isLast
+						label="Safety Circles"
+						onPress={() => router.push("/profile/circles")}
 					/>
 				</ProfileMenuGroup>
 

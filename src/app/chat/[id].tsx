@@ -118,6 +118,7 @@ export default function ChatThreadScreen() {
 						onCancel={() => meetupAction.mutate({ type: "cancel", id: meetup.id })}
 						onCounter={() => setProposing(meetup.id)}
 						onDecline={() => meetupAction.mutate({ type: "decline", id: meetup.id })}
+						onOpen={() => router.push(`/meetup/${meetup.id}`)}
 						partyName={partyName}
 					/>
 				);

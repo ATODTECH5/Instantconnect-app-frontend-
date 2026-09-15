@@ -9,6 +9,7 @@ export const TYPING = "conversation.typing";
 export const READ = "conversation.read";
 export const NOTIFICATION_CREATED = "notification.created";
 export const MEETUP_UPDATED = "meetup.updated";
+export const MEETUP_LOCATION = "meetup.location";
 
 let socket: Socket | null = null;
 

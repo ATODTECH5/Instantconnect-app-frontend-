@@ -8,6 +8,7 @@ import {
 } from "react";
 
 import {
+	MEETUP_LOCATION,
 	MEETUP_UPDATED,
 	MESSAGE_CREATED,
 	READ,
@@ -16,7 +17,8 @@ import {
 } from "@/features/chat/chat-socket";
 import { CONVERSATIONS_KEY } from "@/features/chat/use-conversations";
 import { MESSAGES_KEY } from "@/features/chat/use-thread";
-import { OPEN_MEETUP_KEY } from "@/features/meetups/meetup-keys";
+import { MEETUP_KEY, OPEN_MEETUP_KEY } from "@/features/meetups/meetup-keys";
+import { type ApiMeetup, meetupLocationEventSchema } from "@/lib/api/meetup-schema";
 import type { ApiMessage, ApiMessagePage } from "@/lib/api/chat-schema";
 import { getAccessToken, subscribeToSession } from "@/lib/api/session-store";
 
@@ -150,6 +152,7 @@ export function useChatThreadSocket(conversationId: string): ThreadSocket {
 
 		/** Travel-state changes post no card, so this is the only signal for them. */
 		const onMeetup = () => {
+			void client.invalidateQueries({ queryKey: MEETUP_KEY });
 			void client.invalidateQueries({ queryKey: [...OPEN_MEETUP_KEY, conversationId] });
 			void client.invalidateQueries({ queryKey: [...MESSAGES_KEY, conversationId] });
 		};
@@ -174,8 +177,21 @@ export function useChatThreadSocket(conversationId: string): ThreadSocket {
 			noteTyping(event.isTyping);
 		};
 
+		// Patched into the cache rather than refetched: fixes are frequent and
+		// small, and the event carries the whole party object already.
+		const onLocation = (raw: unknown) => {
+			const parsed = meetupLocationEventSchema.safeParse(raw);
+
+			if (!parsed.success) return;
+
+			client.setQueryData<ApiMeetup>([...MEETUP_KEY, parsed.data.meetupId], (current) =>
+				current ? { ...current, party: parsed.data.party } : current,
+			);
+		};
+
 		socket.on(MESSAGE_CREATED, onMessage);
 		socket.on(MEETUP_UPDATED, onMeetup);
+		socket.on(MEETUP_LOCATION, onLocation);
 		socket.on(READ, onRead);
 		socket.on(TYPING, onTyping);
 
@@ -183,6 +199,7 @@ export function useChatThreadSocket(conversationId: string): ThreadSocket {
 			socket.off("connect", join);
 			socket.off(MESSAGE_CREATED, onMessage);
 			socket.off(MEETUP_UPDATED, onMeetup);
+			socket.off(MEETUP_LOCATION, onLocation);
 			socket.off(READ, onRead);
 			socket.off(TYPING, onTyping);
 			socket.emit("conversation.leave", conversationId);
