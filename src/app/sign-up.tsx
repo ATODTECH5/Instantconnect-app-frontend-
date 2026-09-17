@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useCallback, useRef } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -25,21 +25,25 @@ const DEFAULT_VALUES: SignUpValues = {
 	dateOfBirth: "",
 	password: "",
 	termsAccepted: false,
+	referralCode: "",
 };
 
 export default function SignUpScreen() {
 	const { setDraft } = useSignUpDraft();
+	// An invite link opens Sign Up with the friend's code already filled in.
+	const { ref } = useLocalSearchParams<{ ref?: string }>();
 	const emailRef = useRef<TextInput>(null);
 	const phoneRef = useRef<TextInput>(null);
 	const dateOfBirthRef = useRef<TextInput>(null);
 	const passwordRef = useRef<TextInput>(null);
+	const referralRef = useRef<TextInput>(null);
 
 	const {
 		control,
 		handleSubmit,
 		formState: { errors, isSubmitting },
 	} = useForm<SignUpValues, unknown, SignUpInput>({
-		defaultValues: DEFAULT_VALUES,
+		defaultValues: { ...DEFAULT_VALUES, referralCode: ref ?? "" },
 		resolver: zodResolver(signUpSchema),
 		mode: "onTouched",
 	});
@@ -174,12 +178,33 @@ export default function SignUpScreen() {
 								label="Password"
 								onBlur={onBlur}
 								onChangeText={onChange}
-								onSubmitEditing={submit}
+								onSubmitEditing={() => referralRef.current?.focus()}
 								placeholder="Enter Password"
 								ref={passwordRef}
-								returnKeyType="go"
+								returnKeyType="next"
 								secure
 								textContentType="newPassword"
+								value={value}
+							/>
+						)}
+					/>
+
+					<Controller
+						control={control}
+						name="referralCode"
+						render={({ field: { onChange, onBlur, value } }) => (
+							<FormField
+								autoCapitalize="characters"
+								autoCorrect={false}
+								error={errors.referralCode?.message}
+								label="Referral Code (Optional)"
+								maxLength={16}
+								onBlur={onBlur}
+								onChangeText={onChange}
+								onSubmitEditing={submit}
+								placeholder="Friend's invite code"
+								ref={referralRef}
+								returnKeyType="go"
 								value={value}
 							/>
 						)}

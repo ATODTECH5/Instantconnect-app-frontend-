@@ -27,6 +27,7 @@ export async function createAccount(input: SignUpInput): Promise<{ email: string
 			dateOfBirth: input.dateOfBirth,
 			password: input.password,
 			termsAccepted: input.termsAccepted,
+			...(input.referralCode ? { referralCode: input.referralCode } : {}),
 		},
 		schema: registrationSchema,
 	});

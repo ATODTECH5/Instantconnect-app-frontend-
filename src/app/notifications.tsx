@@ -43,6 +43,11 @@ export default function NotificationsScreen() {
 				return;
 			}
 
+			if (notification.kind === "referral_joined" && notification.subjectId) {
+				router.push(`/profile/refer/joined/${notification.subjectId}`);
+				return;
+			}
+
 			router.push("/(tabs)/connection");
 		},
 		[markRead],
