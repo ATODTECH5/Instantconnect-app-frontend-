@@ -23,6 +23,12 @@ export const signUpSchema = z.object({
 	dateOfBirth: dateOfBirthSchema,
 	password: passwordSchema,
 	termsAccepted: z.boolean().refine((accepted) => accepted, "Accept the terms to continue"),
+	referralCode: z
+		.string()
+		.trim()
+		.toUpperCase()
+		.max(16, "That referral code is too long")
+		.regex(/^[A-Z0-9]*$/, "Use letters and numbers only"),
 });
 
 export type SignUpValues = z.input<typeof signUpSchema>;

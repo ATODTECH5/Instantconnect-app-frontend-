@@ -10,6 +10,8 @@ export const Brand = {
 	magenta: "#CE41B5",
 	violet: "#A136DD",
 	purple: "#9333EA",
+	/** Primary/700. The top of the Help & Support header, before it fades to purple. */
+	purpleDeep: "#7E22CE",
 	purpleLight: "#A855F7",
 	/** Primary/200. Fills the small count badges, such as "6 Visits". */
 	purpleTint: "#E9D5FF",
@@ -69,6 +71,11 @@ export const Ink = {
 	cardBorder: "#94A3B8",
 	/** Presence dot on avatars and people cards. */
 	online: "#41C97C",
+	/** The Help & Support hub, whose cards sit on the purple header. */
+	cardShadow: "rgba(0, 0, 0, 0.1)",
+	/** Circular back control sitting on the support hub's purple header. */
+	glassOnBrand: "rgba(255, 255, 255, 0.15)",
+	glassOnBrandBorder: "rgba(255, 255, 255, 0.2)",
 	/** Filled check beside a verified name in a result row. */
 	verified: "#16A34A",
 	/** Unfilled half of the distance slider track. */
@@ -90,6 +97,13 @@ export const Ink = {
 	navGlass: "rgba(255, 255, 255, 0.07)",
 	navBorder: "rgba(255, 255, 255, 0.4)",
 	navFallback: "rgba(255, 255, 255, 0.94)",
+} as const;
+
+/** Brand colours of the apps in the Refer a Friend share row. Theirs, not ours. */
+export const Social = {
+	message: "#3B82F6",
+	whatsapp: "#25D366",
+	x: "#000000",
 } as const;
 
 /** Pale disc plus icon tint for each home category. */
@@ -125,6 +139,19 @@ const BRAND_GRADIENT_CSS =
 export const BrandGradient = Platform.select({
 	web: { backgroundImage: BRAND_GRADIENT_CSS } as ViewStyle,
 	default: { experimental_backgroundImage: BRAND_GRADIENT_CSS } satisfies ViewStyle,
+});
+
+/**
+ * The Help & Support hub's header: solid purple at the top, fading through
+ * lavender to the page surface where the cards begin.
+ */
+const SUPPORT_HEADER_CSS =
+	`linear-gradient(180deg, ${Brand.purpleDeep} 0%, ${Brand.purple} 38%, ` +
+	`${Brand.purpleSoft} 68%, ${Brand.purpleTint} 86%, ${Ink.surface} 100%)`;
+
+export const SupportHeaderGradient = Platform.select({
+	web: { backgroundImage: SUPPORT_HEADER_CSS } as ViewStyle,
+	default: { experimental_backgroundImage: SUPPORT_HEADER_CSS } satisfies ViewStyle,
 });
 
 /** Darkens the foot of a photo so the caption over it stays readable. */

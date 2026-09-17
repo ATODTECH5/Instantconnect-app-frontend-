@@ -1,8 +1,9 @@
 import { Pressable, StyleSheet, Text } from "react-native";
 
-import { Ink, MinTapTarget, Radius, Spacing, Type } from "@/constants/theme";
+import { Brand, Ink, MinTapTarget, Radius, Spacing, Type } from "@/constants/theme";
 
-export type SecondaryButtonTone = "neutral" | "danger";
+/** `brand` is the purple outline under a purple primary, as on Invite Sent. */
+export type SecondaryButtonTone = "neutral" | "danger" | "brand";
 
 export type SecondaryButtonProps = {
 	label: string;
@@ -21,6 +22,7 @@ export function SecondaryButton({
 	accessibilityHint,
 }: SecondaryButtonProps) {
 	const isDanger = tone === "danger";
+	const isBrand = tone === "brand";
 
 	return (
 		<Pressable
@@ -32,12 +34,16 @@ export function SecondaryButton({
 			onPress={onPress}
 			style={({ pressed }) => [
 				styles.button,
-				isDanger ? styles.danger : styles.neutral,
+				isDanger ? styles.danger : isBrand ? styles.brand : styles.neutral,
 				disabled && styles.disabled,
 				pressed && !disabled && styles.pressed,
 			]}
 		>
-			<Text style={[styles.label, isDanger && styles.dangerLabel]}>{label}</Text>
+			<Text
+				style={[styles.label, isDanger && styles.dangerLabel, isBrand && styles.brandLabel]}
+			>
+				{label}
+			</Text>
 		</Pressable>
 	);
 }
@@ -60,6 +66,10 @@ const styles = StyleSheet.create({
 		borderWidth: 1.5,
 		borderColor: Ink.danger,
 	},
+	brand: {
+		borderWidth: 1,
+		borderColor: Brand.purple,
+	},
 	disabled: {
 		opacity: 0.45,
 	},
@@ -73,5 +83,8 @@ const styles = StyleSheet.create({
 	},
 	dangerLabel: {
 		color: Ink.danger,
+	},
+	brandLabel: {
+		color: Brand.purple,
 	},
 });
