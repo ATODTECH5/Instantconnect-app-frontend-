@@ -48,6 +48,11 @@ export default function NotificationsScreen() {
 				return;
 			}
 
+			if (notification.kind === "kyc_approved" || notification.kind === "kyc_rejected") {
+				router.push("/profile/kyc");
+				return;
+			}
+
 			router.push("/(tabs)/connection");
 		},
 		[markRead],

@@ -91,3 +91,12 @@ export function formatTimeAgo(iso: string, now: Date = new Date()): string {
 
 	return `on ${MONTHS[at.getMonth()]} ${at.getDate()}, ${at.getFullYear()}`;
 }
+
+/** "Sep 22, 2026", the short date the profile section's rows use. */
+export function formatDate(iso: string): string {
+	return new Date(iso).toLocaleDateString("en-US", {
+		month: "short",
+		day: "2-digit",
+		year: "numeric",
+	});
+}

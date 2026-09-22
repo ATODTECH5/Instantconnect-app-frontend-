@@ -117,7 +117,9 @@ export default function CirclesScreen() {
 								<CircleRow
 									accessibilityHint="Shows the people in this circle"
 									name={item.name}
-									onPress={() => setExpanded(expanded === item.id ? null : item.id)}
+									onPress={() =>
+										setExpanded(expanded === item.id ? null : item.id)
+									}
 									subtitle={
 										item.members.length === 0
 											? "No one yet"
@@ -130,13 +132,19 @@ export default function CirclesScreen() {
 										{item.members.map((member) => (
 											<View key={member.id} style={styles.member}>
 												<View style={styles.memberText}>
-													<Text style={styles.memberName}>{member.name}</Text>
-													<Text style={styles.memberEmail}>{member.email}</Text>
+													<Text style={styles.memberName}>
+														{member.name}
+													</Text>
+													<Text style={styles.memberEmail}>
+														{member.email}
+													</Text>
 												</View>
 												<Pressable
 													accessibilityLabel={`Remove ${member.name}`}
 													accessibilityRole="button"
-													accessibilityState={{ disabled: action.isPending }}
+													accessibilityState={{
+														disabled: action.isPending,
+													}}
 													disabled={action.isPending}
 													hitSlop={12}
 													onPress={() =>
@@ -156,17 +164,29 @@ export default function CirclesScreen() {
 											<Pressable
 												accessibilityLabel={`Add a contact to ${item.name}`}
 												accessibilityRole="button"
-												onPress={() => setSheet({ kind: "member", circle: item })}
-												style={({ pressed }) => [styles.link, pressed && styles.pressed]}
+												onPress={() =>
+													setSheet({ kind: "member", circle: item })
+												}
+												style={({ pressed }) => [
+													styles.link,
+													pressed && styles.pressed,
+												]}
 											>
-												<PlusIcon color={Brand.purple} height={16} width={16} />
+												<PlusIcon
+													color={Brand.purple}
+													height={16}
+													width={16}
+												/>
 												<Text style={styles.linkLabel}>Add a contact</Text>
 											</Pressable>
 											<Pressable
 												accessibilityLabel={`Delete ${item.name}`}
 												accessibilityRole="button"
 												onPress={() => setDeleting(item)}
-												style={({ pressed }) => [styles.link, pressed && styles.pressed]}
+												style={({ pressed }) => [
+													styles.link,
+													pressed && styles.pressed,
+												]}
 											>
 												<Text style={styles.linkDanger}>Delete circle</Text>
 											</Pressable>
@@ -183,7 +203,7 @@ export default function CirclesScreen() {
 				actions={
 					<PrimaryButton
 						disabled={!canSubmit || action.isPending}
-						label={sheet?.kind === "circle" ? "Create circle" : "Add contact"}
+						label={sheet?.kind === "member" ? "Add contact" : "Create circle"}
 						loading={action.isPending}
 						onPress={submit}
 					/>

@@ -30,8 +30,16 @@ export type SelectFieldProps = {
 	placeholder: string;
 	accessibilityLabel: string;
 	sheetTitle: string;
-	clearLabel?: string;
+	/** Null removes the "any" row, for a field that must end up with a value. */
+	clearLabel?: string | null;
+	/** Floating label on the border, matching `FormField`, for a select inside a form. */
+	label?: string;
+	error?: string;
+	disabled?: boolean;
 };
+
+/** Half the label line height, so the label straddles the top border. */
+const LABEL_OFFSET = -Type.fieldLabel.lineHeight / 2;
 
 /** Dropdown trigger backed by a sheet, avoiding a native picker dependency. */
 export function SelectField({
@@ -42,11 +50,15 @@ export function SelectField({
 	accessibilityLabel,
 	sheetTitle,
 	clearLabel = "Any category",
+	label,
+	error,
+	disabled = false,
 }: SelectFieldProps) {
 	const insets = useSafeAreaInsets();
 	const [isOpen, setIsOpen] = useState(false);
 
 	const selected = options.find((option) => option.id === value) ?? null;
+	const hasError = Boolean(error);
 
 	const choose = (id: string | null) => {
 		onChange(id);
@@ -54,15 +66,30 @@ export function SelectField({
 	};
 
 	return (
-		<>
+		<View>
 			<Pressable
-				accessibilityHint="Opens the list of categories"
+				accessibilityHint={error ?? `Opens the list of ${sheetTitle.toLowerCase()}`}
 				accessibilityLabel={`${accessibilityLabel}. ${selected?.label ?? placeholder}`}
 				accessibilityRole="button"
-				accessibilityState={{ expanded: isOpen }}
+				accessibilityState={{ expanded: isOpen, disabled }}
+				disabled={disabled}
 				onPress={() => setIsOpen(true)}
-				style={({ pressed }) => [styles.trigger, pressed && styles.pressed]}
+				style={({ pressed }) => [
+					styles.trigger,
+					hasError && styles.triggerError,
+					disabled && styles.triggerDisabled,
+					pressed && styles.pressed,
+				]}
 			>
+				{label ? (
+					<Text
+						numberOfLines={1}
+						style={[styles.floatingLabel, hasError && styles.floatingLabelError]}
+					>
+						{label}
+					</Text>
+				) : null}
+
 				<Text
 					numberOfLines={1}
 					style={[styles.triggerLabel, !selected && styles.placeholder]}
@@ -72,6 +99,12 @@ export function SelectField({
 
 				<ChevronDownIcon color={Ink.muted} height={ICON_SIZE} width={ICON_SIZE} />
 			</Pressable>
+
+			{hasError ? (
+				<Text role="alert" style={styles.error}>
+					{error}
+				</Text>
+			) : null}
 
 			<Modal
 				animationType="slide"
@@ -96,11 +129,13 @@ export function SelectField({
 					</Text>
 
 					<ScrollView bounces={false} style={styles.list}>
-						<OptionRow
-							label={clearLabel}
-							onPress={() => choose(null)}
-							selected={value === null}
-						/>
+						{clearLabel !== null ? (
+							<OptionRow
+								label={clearLabel}
+								onPress={() => choose(null)}
+								selected={value === null}
+							/>
+						) : null}
 
 						{options.map((option) => (
 							<OptionRow
@@ -113,7 +148,7 @@ export function SelectField({
 					</ScrollView>
 				</View>
 			</Modal>
-		</>
+		</View>
 	);
 }
 
@@ -158,10 +193,33 @@ const styles = StyleSheet.create({
 		borderColor: Ink.border,
 		backgroundColor: Ink.surface,
 	},
+	triggerError: {
+		borderColor: Ink.danger,
+	},
+	triggerDisabled: {
+		opacity: 0.6,
+	},
+	floatingLabel: {
+		...Type.fieldLabel,
+		position: "absolute",
+		top: LABEL_OFFSET,
+		left: Spacing.three - Spacing.one,
+		paddingHorizontal: Spacing.three - Spacing.one,
+		backgroundColor: Ink.surface,
+		color: Ink.body,
+	},
+	floatingLabelError: {
+		color: Ink.danger,
+	},
 	triggerLabel: {
 		...Type.rowLabel,
 		flexShrink: 1,
 		color: Ink.title,
+	},
+	error: {
+		...Type.fieldError,
+		marginTop: Spacing.one + Spacing.half,
+		color: Ink.danger,
 	},
 	placeholder: {
 		color: Ink.placeholder,

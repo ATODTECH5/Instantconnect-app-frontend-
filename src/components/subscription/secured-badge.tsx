@@ -5,13 +5,15 @@ import { Ink, Spacing, Type } from "@/constants/theme";
 
 const ICON_SIZE = 12;
 
-/** The lock line under every payment CTA. */
-export function SecuredBadge() {
+const PAYMENT_LABEL = "Your payment is secured with 256-bit encryption";
+
+/** The lock line under every payment CTA, and under every KYC one with its own wording. */
+export function SecuredBadge({ label = PAYMENT_LABEL }: { label?: string }) {
 	return (
 		<View style={styles.row}>
 			<LockIcon color={Ink.meta} height={ICON_SIZE} width={ICON_SIZE} />
 
-			<Text style={styles.label}>Your payment is secured with 256-bit encryption</Text>
+			<Text style={styles.label}>{label}</Text>
 		</View>
 	);
 }

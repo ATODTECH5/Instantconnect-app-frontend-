@@ -75,7 +75,8 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Choose photos from your library to use on your profile and to send in your chats."
+          "photosPermission": "Choose photos from your library to use on your profile, to send in your chats and to verify your identity.",
+          "cameraPermission": "Take a selfie to verify your identity."
         }
       ],
       "expo-maps"
