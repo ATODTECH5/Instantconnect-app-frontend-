@@ -11,6 +11,7 @@ export const uploadSignatureSchema = z.object({
 	signature: z.string().min(1),
 	storageId: z.string().min(1),
 	transformation: z.string().min(1),
+	deliveryType: z.string().min(1).optional(),
 });
 
 export type ApiUploadSignature = z.infer<typeof uploadSignatureSchema>;

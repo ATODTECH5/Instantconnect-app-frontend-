@@ -78,6 +78,7 @@ export async function uploadToProvider(
 	form.append("timestamp", String(signature.timestamp));
 	form.append("public_id", signature.storageId);
 	form.append("transformation", signature.transformation);
+	if (signature.deliveryType) form.append("type", signature.deliveryType);
 	form.append("signature", signature.signature);
 
 	// The provider is reached directly rather than through `request`, so the two

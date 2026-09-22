@@ -111,9 +111,9 @@ export default function SettingsVerifyScreen() {
 
 				await confirmContactChange(purpose, submitted);
 				await refreshAccount();
-				// `navigate` pops back to the contact screen already in the stack
-				// and hands it the flag for its saved banner.
-				router.navigate({
+				// Pops this screen (and the change sheet's route) so Back from
+				// the contact screen cannot land on a spent code entry.
+				router.dismissTo({
 					pathname: "/profile/settings/contact",
 					params: { saved: purpose },
 				});

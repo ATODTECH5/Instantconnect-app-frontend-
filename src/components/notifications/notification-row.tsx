@@ -1,12 +1,14 @@
 import { memo } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
+import ShieldCheckIcon from "@/assets/subscription/shield-check.svg";
 import { AvatarImage } from "@/components/ui/avatar-image";
-import { Brand, Gap, Ink, MinTapTarget, Spacing, Type } from "@/constants/theme";
+import { Brand, Gap, Ink, MinTapTarget, Radius, Spacing, Type } from "@/constants/theme";
 import { messageTime } from "@/features/chat/message-time";
 import type { ApiNotification } from "@/lib/api/notification-schema";
 
 const AVATAR = 44;
+const SYSTEM_ICON = 22;
 const DOT = 8;
 
 export type NotificationRowProps = {
@@ -33,11 +35,19 @@ export const NotificationRow = memo(function NotificationRow({
 				pressed && styles.pressed,
 			]}
 		>
-			<AvatarImage
-				fullName={actor?.fullName ?? "?"}
-				size={AVATAR}
-				uri={actor?.avatarUrl ?? null}
-			/>
+			{actor ? (
+				<AvatarImage fullName={actor.fullName} size={AVATAR} uri={actor.avatarUrl} />
+			) : (
+				// KYC decisions and anything else the system raises have no actor,
+				// and initials of "?" read as a broken avatar rather than as us.
+				<View style={styles.systemBadge}>
+					<ShieldCheckIcon
+						color={Brand.purple}
+						height={SYSTEM_ICON}
+						width={SYSTEM_ICON}
+					/>
+				</View>
+			)}
 
 			<View style={styles.copy}>
 				<View style={styles.titleRow}>
@@ -71,6 +81,14 @@ const styles = StyleSheet.create({
 	},
 	rowUnread: {
 		backgroundColor: Ink.glassOnLight,
+	},
+	systemBadge: {
+		width: AVATAR,
+		height: AVATAR,
+		borderRadius: Radius.pill,
+		alignItems: "center",
+		justifyContent: "center",
+		backgroundColor: Brand.purpleSurface,
 	},
 	copy: {
 		flex: 1,

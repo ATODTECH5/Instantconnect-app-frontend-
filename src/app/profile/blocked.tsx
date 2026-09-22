@@ -27,18 +27,12 @@ import {
 import { useBlockAction, useBlockedUsers } from "@/features/blocks/use-blocks";
 import { describeError } from "@/lib/api/api-error";
 import type { ApiBlockedUser } from "@/lib/api/blocks-schema";
+import { formatDate } from "@/utils/format";
 
 const EDGE_INSET = Spacing.three;
 const AVATAR_SIZE = 44;
 const SHEET_AVATAR_SIZE = 56;
 
-function formatBlockedOn(iso: string): string {
-	return new Date(iso).toLocaleDateString("en-US", {
-		month: "short",
-		day: "2-digit",
-		year: "numeric",
-	});
-}
 
 /**
  * Blocked Users (Figma 2811:639) with the unblock sheet (2813:1008) and the
@@ -146,7 +140,7 @@ export default function BlockedUsersScreen() {
 									</Text>
 
 									<Text style={styles.meta}>
-										Blocked on {formatBlockedOn(item.blockedAt)}
+										Blocked on {formatDate(item.blockedAt)}
 									</Text>
 								</View>
 
