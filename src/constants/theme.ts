@@ -62,6 +62,9 @@ export const Ink = {
 	/** Fades the screen under a loading spinner without dimming the spinner. */
 	surfaceVeil: "rgba(255, 255, 255, 0.75)",
 	keypad: "#F9F9F9",
+	/** Filled form boxes with the label above them, as on Create Event. */
+	fieldFill: "#F9F9F9",
+	fieldBorder: "#E4E7EC",
 	keypadPressed: "#EDECEF",
 	rowBorder: "#EDF1F3",
 	/** Bubble behind a message the other party sent. */
@@ -318,6 +321,8 @@ export const Type = {
 	overline: { fontFamily: UiFont.regular, fontSize: 12, lineHeight: 16, letterSpacing: 1 },
 	/** The card form sets its labels at 11pt; 12 is the floor this app ships. */
 	inputLabel: { fontFamily: UiFont.semibold, fontSize: 12, lineHeight: 16, letterSpacing: 0.4 },
+	/** Label set above a filled field rather than on its border. */
+	stackedLabel: { fontFamily: UiFont.semibold, fontSize: 12, lineHeight: 16 },
 	/** "Save 20%", "ACTIVE CHOICE", "MONTHLY": the smallest pills, raised from 10. */
 	tagLabel: { fontFamily: UiFont.semibold, fontSize: 11, lineHeight: 14, letterSpacing: 0.3 },
 } as const;
