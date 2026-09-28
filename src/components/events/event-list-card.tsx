@@ -5,7 +5,7 @@ import type { ImageSourcePropType } from "react-native";
 
 import ArrowRightIcon from "@/assets/connections/arrow-right.svg";
 import PinSolidIcon from "@/assets/home/pin-solid.svg";
-import { AvatarStack } from "@/components/ui/avatar-stack";
+import { AvatarStack, type StackPerson } from "@/components/ui/avatar-stack";
 import { Brand, Gap, Ink, Radius, Spacing, Type } from "@/constants/theme";
 
 const MEDIA_HEIGHT = 108;
@@ -20,7 +20,7 @@ export type EventListCardProps = {
 	distanceLabel?: string;
 	scheduleLabel: string;
 	photo: ImageSourcePropType | null;
-	faces: ImageSourcePropType[];
+	faces: StackPerson[];
 	extraFaces: number;
 	/** "45 attending", "4 invited". */
 	countLabel: string;
@@ -87,8 +87,8 @@ export const EventListCard = memo(function EventListCard({
 					{faces.length > 0 || extraFaces > 0 ? (
 						<AvatarStack
 							accessibilityLabel={countLabel}
-							avatars={faces}
 							extraCount={extraFaces}
+							people={faces}
 						/>
 					) : null}
 				</View>

@@ -17,8 +17,8 @@ import { StateMessage } from "@/components/ui/state-message";
 import { Brand, Gap, Ink, MaxColumnWidth, Spacing, Type } from "@/constants/theme";
 import { connectActionFor } from "@/features/discover/connect-action";
 import { useConnectRequests } from "@/features/discover/use-connect-requests";
-import type { NearbyEvent } from "@/features/home/home-feed";
 import type { ApiNearbyPerson } from "@/lib/api/discovery-schema";
+import type { ApiNearbyEvent } from "@/lib/api/event-schema";
 import { useHomeFeed } from "@/features/home/use-home-feed";
 import { useProfile } from "@/features/profile/use-profile";
 import { useCurrentUser } from "@/features/user/use-current-user";
@@ -97,11 +97,13 @@ export default function HomeScreen() {
 		[attemptFor, connect, openPerson, personWidth],
 	);
 
+	const openEvent = useCallback((id: string) => router.push(`/events/${id}`), []);
+
 	const renderEvent = useCallback(
-		(event: NearbyEvent) => (
-			<EventCard event={event} onOpen={() => openSearch()} width={eventWidth} />
+		(event: ApiNearbyEvent) => (
+			<EventCard event={event} onOpen={openEvent} width={eventWidth} />
 		),
-		[eventWidth, openSearch],
+		[eventWidth, openEvent],
 	);
 
 	if (status === "loading") {
@@ -221,7 +223,11 @@ export default function HomeScreen() {
 							accessibilityLabel="Events happening around you"
 							data={feed.events}
 							edgeInset={EDGE_INSET}
-							emptyMessage="Nothing is scheduled around you right now. Check back soon."
+							emptyMessage={
+								feed.eventsFailed
+									? "We could not load events. Pull down to try again."
+									: "Nothing is scheduled around you right now. Check back soon."
+							}
 							gap={EVENT_CARD_GAP}
 							itemWidth={eventWidth}
 							keyExtractor={(event) => event.id}

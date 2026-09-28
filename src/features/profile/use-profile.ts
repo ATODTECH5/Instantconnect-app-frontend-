@@ -6,6 +6,7 @@ import {
 	type UseQueryResult,
 } from "@tanstack/react-query";
 
+import { EVENTS_KEY } from "@/features/events/use-events";
 import {
 	fetchHobbies,
 	fetchOccupations,
@@ -52,11 +53,17 @@ export function useUpdateProfile(): UseMutationResult<ApiProfile, Error, Profile
 
 	return useMutation({
 		mutationFn: updateProfile,
-		onSuccess: (profile) => {
+		onSuccess: (profile, changes) => {
 			client.setQueryData(profileKey, profile);
 			// The header greeting and the tab avatar read the account, not the
 			// profile, and the name can change here.
 			void client.invalidateQueries({ queryKey: ["users", "me"] });
+
+			// People and events near you are measured from this point.
+			if (changes.latitude !== undefined || changes.longitude !== undefined) {
+				void client.invalidateQueries({ queryKey: ["discovery"] });
+				void client.invalidateQueries({ queryKey: [...EVENTS_KEY, "nearby"] });
+			}
 		},
 	});
 }

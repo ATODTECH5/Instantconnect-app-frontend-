@@ -4,7 +4,7 @@ import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 
 import PinSolidIcon from "@/assets/home/pin-solid.svg";
 import { Brand, Gap, Ink, Radius, Spacing, Type } from "@/constants/theme";
-import type { NearbyEvent } from "@/features/home/home-feed";
+import type { ApiNearbyEvent } from "@/lib/api/event-schema";
 import { formatPrice } from "@/utils/format";
 
 export const EVENT_CARD_ASPECT = 228 / 165;
@@ -13,14 +13,15 @@ const MEDIA_ASPECT = 228 / 99;
 const PIN_SIZE = 14;
 
 export type EventCardProps = {
-	event: NearbyEvent;
+	event: ApiNearbyEvent;
 	width: number;
 	onOpen: (id: string) => void;
 };
 
 export const EventCard = memo(function EventCard({ event, width, onOpen }: EventCardProps) {
-	const { id, title, venue, priceMinor, currencySymbol, photo } = event;
-	const price = formatPrice(priceMinor, currencySymbol);
+	const { id, title, priceMinor, coverUrl } = event;
+	const venue = event.venue.name;
+	const price = formatPrice(priceMinor / 100, "₦");
 
 	return (
 		<Pressable
@@ -30,13 +31,17 @@ export const EventCard = memo(function EventCard({ event, width, onOpen }: Event
 			onPress={() => onOpen(id)}
 			style={({ pressed }) => [styles.card, { width }, pressed && styles.pressed]}
 		>
-			<Image
-				accessibilityIgnoresInvertColors
-				contentFit="cover"
-				source={photo}
-				style={styles.media}
-				transition={200}
-			/>
+			<View style={styles.media}>
+				{coverUrl ? (
+					<Image
+						accessibilityIgnoresInvertColors
+						contentFit="cover"
+						source={{ uri: coverUrl }}
+						style={StyleSheet.absoluteFill}
+						transition={200}
+					/>
+				) : null}
+			</View>
 
 			<View style={styles.body}>
 				<View style={styles.titleRow}>

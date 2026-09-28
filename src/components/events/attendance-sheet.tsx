@@ -32,6 +32,8 @@ export type AttendanceSheetProps = {
 	onBackToEvents: () => void;
 	onUndoCancellation: () => void;
 	onDismiss: () => void;
+	/** A cancel or undo is in flight. */
+	busy?: boolean;
 };
 
 export function AttendanceSheet({
@@ -46,6 +48,7 @@ export function AttendanceSheet({
 	onBackToEvents,
 	onUndoCancellation,
 	onDismiss,
+	busy = false,
 }: AttendanceSheetProps) {
 	if (state === "confirm") {
 		return (
@@ -54,6 +57,7 @@ export function AttendanceSheet({
 					<>
 						<PrimaryButton
 							label="Yes, Cancel Attendance"
+							loading={busy}
 							onPress={onConfirmCancel}
 							tone="danger"
 						/>
@@ -106,10 +110,11 @@ export function AttendanceSheet({
 
 						<Text
 							accessibilityRole="button"
-							onPress={onUndoCancellation}
+							accessibilityState={{ busy, disabled: busy }}
+							onPress={busy ? undefined : onUndoCancellation}
 							style={styles.link}
 						>
-							Undo Cancellation
+							{busy ? "Undoing…" : "Undo Cancellation"}
 						</Text>
 					</>
 				}

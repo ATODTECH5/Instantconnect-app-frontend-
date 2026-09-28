@@ -3,100 +3,75 @@ import { memo } from "react";
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 
 import PinSolidIcon from "@/assets/home/pin-solid.svg";
-import { AvatarStack } from "@/components/ui/avatar-stack";
-import { Brand, Gap, Ink, MinTapTarget, Radius, Spacing, Type } from "@/constants/theme";
-import type { SearchMeetup } from "@/features/search/search-catalog";
-import { formatDistance, formatSchedule } from "@/utils/format";
+import { Brand, Gap, Ink, Radius, Spacing, Type } from "@/constants/theme";
+import type { SearchEvent } from "@/features/search/search-catalog";
+import { formatDistance, formatPrice, formatSchedule } from "@/utils/format";
 
 const MEDIA_ASPECT = 361 / 180;
 const PIN_SIZE = 14;
-const JOIN_MIN_HEIGHT = 44;
 
-export type MeetupCardProps = {
-	meetup: SearchMeetup;
-	hasJoined: boolean;
-	isJoining: boolean;
+export type EventResultCardProps = {
+	event: SearchEvent;
 	onOpen: (id: string) => void;
-	onJoin: (id: string) => void;
 };
 
-export const MeetupCard = memo(function MeetupCard({
-	meetup,
-	hasJoined,
-	isJoining,
+/** The frame's Join Meetup button is left off: joining an event is not built yet. */
+export const EventResultCard = memo(function EventResultCard({
+	event,
 	onOpen,
-	onJoin,
-}: MeetupCardProps) {
-	const { id, title, venue, distanceKm, startsAt, photo, attendees, extraAttendees } = meetup;
+}: EventResultCardProps) {
+	const { id, title, distanceKm, startsAt, coverUrl, priceMinor } = event;
+	const venue = event.venue.name;
 	const schedule = formatSchedule(startsAt);
 	const distance = formatDistance(distanceKm);
-	const joinLabel = hasJoined ? "Joined" : isJoining ? "Joining" : "Join Meetup";
-	const isJoinInert = hasJoined || isJoining;
+	const price = formatPrice(priceMinor / 100, "₦");
 
 	return (
-		<View style={styles.card}>
-			<Pressable
-				accessibilityHint="Opens this meetup"
-				accessibilityLabel={`${title}, at ${venue}, ${distance}, ${schedule}`}
-				accessibilityRole="button"
-				onPress={() => onOpen(id)}
-				style={({ pressed }) => pressed && styles.pressed}
-			>
-				<Image
-					accessibilityIgnoresInvertColors
-					contentFit="cover"
-					source={photo}
-					style={styles.media}
-					transition={200}
-				/>
-
-				<View style={styles.body}>
-					<View style={styles.copy}>
-						<Text numberOfLines={2} style={styles.title}>
-							{title}
-						</Text>
-
-						<View style={styles.venueRow}>
-							<PinSolidIcon color={Brand.purple} height={PIN_SIZE} width={PIN_SIZE} />
-
-							<Text numberOfLines={1} style={styles.venue}>
-								{venue}
-							</Text>
-						</View>
-
-						<Text numberOfLines={1} style={styles.meta}>
-							{distance}
-						</Text>
-
-						<Text numberOfLines={1} style={styles.meta}>
-							{schedule}
-						</Text>
-					</View>
-
-					<AvatarStack
-						accessibilityLabel={`${attendees.length + extraAttendees} people going`}
-						avatars={attendees}
-						extraCount={extraAttendees}
+		<Pressable
+			accessibilityHint="Opens this event"
+			accessibilityLabel={`${title}, at ${venue}, ${distance}, ${schedule}, ${price}`}
+			accessibilityRole="button"
+			onPress={() => onOpen(id)}
+			style={({ pressed }) => [styles.card, pressed && styles.pressed]}
+		>
+			<View style={styles.media}>
+				{coverUrl ? (
+					<Image
+						accessibilityIgnoresInvertColors
+						contentFit="cover"
+						source={{ uri: coverUrl }}
+						style={StyleSheet.absoluteFill}
+						transition={200}
 					/>
-				</View>
-			</Pressable>
+				) : null}
+			</View>
 
-			<Pressable
-				accessibilityHint={`Adds you to ${title}`}
-				accessibilityLabel={`${joinLabel}, ${title}`}
-				accessibilityRole="button"
-				accessibilityState={{ disabled: isJoinInert, busy: isJoining }}
-				disabled={isJoinInert}
-				onPress={() => onJoin(id)}
-				style={({ pressed }) => [
-					styles.join,
-					isJoinInert && styles.joinInert,
-					pressed && !isJoinInert && styles.pressed,
-				]}
-			>
-				<Text style={styles.joinLabel}>{joinLabel}</Text>
-			</Pressable>
-		</View>
+			<View style={styles.body}>
+				<View style={styles.titleRow}>
+					<Text numberOfLines={2} style={styles.title}>
+						{title}
+					</Text>
+
+					<Text style={styles.price}>{price}</Text>
+				</View>
+
+				<View style={styles.venueRow}>
+					<PinSolidIcon color={Brand.purple} height={PIN_SIZE} width={PIN_SIZE} />
+
+					<Text numberOfLines={1} style={styles.venue}>
+						{venue}
+					</Text>
+				</View>
+
+				<Text numberOfLines={1} style={styles.meta}>
+					{distance}
+				</Text>
+
+				<Text numberOfLines={1} style={styles.meta}>
+					{schedule}
+				</Text>
+			</View>
+		</Pressable>
 	);
 });
 
@@ -122,17 +97,21 @@ const styles = StyleSheet.create({
 		backgroundColor: Ink.border,
 	},
 	body: {
+		gap: Spacing.half,
+		padding: Gap.card,
+	},
+	titleRow: {
 		flexDirection: "row",
 		alignItems: "center",
 		justifyContent: "space-between",
-		gap: Gap.card,
-		padding: Gap.card,
-	},
-	copy: {
-		flex: 1,
-		gap: Spacing.half,
+		gap: Spacing.two,
 	},
 	title: {
+		...Type.resultName,
+		flexShrink: 1,
+		color: Ink.title,
+	},
+	price: {
 		...Type.resultName,
 		color: Ink.title,
 	},
@@ -149,23 +128,6 @@ const styles = StyleSheet.create({
 	meta: {
 		...Type.cardMeta,
 		color: Ink.meta,
-	},
-	join: {
-		minHeight: Math.max(JOIN_MIN_HEIGHT, MinTapTarget),
-		alignItems: "center",
-		justifyContent: "center",
-		marginHorizontal: Gap.card,
-		marginBottom: Gap.card,
-		borderRadius: Radius.control,
-		borderWidth: 1,
-		borderColor: Brand.purple,
-	},
-	joinInert: {
-		borderColor: Ink.borderStrong,
-	},
-	joinLabel: {
-		...Type.cta,
-		color: Brand.purple,
 	},
 	pressed: {
 		opacity: 0.85,

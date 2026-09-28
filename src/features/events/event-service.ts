@@ -5,13 +5,18 @@ import {
 	type ApiEventDetail,
 	type ApiEventPage,
 	type ApiEventVenue,
+	type ApiNearbyEventPage,
 	eventDetailSchema,
 	eventPageSchema,
+	nearbyEventPageSchema,
 	recentVenuesSchema,
 } from "@/lib/api/event-schema";
 import { uploadSignatureSchema } from "@/lib/api/upload-signature-schema";
 
-export type EventTimeframe = "upcoming" | "past";
+export type EventTimeframe = "upcoming" | "past" | "all";
+
+/** `any` adds the events the viewer was invited to. */
+export type EventRole = "host" | "any";
 
 export type NewEvent = {
 	title: string;
@@ -29,9 +34,23 @@ export type NewEvent = {
 /** Enough for the list to feel complete without paging; hosts rarely run more. */
 const MY_EVENTS_PAGE = 50;
 
-export function fetchMyEvents(when: EventTimeframe): Promise<ApiEventPage> {
-	return request(`/events/mine?when=${when}&limit=${MY_EVENTS_PAGE}`, {
+export function fetchMyEvents(when: EventTimeframe, role: EventRole): Promise<ApiEventPage> {
+	return request(`/events/mine?when=${when}&role=${role}&limit=${MY_EVENTS_PAGE}`, {
 		schema: eventPageSchema,
+		auth: true,
+	});
+}
+
+export type NearbyEventsQuery = { limit: number; radiusKm?: number };
+
+export function fetchNearbyEvents({
+	limit,
+	radiusKm,
+}: NearbyEventsQuery): Promise<ApiNearbyEventPage> {
+	const radius = radiusKm === undefined ? "" : `&radiusKm=${radiusKm}`;
+
+	return request(`/events/nearby?limit=${limit}${radius}`, {
+		schema: nearbyEventPageSchema,
 		auth: true,
 	});
 }
@@ -56,6 +75,22 @@ export async function uploadEventCover(photo: PickedPhoto): Promise<string> {
 	});
 
 	return uploadToProvider(signature, photo);
+}
+
+export function joinEvent(id: string): Promise<ApiEventDetail> {
+	return request(`/events/${encodeURIComponent(id)}/attendance`, {
+		method: "POST",
+		schema: eventDetailSchema,
+		auth: true,
+	});
+}
+
+export function leaveEvent(id: string): Promise<ApiEventDetail> {
+	return request(`/events/${encodeURIComponent(id)}/attendance`, {
+		method: "DELETE",
+		schema: eventDetailSchema,
+		auth: true,
+	});
 }
 
 export function createEvent(event: NewEvent): Promise<ApiEventDetail> {

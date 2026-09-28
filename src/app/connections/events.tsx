@@ -1,20 +1,18 @@
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useCallback, useMemo, useState } from "react";
-import { FlatList, StyleSheet, View } from "react-native";
+import { useCallback, useState } from "react";
+import { FlatList, RefreshControl, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { RegisteredEventCard } from "@/components/connections/registered-event-card";
+import { EventSummaryCard } from "@/components/events/event-summary-card";
 import { ScreenHeader } from "@/components/nav/screen-header";
 import { ChipGroup, type ChipOption } from "@/components/ui/chip-group";
 import { StateMessage } from "@/components/ui/state-message";
-import { Gap, Ink, MaxColumnWidth, Spacing } from "@/constants/theme";
-import {
-	eventsForTab,
-	REGISTERED_EVENTS,
-	type RegisteredEvent,
-	type RegisteredEventTab,
-} from "@/features/connections/registered-events";
+import { Brand, Gap, Ink, MaxColumnWidth, Spacing } from "@/constants/theme";
+import type { EventTimeframe } from "@/features/events/event-service";
+import { useMyEvents } from "@/features/events/use-events";
+import { describeError } from "@/lib/api/api-error";
+import type { ApiEventSummary } from "@/lib/api/event-schema";
 
 const EDGE_INSET = Spacing.three;
 
@@ -24,14 +22,23 @@ const TABS: ChipOption[] = [
 	{ id: "all", label: "All" },
 ];
 
-const EMPTY: Record<RegisteredEventTab, string> = {
-	upcoming: "You have not registered for any upcoming events.",
-	past: "Events you have attended will appear here.",
-	all: "Events you register for will appear here.",
+const EMPTY: Record<EventTimeframe, string> = {
+	upcoming: "Upcoming events you are hosting or invited to will appear here.",
+	past: "Events you hosted or were invited to will appear here once they have happened.",
+	all: "Events you host or are invited to will appear here.",
 };
 
+function isTimeframe(id: string): id is EventTimeframe {
+	return id === "upcoming" || id === "past" || id === "all";
+}
+
+/**
+ * Hosting plus invitations. There is no joining yet, so "registered" means the
+ * events the viewer is already part of rather than ones they signed up for.
+ */
 export default function RegisteredEventsScreen() {
-	const [tab, setTab] = useState<RegisteredEventTab>("upcoming");
+	const [tab, setTab] = useState<EventTimeframe>("upcoming");
+	const events = useMyEvents(tab, "any");
 
 	const goBack = useCallback(() => {
 		if (router.canGoBack()) router.back();
@@ -40,11 +47,9 @@ export default function RegisteredEventsScreen() {
 
 	const openEvent = useCallback((id: string) => router.push(`/events/${id}`), []);
 
-	const events = useMemo(() => eventsForTab(REGISTERED_EVENTS, tab), [tab]);
-
 	const renderEvent = useCallback(
-		({ item }: { item: RegisteredEvent }) => (
-			<RegisteredEventCard event={item} onOpen={openEvent} />
+		({ item }: { item: ApiEventSummary }) => (
+			<EventSummaryCard actionLabel="View Event" event={item} onOpen={openEvent} />
 		),
 		[openEvent],
 	);
@@ -58,19 +63,36 @@ export default function RegisteredEventsScreen() {
 
 				<ChipGroup
 					accessibilityLabel="Filter events"
-					onSelect={(id) => setTab(id as RegisteredEventTab)}
+					onSelect={(id) => {
+						if (isTimeframe(id)) setTab(id);
+					}}
 					options={TABS}
 					scrollable
 					selectedId={tab}
 				/>
 
-				{events.length === 0 ? (
-					<StateMessage message={EMPTY[tab]} />
+				{events.isPending ? (
+					<StateMessage message="Loading your events…" />
+				) : events.isError ? (
+					<StateMessage
+						actionLabel="Try again"
+						isError
+						message={describeError(events.error)}
+						onPressAction={() => void events.refetch()}
+					/>
 				) : (
 					<FlatList
+						ListEmptyComponent={<StateMessage message={EMPTY[tab]} />}
 						contentContainerStyle={styles.list}
-						data={events}
+						data={events.data.items}
 						keyExtractor={(item) => item.id}
+						refreshControl={
+							<RefreshControl
+								onRefresh={() => void events.refetch()}
+								refreshing={events.isRefetching}
+								tintColor={Brand.purple}
+							/>
+						}
 						renderItem={renderEvent}
 						showsVerticalScrollIndicator={false}
 					/>

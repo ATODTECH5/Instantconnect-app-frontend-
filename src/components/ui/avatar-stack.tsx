@@ -1,43 +1,40 @@
-import { Image } from "expo-image";
 import { StyleSheet, Text, View } from "react-native";
-import type { ImageSourcePropType } from "react-native";
 
+import { AvatarImage } from "@/components/ui/avatar-image";
 import { Brand, Ink, Type } from "@/constants/theme";
 
 const SIZE = 28;
 const RING = 2;
 const OVERLAP = 10;
 
+export type StackPerson = {
+	id: string;
+	fullName: string;
+	avatarUrl: string | null;
+};
+
 export type AvatarStackProps = {
-	avatars: ImageSourcePropType[];
+	people: StackPerson[];
 	extraCount?: number;
 	accessibilityLabel: string;
 };
 
-/** Overlapping attendee faces closed by a "+N" disc. */
-export function AvatarStack({ avatars, extraCount = 0, accessibilityLabel }: AvatarStackProps) {
+/** Overlapping faces, photo or initials, closed by a "+N" disc. */
+export function AvatarStack({ people, extraCount = 0, accessibilityLabel }: AvatarStackProps) {
 	return (
 		<View accessibilityLabel={accessibilityLabel} style={styles.row}>
-			{avatars.map((avatar, index) => (
-				<Image
-					accessibilityIgnoresInvertColors
-					contentFit="cover"
-					// Avatars are positional, and the same face can legitimately repeat
-					// in a stack, so the index is the only stable key available.
-					key={index}
-					source={avatar}
-					style={[styles.avatar, index > 0 && { marginLeft: -OVERLAP }]}
-				/>
+			{people.map((person, index) => (
+				<View key={person.id} style={[styles.ring, index > 0 && styles.overlap]}>
+					<AvatarImage
+						fullName={person.fullName}
+						size={SIZE - RING * 2}
+						uri={person.avatarUrl}
+					/>
+				</View>
 			))}
 
 			{extraCount > 0 ? (
-				<View
-					style={[
-						styles.avatar,
-						styles.extra,
-						avatars.length > 0 && { marginLeft: -OVERLAP },
-					]}
-				>
+				<View style={[styles.ring, styles.extra, people.length > 0 && styles.overlap]}>
 					<Text style={styles.extraLabel}>+{extraCount}</Text>
 				</View>
 			) : null}
@@ -50,17 +47,20 @@ const styles = StyleSheet.create({
 		flexDirection: "row",
 		alignItems: "center",
 	},
-	avatar: {
+	ring: {
 		width: SIZE,
 		height: SIZE,
 		borderRadius: SIZE / 2,
-		borderWidth: RING,
-		borderColor: Ink.surface,
-		backgroundColor: Ink.border,
-	},
-	extra: {
 		alignItems: "center",
 		justifyContent: "center",
+		backgroundColor: Ink.surface,
+	},
+	overlap: {
+		marginLeft: -OVERLAP,
+	},
+	extra: {
+		borderWidth: RING,
+		borderColor: Ink.surface,
 		backgroundColor: Brand.purple,
 	},
 	extraLabel: {

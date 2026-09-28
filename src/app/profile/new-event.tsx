@@ -183,7 +183,7 @@ export default function NewEventScreen() {
 				coverStorageId: cover?.storageId ?? undefined,
 				inviteeIds: invitees.map((person) => person.id),
 			},
-			{ onSuccess: (event) => router.replace(`/events/hosted/${event.id}`) },
+			{ onSuccess: (event) => router.replace(`/events/${event.id}`) },
 		);
 	};
 
