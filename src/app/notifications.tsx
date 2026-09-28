@@ -48,8 +48,11 @@ export default function NotificationsScreen() {
 				return;
 			}
 
-			if (notification.kind === "event_invite" && notification.subjectId) {
-				router.push(`/events/hosted/${notification.subjectId}`);
+			if (
+				(notification.kind === "event_invite" || notification.kind === "event_joined") &&
+				notification.subjectId
+			) {
+				router.push(`/events/${notification.subjectId}`);
 				return;
 			}
 

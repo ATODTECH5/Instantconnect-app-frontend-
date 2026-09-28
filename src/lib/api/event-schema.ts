@@ -28,11 +28,23 @@ export const eventSummarySchema = z.object({
 	isPublic: z.boolean(),
 	coverUrl: z.string().nullable(),
 	inviteeCount: z.number(),
+	/** The host's own events only; empty for everyone else. */
 	inviteePreview: z.array(eventPersonSchema),
+	attendeeCount: z.number(),
+	attendeePreview: z.array(eventPersonSchema),
 });
 
 export const eventPageSchema = z.object({
 	items: z.array(eventSummarySchema),
+	page: pageInfoSchema,
+});
+
+export const nearbyEventSchema = eventSummarySchema.extend({
+	distanceKm: z.number(),
+});
+
+export const nearbyEventPageSchema = z.object({
+	items: z.array(nearbyEventSchema),
 	page: pageInfoSchema,
 });
 
@@ -41,6 +53,10 @@ export const eventDetailSchema = eventSummarySchema.extend({
 	host: eventPersonSchema,
 	isHost: z.boolean(),
 	invitees: z.array(eventPersonSchema),
+	/** The first few going; `attendeeCount` has the total. */
+	attendees: z.array(eventPersonSchema),
+	isAttending: z.boolean(),
+	joinedAt: z.string().nullable(),
 	createdAt: z.string(),
 });
 
@@ -50,4 +66,6 @@ export type ApiEventPerson = z.infer<typeof eventPersonSchema>;
 export type ApiEventVenue = z.infer<typeof eventVenueSchema>;
 export type ApiEventSummary = z.infer<typeof eventSummarySchema>;
 export type ApiEventPage = z.infer<typeof eventPageSchema>;
+export type ApiNearbyEvent = z.infer<typeof nearbyEventSchema>;
+export type ApiNearbyEventPage = z.infer<typeof nearbyEventPageSchema>;
 export type ApiEventDetail = z.infer<typeof eventDetailSchema>;

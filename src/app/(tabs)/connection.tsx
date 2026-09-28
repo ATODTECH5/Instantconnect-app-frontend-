@@ -6,9 +6,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import PlusIcon from "@/assets/connections/plus-filled.svg";
 import { ConnectionRow } from "@/components/connections/connection-row";
-import { RegisteredEventCard } from "@/components/connections/registered-event-card";
 import { StoryRail } from "@/components/connections/story-rail";
 import { VisitedPlaceCard } from "@/components/connections/visited-place-card";
+import { EventSummaryCard } from "@/components/events/event-summary-card";
 import { SectionHeader } from "@/components/home/section-header";
 import { IconButton } from "@/components/ui/icon-button";
 import { ChipGroup, type ChipOption } from "@/components/ui/chip-group";
@@ -16,11 +16,11 @@ import { GradientSpinner } from "@/components/ui/gradient-spinner";
 import { StateMessage } from "@/components/ui/state-message";
 import { Gap, Ink, MaxColumnWidth, Spacing, Type } from "@/constants/theme";
 import { connectionMeta } from "@/features/connections/connection-meta";
-import { REGISTERED_EVENTS, eventsForTab } from "@/features/connections/registered-events";
 import { useConnections } from "@/features/connections/use-connections";
 import { VISITED_PLACES } from "@/features/connections/visited-places";
+import { useMyEvents } from "@/features/events/use-events";
 import { useNavBarInset } from "@/hooks/use-nav-bar-inset";
-import { isApiError } from "@/lib/api/api-error";
+import { describeError, isApiError } from "@/lib/api/api-error";
 
 const EDGE_INSET = Spacing.three;
 /** How many rows the tab shows before See All takes over. */
@@ -41,8 +41,10 @@ export default function ConnectionScreen() {
 	const [tab, setTab] = useState("people");
 
 	const accepted = useConnections("accepted");
+	const upcomingEvents = useMyEvents("upcoming", "any");
 
 	const openPerson = useCallback((id: string) => router.push(`/person/${id}`), []);
+	const openEvent = useCallback((id: string) => router.push(`/events/${id}`), []);
 
 	const connections = useMemo(() => accepted.data?.items ?? [], [accepted.data]);
 
@@ -117,6 +119,44 @@ export default function ConnectionScreen() {
 		);
 	}
 
+	function renderEvents() {
+		if (upcomingEvents.isPending) {
+			return <StateMessage message="Loading your events…" />;
+		}
+
+		if (upcomingEvents.isError) {
+			return (
+				<StateMessage
+					actionLabel="Try again"
+					isError
+					message={describeError(upcomingEvents.error)}
+					onPressAction={() => void upcomingEvents.refetch()}
+				/>
+			);
+		}
+
+		const events = upcomingEvents.data.items.slice(0, TAB_PREVIEW_COUNT);
+
+		if (events.length === 0) {
+			return (
+				<StateMessage message="Upcoming events you are hosting or invited to will appear here." />
+			);
+		}
+
+		return (
+			<View style={styles.cards}>
+				{events.map((event) => (
+					<EventSummaryCard
+						actionLabel="View Event"
+						event={event}
+						key={event.id}
+						onOpen={openEvent}
+					/>
+				))}
+			</View>
+		);
+	}
+
 	return (
 		<SafeAreaView edges={["top"]} style={styles.screen}>
 			<StatusBar style="dark" />
@@ -180,23 +220,13 @@ export default function ConnectionScreen() {
 				{tab === "events" ? (
 					<View style={styles.padded}>
 						<SectionHeader
-							actionHint="Opens every registered event"
+							actionHint="Opens every event you are hosting or invited to"
 							actionLabel="See All"
 							onPressAction={() => router.push("/connections/events")}
 							title="Upcoming Events"
 						/>
 
-						<View style={styles.cards}>
-							{eventsForTab(REGISTERED_EVENTS, "upcoming")
-								.slice(0, TAB_PREVIEW_COUNT)
-								.map((event) => (
-									<RegisteredEventCard
-										event={event}
-										key={event.id}
-										onOpen={(eventId) => router.push(`/events/${eventId}`)}
-									/>
-								))}
-						</View>
+						{renderEvents()}
 					</View>
 				) : null}
 

@@ -29,7 +29,6 @@ import {
 	type SearchTabId,
 } from "@/features/search/search-filters";
 import { useSearchHistory } from "@/features/search/search-history";
-import { useJoinMeetups } from "@/features/search/use-join-meetups";
 import { useSearchResults, useSearchSuggestions } from "@/features/search/use-search";
 import { isEmptyResults } from "@/features/search/search-catalog";
 import { useNavBarInset } from "@/hooks/use-nav-bar-inset";
@@ -51,7 +50,6 @@ export default function SearchScreen() {
 	const navInset = useNavBarInset();
 	const { recents, remember, forget, clear } = useSearchHistory();
 	const { attemptFor, connect } = useConnectRequests();
-	const { stateFor: joinStateFor, join } = useJoinMeetups();
 
 	const [query, setQuery] = useState(params.q ?? "");
 	const [submitted, setSubmitted] = useState<string | null>(params.q ?? null);
@@ -105,7 +103,7 @@ export default function SearchScreen() {
 
 	const openPerson = useCallback((id: string) => router.push(`/person/${id}`), []);
 	const openPlace = useCallback(() => {}, []);
-	const openMeetup = useCallback(() => {}, []);
+	const openEvent = useCallback((id: string) => router.push(`/events/${id}`), []);
 
 	const sections = useMemo(
 		() => (results.data ? buildSections(results.data, tab !== "all") : []),
@@ -316,10 +314,8 @@ export default function SearchScreen() {
 			<ResultSections
 				attemptFor={attemptFor}
 				contentInset={navInset + Spacing.four}
-				joinStateFor={joinStateFor}
 				onConnect={connect}
-				onJoinMeetup={join}
-				onOpenMeetup={openMeetup}
+				onOpenEvent={openEvent}
 				onOpenPerson={openPerson}
 				onOpenPlace={openPlace}
 				sections={sections}

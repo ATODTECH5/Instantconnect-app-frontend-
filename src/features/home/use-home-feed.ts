@@ -1,11 +1,12 @@
 import { useCallback } from "react";
 
 import { useNearbyPeople } from "@/features/discover/use-discover";
-import { EVENTS, type NearbyEvent } from "@/features/home/home-feed";
+import { useNearbyEvents } from "@/features/events/use-events";
 import { useUnreadNotificationCount } from "@/features/notifications/use-notifications";
 import { useProfile } from "@/features/profile/use-profile";
 import { isApiError } from "@/lib/api/api-error";
 import type { ApiNearbyPerson } from "@/lib/api/discovery-schema";
+import type { ApiNearbyEvent } from "@/lib/api/event-schema";
 
 /** What the carousel shows before the grid takes over on Discover. */
 const HOME_CARD_COUNT = 10;
@@ -17,7 +18,9 @@ export type HomeFeed = {
 	unreadCount: number;
 	matchCount: number;
 	people: ApiNearbyPerson[];
-	events: NearbyEvent[];
+	events: ApiNearbyEvent[];
+	/** The events rail failed on its own; people still render. */
+	eventsFailed: boolean;
 };
 
 export type HomeFeedState = {
@@ -35,13 +38,15 @@ const GENERIC_ERROR = "We could not load your feed. Check your connection and tr
 
 export function useHomeFeed(): HomeFeedState {
 	const people = useNearbyPeople({ limit: HOME_CARD_COUNT });
+	const events = useNearbyEvents({ limit: HOME_CARD_COUNT });
 	const profile = useProfile();
 	const unreadCount = useUnreadNotificationCount();
 
 	const refetch = useCallback(() => {
 		void people.refetch();
+		void events.refetch();
 		void profile.refetch();
-	}, [people, profile]);
+	}, [people, events, profile]);
 
 	const needsLocation = isApiError(people.error) && people.error.code === "LOCATION_REQUIRED";
 
@@ -51,7 +56,8 @@ export function useHomeFeed(): HomeFeedState {
 				unreadCount,
 				matchCount: people.data.page.total,
 				people: people.data.items,
-				events: EVENTS,
+				events: events.data?.items ?? [],
+				eventsFailed: events.isError,
 			}
 		: null;
 
@@ -65,7 +71,7 @@ export function useHomeFeed(): HomeFeedState {
 		status,
 		feed,
 		error: people.isError ? errorMessage(people.error) : null,
-		refreshing: people.isRefetching,
+		refreshing: people.isRefetching || events.isRefetching,
 		needsLocation,
 		reload: refetch,
 		refresh: refetch,

@@ -14,6 +14,7 @@ export const notificationKindSchema = z.enum([
 	"kyc_approved",
 	"kyc_rejected",
 	"event_invite",
+	"event_joined",
 ]);
 
 export const notificationActorSchema = z.object({

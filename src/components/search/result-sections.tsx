@@ -1,23 +1,22 @@
 import { SectionList, StyleSheet, View, type SectionListRenderItem } from "react-native";
 
 import { SectionHeader } from "@/components/home/section-header";
-import { MeetupCard } from "@/components/search/meetup-card";
+import { EventResultCard } from "@/components/search/meetup-card";
 import { PersonRow } from "@/components/search/person-row";
 import { PlaceRow } from "@/components/search/place-row";
 import { Gap, MaxColumnWidth, Spacing } from "@/constants/theme";
 import type { ConnectAttempt } from "@/features/discover/connect-action";
 import type {
-	SearchMeetup,
+	SearchEvent,
 	SearchPerson,
 	SearchPlace,
 	SearchResults,
 } from "@/features/search/search-catalog";
-import type { JoinState } from "@/features/search/use-join-meetups";
 
 export type ResultItem =
 	| { type: "person"; id: string; person: SearchPerson }
 	| { type: "place"; id: string; place: SearchPlace }
-	| { type: "meetup"; id: string; meetup: SearchMeetup };
+	| { type: "event"; id: string; event: SearchEvent };
 
 export type ResultSection = {
 	title: string;
@@ -37,11 +36,11 @@ export function buildSections(results: SearchResults, showCounts: boolean): Resu
 		});
 	}
 
-	if (results.meetups.length > 0) {
+	if (results.events.length > 0) {
 		sections.push({
 			title: "Events",
-			count: showCounts ? results.meetups.length : null,
-			data: results.meetups.map((meetup) => ({ type: "meetup", id: meetup.id, meetup })),
+			count: showCounts ? results.events.length : null,
+			data: results.events.map((event) => ({ type: "event", id: event.id, event })),
 		});
 	}
 
@@ -62,12 +61,10 @@ export function buildSections(results: SearchResults, showCounts: boolean): Resu
 export type ResultSectionsProps = {
 	sections: ResultSection[];
 	attemptFor: (id: string) => ConnectAttempt;
-	joinStateFor: (id: string) => JoinState;
 	onOpenPerson: (id: string) => void;
 	onConnect: (id: string) => void;
 	onOpenPlace: (id: string) => void;
-	onOpenMeetup: (id: string) => void;
-	onJoinMeetup: (id: string) => void;
+	onOpenEvent: (id: string) => void;
 	contentInset: number;
 	ListHeaderComponent?: React.ComponentType | React.ReactElement | null;
 	ListEmptyComponent?: React.ComponentType | React.ReactElement | null;
@@ -76,12 +73,10 @@ export type ResultSectionsProps = {
 export function ResultSections({
 	sections,
 	attemptFor,
-	joinStateFor,
 	onOpenPerson,
 	onConnect,
 	onOpenPlace,
-	onOpenMeetup,
-	onJoinMeetup,
+	onOpenEvent,
 	contentInset,
 	ListHeaderComponent,
 	ListEmptyComponent,
@@ -102,15 +97,7 @@ export function ResultSections({
 			return <PlaceRow onOpen={onOpenPlace} place={item.place} />;
 		}
 
-		return (
-			<MeetupCard
-				hasJoined={joinStateFor(item.meetup.id) === "joined"}
-				isJoining={joinStateFor(item.meetup.id) === "joining"}
-				meetup={item.meetup}
-				onJoin={onJoinMeetup}
-				onOpen={onOpenMeetup}
-			/>
-		);
+		return <EventResultCard event={item.event} onOpen={onOpenEvent} />;
 	};
 
 	return (

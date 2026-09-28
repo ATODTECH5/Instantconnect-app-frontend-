@@ -1,12 +1,14 @@
 import type { ImageSourcePropType } from "react-native";
 
 import { fetchNearbyPeople } from "@/features/discover/discovery-service";
+import { fetchNearbyEvents } from "@/features/events/event-service";
 import {
 	ratingFloor,
 	type SearchFilters,
 	type SearchTabId,
 } from "@/features/search/search-filters";
 import type { ApiNearbyPerson } from "@/lib/api/discovery-schema";
+import type { ApiNearbyEvent } from "@/lib/api/event-schema";
 
 /**
  * People come from `GET /discovery/people`, so the row reads the server's shape
@@ -27,33 +29,23 @@ export type SearchPlace = {
 	photo: ImageSourcePropType;
 };
 
-export type SearchMeetup = {
-	id: string;
-	title: string;
-	venue: string;
-	distanceKm: number;
-	startsAt: string;
-	photo: ImageSourcePropType;
-	attendees: ImageSourcePropType[];
-	extraAttendees: number;
-};
+export type SearchEvent = ApiNearbyEvent;
 
 export type SearchResults = {
 	people: SearchPerson[];
 	places: SearchPlace[];
-	meetups: SearchMeetup[];
+	events: SearchEvent[];
 };
 
 export function isEmptyResults(results: SearchResults) {
 	return (
-		results.people.length === 0 && results.places.length === 0 && results.meetups.length === 0
+		results.people.length === 0 && results.places.length === 0 && results.events.length === 0
 	);
 }
 
 /**
- * People are real: the People tab and the All tab's people section both read
- * `GET /discovery/people`. Places and events are still fixtures, because the
- * server has no module for either. Delete each array as its endpoint lands.
+ * People read `GET /discovery/people` and events `GET /events/nearby`. Places
+ * are still fixtures, because the server has no module for them.
  */
 const MOCK_LATENCY_MS = 650;
 
@@ -134,35 +126,6 @@ const PLACES: SearchPlace[] = [
 	},
 ];
 
-const ATTENDEES: ImageSourcePropType[] = [
-	require("@/assets/onboarding/avatar-2.jpg"),
-	require("@/assets/onboarding/avatar-4.jpg"),
-	require("@/assets/onboarding/avatar-5.png"),
-];
-
-const MEETUPS: SearchMeetup[] = [
-	{
-		id: "startup-founders",
-		title: "Startup Founders Meeting",
-		venue: "Colab Space",
-		distanceKm: 400,
-		startsAt: "2026-07-20T10:00:00",
-		photo: require("@/assets/onboarding/card-back-left.jpg"),
-		attendees: ATTENDEES,
-		extraAttendees: 14,
-	},
-	{
-		id: "creative-sketch",
-		title: "Creative Art Skitch Session",
-		venue: "Colab Space",
-		distanceKm: 400,
-		startsAt: "2026-07-20T10:00:00",
-		photo: require("@/assets/onboarding/card-back-right.jpg"),
-		attendees: ATTENDEES,
-		extraAttendees: 14,
-	},
-];
-
 const SUGGESTIONS = ["Café Bloom", "CoLab Workspace", "Freedom Pack", "Events"];
 
 function matches(haystack: string, needle: string) {
@@ -198,10 +161,7 @@ function keepPerson(person: SearchPerson, query: string) {
  * `rating` has no server support and no source for people, so it is not sent.
  * `lookingFor` is a search hint rather than a filter and has nowhere to go yet.
  */
-async function searchPeople(
-	query: string,
-	filters: SearchFilters,
-): Promise<SearchPerson[]> {
+async function searchPeople(query: string, filters: SearchFilters): Promise<SearchPerson[]> {
 	const page = await fetchNearbyPeople({
 		categoryId: filters.categoryId ?? undefined,
 		radiusKm: filters.distanceKm,
@@ -219,10 +179,18 @@ function keepPlace(place: SearchPlace, query: string, filters: SearchFilters) {
 	return true;
 }
 
-function keepMeetup(meetup: SearchMeetup, query: string) {
-	if (query.length > 0 && !matches(`${meetup.title} ${meetup.venue}`, query)) return false;
+/** The server's page cap. Nearby events are few enough that one page is all of them. */
+const EVENT_SEARCH_LIMIT = 50;
 
-	return true;
+async function searchEvents(query: string, filters: SearchFilters): Promise<SearchEvent[]> {
+	const page = await fetchNearbyEvents({
+		limit: EVENT_SEARCH_LIMIT,
+		radiusKm: filters.distanceKm,
+	});
+
+	if (query.length === 0) return page.items;
+
+	return page.items.filter((event) => matches(`${event.title} ${event.venue.name}`, query));
 }
 
 export type SearchRequest = {
@@ -241,18 +209,18 @@ export async function fetchSearchResults({
 }: SearchRequest): Promise<SearchResults> {
 	const term = query.trim();
 
-	const people = PLACE_ONLY_TABS.includes(tab)
-		? []
-		: await searchPeople(term, filters);
+	if (tab === "events") {
+		return { people: [], places: [], events: await searchEvents(term, filters) };
+	}
+
+	const people = PLACE_ONLY_TABS.includes(tab) ? [] : await searchPeople(term, filters);
 
 	// Still fixtures, so still faked latency. People no longer wait on it.
 	if (PLACE_ONLY_TABS.includes(tab)) await delay(MOCK_LATENCY_MS);
 
 	const places = PLACES.filter((place) => keepPlace(place, term, filters));
-	const meetups = MEETUPS.filter((meetup) => keepMeetup(meetup, term));
 
-	if (tab === "people") return { people, places: [], meetups: [] };
-	if (tab === "events") return { people: [], places: [], meetups };
+	if (tab === "people") return { people, places: [], events: [] };
 
 	if (tab === "restaurant" || tab === "workspace") {
 		const kind: PlaceKind = tab === "restaurant" ? "restaurant" : "workspace";
@@ -260,11 +228,11 @@ export async function fetchSearchResults({
 		return {
 			people: [],
 			places: places.filter((place) => place.kind === kind),
-			meetups: [],
+			events: [],
 		};
 	}
 
 	// The All tab leads with people and places, matching the artboard, and keeps
-	// meetups to their own tab so the list does not run past three sections.
-	return { people: people.slice(0, 3), places: places.slice(0, 2), meetups: [] };
+	// events to their own tab so the list does not run past three sections.
+	return { people: people.slice(0, 3), places: places.slice(0, 2), events: [] };
 }

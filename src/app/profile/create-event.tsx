@@ -5,7 +5,7 @@ import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from "rea
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import PlusIcon from "@/assets/profile/plus.svg";
-import { EventListCard } from "@/components/events/event-list-card";
+import { EventSummaryCard } from "@/components/events/event-summary-card";
 import { ScreenHeader } from "@/components/nav/screen-header";
 import { ChipGroup } from "@/components/ui/chip-group";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -24,7 +24,6 @@ import type { EventTimeframe } from "@/features/events/event-service";
 import { useMyEvents } from "@/features/events/use-events";
 import { describeError } from "@/lib/api/api-error";
 import type { ApiEventSummary } from "@/lib/api/event-schema";
-import { formatSchedule } from "@/utils/format";
 
 const EmptyEventsArt = require("@/assets/events/empty-events.png");
 
@@ -32,19 +31,21 @@ const EDGE_INSET = Spacing.three;
 const PLUS = 18;
 const PILL_HEIGHT = 34;
 
-const TABS: { id: EventTimeframe; label: string }[] = [
+type HostTimeframe = Exclude<EventTimeframe, "all">;
+
+const TABS: { id: HostTimeframe; label: string }[] = [
 	{ id: "upcoming", label: "Upcoming Events" },
 	{ id: "past", label: "Past" },
 ];
 
-const EMPTY_COPY: Record<EventTimeframe, string> = {
+const EMPTY_COPY: Record<HostTimeframe, string> = {
 	upcoming: "You have not created any events yet. Events you create will show here.",
 	past: "Events you hosted will show here once they have happened.",
 };
 
 /** The Profile's "Create Event" row lands here: the host's own events, then the form. */
 export default function MyEventsScreen() {
-	const [tab, setTab] = useState<EventTimeframe>("upcoming");
+	const [tab, setTab] = useState<HostTimeframe>("upcoming");
 	const events = useMyEvents(tab);
 
 	const goBack = useCallback(() => {
@@ -52,29 +53,12 @@ export default function MyEventsScreen() {
 		else router.replace("/(tabs)/profile");
 	}, []);
 
-	const openEvent = useCallback((id: string) => router.push(`/events/hosted/${id}`), []);
+	const openEvent = useCallback((id: string) => router.push(`/events/${id}`), []);
 
 	const renderItem = useCallback(
-		({ item }: { item: ApiEventSummary }) => {
-			const faces = item.inviteePreview.flatMap((person) =>
-				person.avatarUrl ? [{ uri: person.avatarUrl }] : [],
-			);
-
-			return (
-				<EventListCard
-					actionLabel="View Details"
-					countLabel={`${item.inviteeCount} invited`}
-					extraFaces={item.inviteeCount - faces.length}
-					faces={faces}
-					id={item.id}
-					onOpen={openEvent}
-					photo={item.coverUrl ? { uri: item.coverUrl } : null}
-					scheduleLabel={formatSchedule(item.startsAt)}
-					title={item.title}
-					venue={item.venue.name}
-				/>
-			);
-		},
+		({ item }: { item: ApiEventSummary }) => (
+			<EventSummaryCard actionLabel="View Details" event={item} onOpen={openEvent} />
+		),
 		[openEvent],
 	);
 
