@@ -18,6 +18,8 @@ export type ToggleRowProps = {
 	indented?: boolean;
 	disabled?: boolean;
 	isLast?: boolean;
+	/** False sits the row flush with a form's edges instead of inside a card. */
+	inset?: boolean;
 };
 
 /** A labelled switch on a grouped card, in the Notifications and Security frames' shape. */
@@ -30,9 +32,17 @@ export function ToggleRow({
 	indented = false,
 	disabled = false,
 	isLast = false,
+	inset = true,
 }: ToggleRowProps) {
 	return (
-		<View style={[styles.row, indented && styles.rowIndented, !isLast && styles.divided]}>
+		<View
+			style={[
+				styles.row,
+				indented && styles.rowIndented,
+				!isLast && styles.divided,
+				!inset && styles.flush,
+			]}
+		>
 			{indented ? <View style={styles.indentLine} /> : null}
 
 			{Icon ? <Icon color={Brand.purple} height={ICON_SIZE} width={ICON_SIZE} /> : null}
@@ -64,6 +74,9 @@ const styles = StyleSheet.create({
 		gap: Gap.card,
 		paddingHorizontal: Spacing.three,
 		paddingVertical: Spacing.three - Spacing.half,
+	},
+	flush: {
+		paddingHorizontal: 0,
 	},
 	rowIndented: {
 		paddingLeft: Spacing.five + Spacing.one,

@@ -43,6 +43,26 @@ const MONTHS = [
 	"December",
 ];
 
+/** "6:00 PM". */
+export function formatClock(date: Date) {
+	const hours = date.getHours();
+	const meridiem = hours < 12 ? "AM" : "PM";
+	const hour12 = hours % 12 === 0 ? 12 : hours % 12;
+	const minutes = date.getMinutes().toString().padStart(2, "0");
+
+	return `${hour12}:${minutes} ${meridiem}`;
+}
+
+/** "Aug 15, 2026". */
+export function formatShortDate(date: Date) {
+	return `${MONTHS[date.getMonth()]?.slice(0, 3)} ${date.getDate()}, ${date.getFullYear()}`;
+}
+
+/** "August 15, 2026". */
+export function formatLongDate(date: Date) {
+	return `${MONTHS[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
+}
+
 /**
  * Hand formatted rather than going through `Intl`, so the artboard's wording
  * holds whatever locale the device is set to.
@@ -52,12 +72,7 @@ export function formatSchedule(startsAt: string) {
 
 	if (Number.isNaN(date.getTime())) return "";
 
-	const hours = date.getHours();
-	const meridiem = hours < 12 ? "AM" : "PM";
-	const hour12 = hours % 12 === 0 ? 12 : hours % 12;
-	const minutes = date.getMinutes().toString().padStart(2, "0");
-
-	return `${MONTHS[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()} • ${hour12}:${minutes} ${meridiem}`;
+	return `${formatLongDate(date)} • ${formatClock(date)}`;
 }
 
 const MINUTE_MS = 60_000;

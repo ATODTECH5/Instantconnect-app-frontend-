@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import { ScrollView, StyleSheet, Switch, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { Tag } from "@/components/ui/tag";
 import { CodeBoxes } from "@/components/auth/code-boxes";
 import { OtpInput } from "@/components/auth/otp-input";
 import { MeetupMap } from "@/components/map/meetup-map";
@@ -167,7 +168,9 @@ function Loaded({ meetup }: { meetup: ApiMeetup }) {
 
 				<View style={styles.tags}>
 					{live.isWatching ? <Tag label="GPS Active" tone="brand" /> : null}
-					{meetup.me.isInSafeZone ? <Tag label="Safe Zone Active" tone="success" /> : null}
+					{meetup.me.isInSafeZone ? (
+						<Tag label="Safe Zone Active" tone="success" />
+					) : null}
 				</View>
 
 				<MeetupMap
@@ -175,7 +178,9 @@ function Loaded({ meetup }: { meetup: ApiMeetup }) {
 					party={meetup.party.location}
 					partyName={partyName}
 					venue={
-						meetup.venue && meetup.venue.latitude !== null && meetup.venue.longitude !== null
+						meetup.venue &&
+						meetup.venue.latitude !== null &&
+						meetup.venue.longitude !== null
 							? { latitude: meetup.venue.latitude, longitude: meetup.venue.longitude }
 							: null
 					}
@@ -195,8 +200,8 @@ function Loaded({ meetup }: { meetup: ApiMeetup }) {
 				<View style={[styles.card, styles.cardActive]}>
 					<Text style={styles.title}>You&apos;re both verified</Text>
 					<Text style={styles.copy}>
-						Each of you confirmed the other arrived. Enjoy it, and end the meetup here when
-						you part ways.
+						Each of you confirmed the other arrived. Enjoy it, and end the meetup here
+						when you part ways.
 					</Text>
 					<PrimaryButton
 						accessibilityHint="Marks this meetup as finished"
@@ -216,7 +221,9 @@ function Loaded({ meetup }: { meetup: ApiMeetup }) {
 							<Text style={styles.done}>✓ {partyName} confirmed you arrived</Text>
 						) : shownCode ? (
 							<>
-								<Text style={styles.copy}>Show this to {partyName} when you meet.</Text>
+								<Text style={styles.copy}>
+									Show this to {partyName} when you meet.
+								</Text>
 								<CodeBoxes active={false} length={CODE_LENGTH} value={shownCode} />
 								<Text style={styles.expiry}>
 									{untilExpiry > 0
@@ -255,7 +262,9 @@ function Loaded({ meetup }: { meetup: ApiMeetup }) {
 							<Text style={styles.done}>✓ You confirmed {partyName} arrived</Text>
 						) : (
 							<>
-								<Text style={styles.copy}>Enter the code on {partyName}&apos;s phone.</Text>
+								<Text style={styles.copy}>
+									Enter the code on {partyName}&apos;s phone.
+								</Text>
 								<OtpInput
 									editable={!busy}
 									error={
@@ -347,16 +356,6 @@ function agoLabel(iso: string): string {
 	return `${Math.floor(seconds / 3600)}h ago`;
 }
 
-function Tag({ label, tone }: { label: string; tone: "brand" | "success" }) {
-	return (
-		<View style={[styles.tag, tone === "success" ? styles.tagSuccess : styles.tagBrand]}>
-			<Text style={[styles.tagLabel, tone === "success" ? styles.tagLabelSuccess : null]}>
-				{label}
-			</Text>
-		</View>
-	);
-}
-
 const styles = StyleSheet.create({
 	screen: {
 		flex: 1,
@@ -435,26 +434,6 @@ const styles = StyleSheet.create({
 		flexDirection: "row",
 		flexWrap: "wrap",
 		gap: Spacing.two,
-	},
-	tag: {
-		paddingHorizontal: Gap.snug,
-		paddingVertical: Spacing.one,
-		borderRadius: Radius.pill,
-	},
-	tagBrand: {
-		backgroundColor: Brand.purpleSurface,
-	},
-	tagSuccess: {
-		backgroundColor: Ink.successSurface,
-		borderWidth: 1,
-		borderColor: Ink.successBorder,
-	},
-	tagLabel: {
-		...Type.badgeLabel,
-		color: Brand.purple,
-	},
-	tagLabelSuccess: {
-		color: Ink.success,
 	},
 	partyStatus: {
 		...Type.cardMeta,

@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import CheckIcon from "@/assets/auth/check.svg";
 import ChevronDownIcon from "@/assets/search/chevron-down.svg";
+import { StackedPressableField } from "@/components/ui/stacked-field";
 import {
 	Brand,
 	Gap,
@@ -36,6 +37,8 @@ export type SelectFieldProps = {
 	label?: string;
 	error?: string;
 	disabled?: boolean;
+	/** `stacked` puts the label above a filled box, as the Create Event form does. */
+	variant?: "outlined" | "stacked";
 };
 
 /** Half the label line height, so the label straddles the top border. */
@@ -53,6 +56,7 @@ export function SelectField({
 	label,
 	error,
 	disabled = false,
+	variant = "outlined",
 }: SelectFieldProps) {
 	const insets = useSafeAreaInsets();
 	const [isOpen, setIsOpen] = useState(false);
@@ -65,42 +69,57 @@ export function SelectField({
 		setIsOpen(false);
 	};
 
+	const openHint = `Opens the list of ${sheetTitle.toLowerCase()}`;
+
 	return (
 		<View>
-			<Pressable
-				accessibilityHint={error ?? `Opens the list of ${sheetTitle.toLowerCase()}`}
-				accessibilityLabel={`${accessibilityLabel}. ${selected?.label ?? placeholder}`}
-				accessibilityRole="button"
-				accessibilityState={{ expanded: isOpen, disabled }}
-				disabled={disabled}
-				onPress={() => setIsOpen(true)}
-				style={({ pressed }) => [
-					styles.trigger,
-					hasError && styles.triggerError,
-					disabled && styles.triggerDisabled,
-					pressed && styles.pressed,
-				]}
-			>
-				{label ? (
+			{variant === "stacked" ? (
+				<StackedPressableField
+					TrailingIcon={ChevronDownIcon}
+					accessibilityHint={openHint}
+					disabled={disabled}
+					error={error}
+					label={label ?? accessibilityLabel}
+					onPress={() => setIsOpen(true)}
+					placeholder={placeholder}
+					value={selected?.label ?? null}
+				/>
+			) : (
+				<Pressable
+					accessibilityHint={error ?? openHint}
+					accessibilityLabel={`${accessibilityLabel}. ${selected?.label ?? placeholder}`}
+					accessibilityRole="button"
+					accessibilityState={{ expanded: isOpen, disabled }}
+					disabled={disabled}
+					onPress={() => setIsOpen(true)}
+					style={({ pressed }) => [
+						styles.trigger,
+						hasError && styles.triggerError,
+						disabled && styles.triggerDisabled,
+						pressed && styles.pressed,
+					]}
+				>
+					{label ? (
+						<Text
+							numberOfLines={1}
+							style={[styles.floatingLabel, hasError && styles.floatingLabelError]}
+						>
+							{label}
+						</Text>
+					) : null}
+
 					<Text
 						numberOfLines={1}
-						style={[styles.floatingLabel, hasError && styles.floatingLabelError]}
+						style={[styles.triggerLabel, !selected && styles.placeholder]}
 					>
-						{label}
+						{selected?.label ?? placeholder}
 					</Text>
-				) : null}
 
-				<Text
-					numberOfLines={1}
-					style={[styles.triggerLabel, !selected && styles.placeholder]}
-				>
-					{selected?.label ?? placeholder}
-				</Text>
+					<ChevronDownIcon color={Ink.muted} height={ICON_SIZE} width={ICON_SIZE} />
+				</Pressable>
+			)}
 
-				<ChevronDownIcon color={Ink.muted} height={ICON_SIZE} width={ICON_SIZE} />
-			</Pressable>
-
-			{hasError ? (
+			{hasError && variant === "outlined" ? (
 				<Text role="alert" style={styles.error}>
 					{error}
 				</Text>

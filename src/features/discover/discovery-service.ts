@@ -71,8 +71,11 @@ export function respondToConnection(
 
 export function fetchConnections(
 	status?: "pending" | "accepted" | "declined",
+	limit?: number,
 ): Promise<ApiConnectionPage> {
-	return request(`/connections${status ? `?status=${status}` : ""}`, {
+	const params = [status && `status=${status}`, limit && `limit=${limit}`].filter(Boolean);
+
+	return request(`/connections${params.length ? `?${params.join("&")}` : ""}`, {
 		schema: connectionPageSchema,
 		auth: true,
 	});

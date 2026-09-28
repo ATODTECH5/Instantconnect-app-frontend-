@@ -109,3 +109,58 @@ export async function searchPlace(query: string): Promise<Coordinates | null> {
 		return null;
 	}
 }
+
+export type VenueCandidate = Coordinates & {
+	name: string;
+	address: string | null;
+};
+
+const MAX_VENUE_RESULTS = 5;
+
+/**
+ * The platform geocoder answers with points, not places, so each point is
+ * reverse geocoded for something to show. Where it knows a landmark name that
+ * becomes the venue; otherwise the words the host typed are, since that is the
+ * name they have in mind.
+ */
+export async function searchVenues(query: string): Promise<VenueCandidate[]> {
+	const trimmed = query.trim();
+
+	if (!trimmed) return [];
+
+	try {
+		const matches = (await geocodeAsync(trimmed)).slice(0, MAX_VENUE_RESULTS);
+
+		return await Promise.all(
+			matches.map(async ({ latitude, longitude }) => {
+				const [place] = await reverseGeocodeAsync({ latitude, longitude });
+				const street = joinParts([place?.streetNumber, place?.street], " ");
+				const landmark = place?.name && place.name !== street ? place.name : null;
+				const address =
+					joinParts([street, place?.district ?? place?.city, place?.region], ", ") ||
+					place?.formattedAddress ||
+					null;
+
+				return { latitude, longitude, name: landmark ?? trimmed, address };
+			}),
+		);
+	} catch {
+		return [];
+	}
+}
+
+/** Where the device is now, named by its street address for a venue field. */
+export async function currentVenue(): Promise<VenueCandidate | null> {
+	const coordinates = await getCurrentCoordinates();
+
+	if (!coordinates) return null;
+
+	const resolved = await resolveAddress(coordinates);
+	const line = resolved?.line ?? null;
+
+	return {
+		...coordinates,
+		name: line?.split(",")[0]?.trim() || "Current location",
+		address: line,
+	};
+}
