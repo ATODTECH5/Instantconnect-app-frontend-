@@ -38,7 +38,10 @@ export default function NotificationsScreen() {
 		(notification: ApiNotification) => {
 			if (!notification.isRead) markRead(notification.id);
 
-			if (notification.kind === "message" && notification.subjectId) {
+			if (
+				(notification.kind === "message" || notification.kind === "meetup_safety_check") &&
+				notification.subjectId
+			) {
 				router.push(`/chat/${notification.subjectId}`);
 				return;
 			}

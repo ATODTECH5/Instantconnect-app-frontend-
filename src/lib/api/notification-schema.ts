@@ -15,6 +15,7 @@ export const notificationKindSchema = z.enum([
 	"kyc_rejected",
 	"event_invite",
 	"event_joined",
+	"meetup_safety_check",
 ]);
 
 export const notificationActorSchema = z.object({
@@ -29,7 +30,9 @@ export const notificationActorSchema = z.object({
  */
 export const notificationSchema = z.object({
 	id: z.string(),
-	kind: notificationKindSchema,
+	// A kind added on the server before this build knew about it still renders:
+	// the title and body come from the server, and it opens the Connection tab.
+	kind: z.union([notificationKindSchema, z.string()]),
 	title: z.string(),
 	body: z.string(),
 	actor: notificationActorSchema.nullable(),
