@@ -79,6 +79,13 @@
           "cameraPermission": "Take a selfie to verify your identity."
         }
       ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/android-icon-monochrome.png",
+          "color": "#EC4899"
+        }
+      ],
       "expo-maps"
     ],
     "experiments": {

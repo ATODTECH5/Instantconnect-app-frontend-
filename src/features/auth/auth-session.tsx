@@ -15,6 +15,7 @@ import { revokeRefreshToken } from "@/features/auth/auth-service";
 import { restoreSession } from "@/lib/api/api-client";
 import { describeError } from "@/lib/api/api-error";
 import { closeChatSocket } from "@/features/chat/chat-socket";
+import { unregisterForPush } from "@/features/notifications/push-service";
 import { clearSession, getSession, subscribeToSession } from "@/lib/api/session-store";
 
 export type AuthStatus = "restoring" | "authenticated" | "unauthenticated";
@@ -83,6 +84,10 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
 	 * way and the server expires the token on its own schedule.
 	 */
 	const endSession = useCallback(async () => {
+		// First, while the access token still works: the server only lets an
+		// account remove its own devices.
+		await unregisterForPush();
+
 		try {
 			await revokeRefreshToken();
 		} catch {

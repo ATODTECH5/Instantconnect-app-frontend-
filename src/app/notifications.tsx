@@ -8,6 +8,7 @@ import { NotificationRow } from "@/components/notifications/notification-row";
 import { ScreenHeader } from "@/components/nav/screen-header";
 import { StateMessage } from "@/components/ui/state-message";
 import { Brand, Ink, MaxColumnWidth, Spacing, Type } from "@/constants/theme";
+import { notificationRoute } from "@/features/notifications/notification-route";
 import {
 	useMarkAllNotificationsRead,
 	useMarkNotificationRead,
@@ -29,42 +30,12 @@ export default function NotificationsScreen() {
 		else router.replace("/(tabs)");
 	}, []);
 
-	/**
-	 * Reading and opening are the same gesture. A connection notification has
-	 * nowhere of its own to go, so it lands on the Connection tab; a message
-	 * opens the thread it belongs to.
-	 */
+	/** Reading and opening are the same gesture. */
 	const open = useCallback(
 		(notification: ApiNotification) => {
 			if (!notification.isRead) markRead(notification.id);
 
-			if (
-				(notification.kind === "message" || notification.kind === "meetup_safety_check") &&
-				notification.subjectId
-			) {
-				router.push(`/chat/${notification.subjectId}`);
-				return;
-			}
-
-			if (notification.kind === "referral_joined" && notification.subjectId) {
-				router.push(`/profile/refer/joined/${notification.subjectId}`);
-				return;
-			}
-
-			if (
-				(notification.kind === "event_invite" || notification.kind === "event_joined") &&
-				notification.subjectId
-			) {
-				router.push(`/events/${notification.subjectId}`);
-				return;
-			}
-
-			if (notification.kind === "kyc_approved" || notification.kind === "kyc_rejected") {
-				router.push("/profile/kyc");
-				return;
-			}
-
-			router.push("/(tabs)/connection");
+			router.push(notificationRoute(notification.kind, notification.subjectId));
 		},
 		[markRead],
 	);
