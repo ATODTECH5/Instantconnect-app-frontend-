@@ -2,17 +2,10 @@ import { Pressable, StyleSheet, Text } from "react-native";
 import type { StyleProp, ViewStyle } from "react-native";
 
 import { GradientSpinner } from "@/components/ui/gradient-spinner";
-import {
-	Brand,
-	BrandGradient,
-	Ink,
-	MinTapTarget,
-	Radius,
-	Spacing,
-	Type,
-} from "@/constants/theme";
+import { Brand, BrandGradient, Ink, MinTapTarget, Radius, Spacing, Type } from "@/constants/theme";
 
 const SPINNER_SIZE = 18;
+export const SINGLE_LINE_MIN_SCALE = 0.8;
 
 export type PrimaryButtonTone = "solid" | "gradient" | "danger";
 
@@ -24,6 +17,8 @@ export type PrimaryButtonProps = {
 	/** The gradient fill is the frame's treatment wherever the button sits on a photo. */
 	tone?: PrimaryButtonTone;
 	accessibilityHint?: string;
+	/** For buttons sharing a row: tighter padding, and the label shrinks before it wraps. */
+	singleLine?: boolean;
 };
 
 export function PrimaryButton({
@@ -33,6 +28,7 @@ export function PrimaryButton({
 	loading = false,
 	tone = "solid",
 	accessibilityHint,
+	singleLine = false,
 }: PrimaryButtonProps) {
 	const isInert = disabled || loading;
 
@@ -47,6 +43,7 @@ export function PrimaryButton({
 			style={({ pressed }) => [
 				styles.button,
 				TONE_STYLE[tone],
+				singleLine && styles.singleLine,
 				disabled && styles.disabled,
 				pressed && !isInert && styles.pressed,
 			]}
@@ -54,7 +51,14 @@ export function PrimaryButton({
 			{loading ? (
 				<GradientSpinner size={SPINNER_SIZE} />
 			) : (
-				<Text style={styles.label}>{label}</Text>
+				<Text
+					adjustsFontSizeToFit={singleLine}
+					minimumFontScale={SINGLE_LINE_MIN_SCALE}
+					numberOfLines={singleLine ? 1 : undefined}
+					style={styles.label}
+				>
+					{label}
+				</Text>
 			)}
 		</Pressable>
 	);
@@ -68,6 +72,9 @@ const styles = StyleSheet.create({
 		borderRadius: Radius.control,
 		alignItems: "center",
 		justifyContent: "center",
+	},
+	singleLine: {
+		paddingHorizontal: Spacing.two,
 	},
 	solid: {
 		backgroundColor: Brand.purple,

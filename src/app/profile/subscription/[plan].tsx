@@ -1,6 +1,5 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { openAuthSessionAsync } from "expo-web-browser";
 import { useCallback, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -8,6 +7,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { ScreenHeader } from "@/components/nav/screen-header";
 import { BillingSegment } from "@/components/subscription/billing-segment";
 import { FeatureRow } from "@/components/subscription/feature-row";
+import { PaystackCheckoutSheet } from "@/components/subscription/paystack-checkout-sheet";
 import { FormErrorBanner } from "@/components/ui/form-error-banner";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { StateMessage } from "@/components/ui/state-message";
@@ -33,6 +33,7 @@ import {
 import { startCheckout } from "@/features/subscription/subscription-service";
 import { useMySubscription, usePlans } from "@/features/subscription/use-subscription";
 import { describeError } from "@/lib/api/api-error";
+import type { ApiCheckout } from "@/lib/api/subscription-schema";
 
 const EDGE_INSET = Spacing.three;
 const ON_GRADIENT_BODY = "rgba(255, 255, 255, 0.88)";
@@ -41,8 +42,8 @@ const ON_GRADIENT_PILL = "rgba(255, 255, 255, 0.19)";
 /**
  * Plan Details (Figma 2827:1887). The frame draws Pro; Premium borrows the
  * plans screen's pale card for its header so the two tiers keep their
- * colours across screens. Paying opens Paystack's own checkout page in an
- * in-app browser session, so card details never enter the app.
+ * colours across screens. Paying opens Paystack's own checkout page in a
+ * sheet over this screen, so card details never enter the app.
  */
 export default function PlanDetailsScreen() {
 	const { plan: planParam } = useLocalSearchParams<{ plan?: string }>();
@@ -51,6 +52,7 @@ export default function PlanDetailsScreen() {
 	const [cycle, setCycle] = useState<BillingCycle>("monthly");
 	const [isStarting, setIsStarting] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+	const [checkout, setCheckout] = useState<ApiCheckout | null>(null);
 	const goBack = useCallback(() => router.back(), []);
 
 	const plan = plans.data?.find((candidate) => candidate.id === planParam);
@@ -98,16 +100,7 @@ export default function PlanDetailsScreen() {
 		setIsStarting(true);
 
 		try {
-			const checkout = await startCheckout(plan.id, cycle);
-
-			// Closes itself when Paystack redirects to the callback. Whether it
-			// closed that way or the member backed out, the server has the answer.
-			await openAuthSessionAsync(checkout.authorizationUrl, checkout.callbackUrl);
-
-			router.replace({
-				pathname: "/profile/subscription/complete",
-				params: { reference: checkout.reference },
-			});
+			setCheckout(await startCheckout(plan.id, cycle));
 		} catch (cause) {
 			setError(describeError(cause));
 		} finally {
@@ -115,9 +108,33 @@ export default function PlanDetailsScreen() {
 		}
 	};
 
+	const finishCheckout = () => {
+		if (!checkout) return;
+
+		setCheckout(null);
+		router.replace({
+			pathname: "/profile/subscription/complete",
+			params: { reference: checkout.reference },
+		});
+	};
+
+	// Backing out stays here. A charge that settled anyway reaches the server
+	// by webhook, so the plan is fetched again rather than assumed unchanged.
+	const closeCheckout = () => {
+		setCheckout(null);
+		void mine.refetch();
+	};
+
 	return (
 		<SafeAreaView edges={["top", "bottom"]} style={styles.screen}>
 			<StatusBar style="dark" />
+
+			<PaystackCheckoutSheet
+				authorizationUrl={checkout?.authorizationUrl ?? null}
+				callbackUrl={checkout?.callbackUrl ?? ""}
+				onClose={closeCheckout}
+				onFinished={finishCheckout}
+			/>
 
 			<View style={styles.column}>
 				<ScreenHeader onBack={goBack} title="Plan Details" />
