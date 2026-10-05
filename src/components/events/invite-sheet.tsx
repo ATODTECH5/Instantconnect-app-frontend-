@@ -125,7 +125,7 @@ export function InviteSheet({ visible, selected, onDone, onDismiss }: InviteShee
 								message={
 									query.trim()
 										? "No connections match that name."
-										: "Connect with people first, then you can invite them to events."
+										: "Connect with people first, then you can invite them."
 								}
 							/>
 						}

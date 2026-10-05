@@ -177,6 +177,11 @@ export default function DeleteAccountScreen() {
 
 			<ReasonSheet
 				details={details}
+				footnote="InstantConnect is here to help you connect better"
+				options={DELETION_REASONS}
+				submitLabel="Ok"
+				subtitle="Why are you leaving?"
+				title="Reason"
 				isSubmitting={isSending}
 				onChangeDetails={setDetails}
 				onChangeReason={setReason}

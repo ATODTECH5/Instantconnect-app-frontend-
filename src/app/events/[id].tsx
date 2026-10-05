@@ -14,6 +14,7 @@ import { AvatarImage } from "@/components/ui/avatar-image";
 import { StateMessage } from "@/components/ui/state-message";
 import { Tag } from "@/components/ui/tag";
 import { Brand, Gap, Ink, MaxColumnWidth, Radius, Spacing, Type } from "@/constants/theme";
+import { externalSourceName } from "@/features/events/event-source";
 import { hasEventEnded } from "@/features/events/event-time";
 import { useEvent } from "@/features/events/use-events";
 import { describeError } from "@/lib/api/api-error";
@@ -69,6 +70,7 @@ export default function EventDetailScreen() {
 
 function EventBody({ event }: { event: ApiEventDetail }) {
 	const venueLine = [event.venue.name, event.venue.address].filter(Boolean).join(", ");
+	const sourceName = externalSourceName(event);
 
 	return (
 		<ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -101,6 +103,8 @@ function EventBody({ event }: { event: ApiEventDetail }) {
 				{event.category ? (
 					<Tag label={event.category.label.toUpperCase()} tone="brand" />
 				) : null}
+
+				{sourceName ? <Tag label={sourceName.toUpperCase()} tone="success" /> : null}
 			</View>
 
 			<Text accessibilityRole="header" style={styles.title}>
@@ -131,23 +135,7 @@ function EventBody({ event }: { event: ApiEventDetail }) {
 				</View>
 			) : null}
 
-			<View style={styles.host}>
-				<AvatarImage
-					fullName={event.host.fullName}
-					size={HOST_AVATAR}
-					uri={event.host.avatarUrl}
-				/>
-
-				<View style={styles.hostCopy}>
-					<Text numberOfLines={1} style={styles.hostName}>
-						{event.host.fullName}
-					</Text>
-
-					<Text style={styles.hostRole}>
-						{event.host.isVerified ? "Verified Host" : "Host"}
-					</Text>
-				</View>
-			</View>
+			<Organiser event={event} sourceName={sourceName} />
 
 			<View style={styles.section}>
 				<Text accessibilityRole="header" style={styles.sectionTitle}>
@@ -191,6 +179,30 @@ function EventBody({ event }: { event: ApiEventDetail }) {
 
 			<EventAttendance event={event} />
 		</ScrollView>
+	);
+}
+
+/** A member host, or for an imported event the organiser named by the listing. */
+function Organiser({ event, sourceName }: { event: ApiEventDetail; sourceName: string | null }) {
+	const name = event.host?.fullName ?? event.organizerName ?? sourceName ?? "Organiser";
+	const role = event.host
+		? event.host.isVerified
+			? "Verified Host"
+			: "Host"
+		: `Organiser · Listed on ${sourceName ?? "another site"}`;
+
+	return (
+		<View style={styles.host}>
+			<AvatarImage fullName={name} size={HOST_AVATAR} uri={event.host?.avatarUrl ?? null} />
+
+			<View style={styles.hostCopy}>
+				<Text numberOfLines={1} style={styles.hostName}>
+					{name}
+				</Text>
+
+				<Text style={styles.hostRole}>{role}</Text>
+			</View>
+		</View>
 	);
 }
 

@@ -3,6 +3,7 @@ import { memo } from "react";
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 
 import PinSolidIcon from "@/assets/home/pin-solid.svg";
+import { RegisterLink } from "@/components/events/register-link";
 import { Brand, Gap, Ink, Radius, Spacing, Type } from "@/constants/theme";
 import type { SearchEvent } from "@/features/search/search-catalog";
 import { formatDistance, formatPrice, formatSchedule } from "@/utils/format";
@@ -70,6 +71,8 @@ export const EventResultCard = memo(function EventResultCard({
 				<Text numberOfLines={1} style={styles.meta}>
 					{schedule}
 				</Text>
+
+				<RegisterLink event={event} />
 			</View>
 		</Pressable>
 	);

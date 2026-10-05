@@ -5,6 +5,7 @@ import type { ImageSourcePropType } from "react-native";
 
 import ArrowRightIcon from "@/assets/connections/arrow-right.svg";
 import PinSolidIcon from "@/assets/home/pin-solid.svg";
+import { RegisterLink, type RegisterLinkProps } from "@/components/events/register-link";
 import { AvatarStack, type StackPerson } from "@/components/ui/avatar-stack";
 import { Brand, Gap, Ink, Radius, Spacing, Type } from "@/constants/theme";
 
@@ -25,6 +26,8 @@ export type EventListCardProps = {
 	/** "45 attending", "4 invited". */
 	countLabel: string;
 	actionLabel: string;
+	/** Imported events add a link out to where people register. */
+	registration?: RegisterLinkProps["event"];
 	onOpen: (id: string) => void;
 };
 
@@ -40,6 +43,7 @@ export const EventListCard = memo(function EventListCard({
 	extraFaces,
 	countLabel,
 	actionLabel,
+	registration,
 	onOpen,
 }: EventListCardProps) {
 	return (
@@ -92,6 +96,8 @@ export const EventListCard = memo(function EventListCard({
 						/>
 					) : null}
 				</View>
+
+				{registration ? <RegisterLink event={registration} /> : null}
 
 				<View style={styles.footer}>
 					<Text style={styles.count}>{countLabel}</Text>

@@ -16,14 +16,22 @@ export type CoverPickerProps = {
 	uploading: boolean;
 	error: string | null;
 	onPick: () => void;
+	/** The prompt before a photo is picked. */
+	emptyTitle?: string;
 };
 
-export function CoverPicker({ uri, uploading, error, onPick }: CoverPickerProps) {
+export function CoverPicker({
+	uri,
+	uploading,
+	error,
+	onPick,
+	emptyTitle = "Add Event Cover Photo",
+}: CoverPickerProps) {
 	return (
 		<View style={styles.frame}>
 			<Pressable
 				accessibilityHint="Opens your photo library"
-				accessibilityLabel={uri ? "Change cover photo" : "Add event cover photo"}
+				accessibilityLabel={uri ? "Change cover photo" : "Add cover photo"}
 				accessibilityRole="button"
 				accessibilityState={{ busy: uploading }}
 				disabled={uploading}
@@ -66,7 +74,7 @@ export function CoverPicker({ uri, uploading, error, onPick }: CoverPickerProps)
 							<ImageAddIcon color={Brand.purple} height={ICON} width={ICON} />
 						</View>
 
-						<Text style={styles.title}>Add Event Cover Photo</Text>
+						<Text style={styles.title}>{emptyTitle}</Text>
 
 						<Text style={styles.hint}>PNG or JPG, landscape works best (16:9)</Text>
 					</>

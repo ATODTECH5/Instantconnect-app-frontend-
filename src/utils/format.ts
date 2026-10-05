@@ -115,3 +115,15 @@ export function formatDate(iso: string): string {
 		year: "numeric",
 	});
 }
+
+/** "980", "14.2K", "2.3M": counts on cards where the exact figure is noise. */
+export function formatCompactCount(value: number): string {
+	if (value < 1000) return String(value);
+	if (value < 1_000_000) return `${trimDecimal(value / 1000)}K`;
+
+	return `${trimDecimal(value / 1_000_000)}M`;
+}
+
+function trimDecimal(value: number): string {
+	return (Math.floor(value * 10) / 10).toFixed(1).replace(/\.0$/, "");
+}

@@ -11,7 +11,6 @@ import {
 } from "react-native";
 
 import { Brand, Gap, Ink, MaxColumnWidth, Radius, Spacing, Type } from "@/constants/theme";
-import { type DeletionReason, DELETION_REASONS } from "@/lib/api/settings-schema";
 
 const HANDLE_WIDTH = 36;
 const HANDLE_HEIGHT = 4;
@@ -19,32 +18,44 @@ const RADIO_SIZE = 18;
 const DETAILS_HEIGHT = 64;
 const DETAILS_MAX_LENGTH = 1000;
 
-export type ReasonSheetProps = {
+export type ReasonOption<T extends string> = { id: T; label: string };
+
+export type ReasonSheetProps<T extends string> = {
 	visible: boolean;
-	reason: DeletionReason | null;
+	title: string;
+	subtitle: string;
+	options: readonly ReasonOption<T>[];
+	reason: T | null;
 	details: string;
-	onChangeReason: (reason: DeletionReason) => void;
+	onChangeReason: (reason: T) => void;
 	onChangeDetails: (details: string) => void;
+	submitLabel: string;
+	footnote: string;
 	onSubmit: () => void;
 	onDismiss: () => void;
 	isSubmitting: boolean;
 };
 
 /**
- * The reason sheet on Settings / Delete Account (Figma 3075:2930). Its own
- * sheet rather than `BottomSheet`, which centres a title and a badge; this
- * one is a left-aligned form with radio rows and a text box.
+ * A left-aligned form of radio rows and a text box, ending in a red submit:
+ * Settings / Delete Account (Figma 3075:2930) and Report Post. Its own sheet
+ * rather than `BottomSheet`, which centres a title and a badge.
  */
-export function ReasonSheet({
+export function ReasonSheet<T extends string>({
 	visible,
+	title,
+	subtitle,
+	options,
 	reason,
 	details,
 	onChangeReason,
 	onChangeDetails,
+	submitLabel,
+	footnote,
 	onSubmit,
 	onDismiss,
 	isSubmitting,
-}: ReasonSheetProps) {
+}: ReasonSheetProps<T>) {
 	return (
 		<Modal
 			animationType="slide"
@@ -69,15 +80,15 @@ export function ReasonSheet({
 
 					<View style={styles.heading}>
 						<Text accessibilityRole="header" style={styles.title}>
-							Reason
+							{title}
 						</Text>
 
-						<Text style={styles.subtitle}>Why are you leaving?</Text>
+						<Text style={styles.subtitle}>{subtitle}</Text>
 					</View>
 
 					<ScrollView keyboardShouldPersistTaps="handled" style={styles.scroll}>
 						<View accessibilityRole="radiogroup">
-							{DELETION_REASONS.map((option) => {
+							{options.map((option) => {
 								const selected = option.id === reason;
 
 								return (
@@ -119,7 +130,7 @@ export function ReasonSheet({
 					</ScrollView>
 
 					<Pressable
-						accessibilityLabel="Ok"
+						accessibilityLabel={submitLabel}
 						accessibilityRole="button"
 						accessibilityState={{ disabled: reason === null || isSubmitting }}
 						disabled={reason === null || isSubmitting}
@@ -130,12 +141,12 @@ export function ReasonSheet({
 							pressed && styles.pressed,
 						]}
 					>
-						<Text style={styles.submitLabel}>{isSubmitting ? "Sending…" : "Ok"}</Text>
+						<Text style={styles.submitLabel}>
+							{isSubmitting ? "Sending…" : submitLabel}
+						</Text>
 					</Pressable>
 
-					<Text style={styles.footnote}>
-						InstantConnect is here to help you connect better
-					</Text>
+					<Text style={styles.footnote}>{footnote}</Text>
 				</View>
 			</KeyboardAvoidingView>
 		</Modal>
