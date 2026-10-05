@@ -1,12 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { Brand, BrandGradient, Gap, Ink, MinTapTarget, Radius, Type } from "@/constants/theme";
-import {
-	cycleSuffix,
-	formatNaira,
-	type PaidPlanId,
-	type Plan,
-} from "@/features/subscription/plans";
+import { cycleSuffix, formatNaira, type Plan } from "@/features/subscription/plans";
 
 const BULLET_SIZE = 6;
 const CARD_PADDING = 20;
@@ -16,7 +11,7 @@ const ON_GRADIENT_MUTED = "rgba(255, 255, 255, 0.8)";
 const ON_GRADIENT_LINE = "rgba(255, 255, 255, 0.3)";
 
 export type PlanCardProps = {
-	plan: Plan & { id: PaidPlanId };
+	plan: Plan;
 	/** The frame draws this tier's card as the account's active plan. */
 	isCurrent: boolean;
 	onPress: () => void;
@@ -29,7 +24,7 @@ export type PlanCardProps = {
  */
 export function PlanCard({ plan, isCurrent, onPress }: PlanCardProps) {
 	const isPro = plan.id === "pro";
-	const ctaLabel = isCurrent ? "Current Plan" : `Upgrade to ${isPro ? "Pro" : "Premium"}`;
+	const ctaLabel = isCurrent ? "Current Plan" : `Upgrade to ${plan.name.split(" ")[0]}`;
 
 	return (
 		<View style={[styles.card, isPro ? styles.cardPro : styles.cardPremium]}>

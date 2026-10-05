@@ -18,6 +18,11 @@ export const eventVenueSchema = z.object({
 
 export const eventSummarySchema = z.object({
 	id: z.string(),
+	/** "instant_connect" for events members create, otherwise the listing it was imported from. */
+	source: z.string(),
+	/** Imported events only: the organiser's page, where people register or buy tickets. */
+	externalUrl: z.string().nullable(),
+	organizerName: z.string().nullable(),
 	title: z.string(),
 	startsAt: z.string(),
 	endsAt: z.string().nullable(),
@@ -50,7 +55,8 @@ export const nearbyEventPageSchema = z.object({
 
 export const eventDetailSchema = eventSummarySchema.extend({
 	description: z.string().nullable(),
-	host: eventPersonSchema,
+	/** Null for imported events, which `organizerName` describes instead. */
+	host: eventPersonSchema.nullable(),
 	isHost: z.boolean(),
 	invitees: z.array(eventPersonSchema),
 	/** The first few going; `attendeeCount` has the total. */

@@ -1,3 +1,4 @@
+import type { UseQueryResult } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useCallback, useMemo, useState } from "react";
@@ -8,6 +9,7 @@ import PlusIcon from "@/assets/connections/plus-filled.svg";
 import { ConnectionRow } from "@/components/connections/connection-row";
 import { StoryRail } from "@/components/connections/story-rail";
 import { VisitedPlaceCard } from "@/components/connections/visited-place-card";
+import { CommunityCard } from "@/components/communities/community-card";
 import { EventSummaryCard } from "@/components/events/event-summary-card";
 import { SectionHeader } from "@/components/home/section-header";
 import { IconButton } from "@/components/ui/icon-button";
@@ -18,9 +20,11 @@ import { Gap, Ink, MaxColumnWidth, Spacing, Type } from "@/constants/theme";
 import { connectionMeta } from "@/features/connections/connection-meta";
 import { useConnections } from "@/features/connections/use-connections";
 import { VISITED_PLACES } from "@/features/connections/visited-places";
-import { useMyEvents } from "@/features/events/use-events";
+import { useCommunities } from "@/features/communities/use-communities";
+import { useMyEvents, useNearbyEvents } from "@/features/events/use-events";
 import { useNavBarInset } from "@/hooks/use-nav-bar-inset";
 import { describeError, isApiError } from "@/lib/api/api-error";
+import type { ApiEventPage, ApiNearbyEventPage } from "@/lib/api/event-schema";
 
 const EDGE_INSET = Spacing.three;
 /** How many rows the tab shows before See All takes over. */
@@ -35,13 +39,19 @@ const TABS: ChipOption[] = [
 
 /** How many cards each tab previews before its See All takes over. */
 const TAB_PREVIEW_COUNT = 2;
+/** The Safety Community plus two of the viewer's own, as the design shows. */
+const COMMUNITY_PREVIEW_COUNT = 3;
 
 export default function ConnectionScreen() {
 	const navInset = useNavBarInset();
 	const [tab, setTab] = useState("people");
 
 	const accepted = useConnections("accepted");
-	const upcomingEvents = useMyEvents("upcoming", "any");
+	const isEventsTab = tab === "events";
+	const nearbyEvents = useNearbyEvents({ limit: TAB_PREVIEW_COUNT }, isEventsTab);
+	const upcomingEvents = useMyEvents("upcoming", "any", isEventsTab);
+	const communities = useCommunities("joined", COMMUNITY_PREVIEW_COUNT, "", tab === "community");
+	const openCommunity = useCallback((id: string) => router.push(`/communities/${id}`), []);
 
 	const openPerson = useCallback((id: string) => router.push(`/person/${id}`), []);
 	const openEvent = useCallback((id: string) => router.push(`/events/${id}`), []);
@@ -119,28 +129,29 @@ export default function ConnectionScreen() {
 		);
 	}
 
-	function renderEvents() {
-		if (upcomingEvents.isPending) {
-			return <StateMessage message="Loading your events…" />;
+	function renderEvents(
+		query: UseQueryResult<ApiEventPage | ApiNearbyEventPage>,
+		emptyMessage: string,
+	) {
+		if (query.isPending) {
+			return <StateMessage message="Loading events…" />;
 		}
 
-		if (upcomingEvents.isError) {
+		if (query.isError) {
 			return (
 				<StateMessage
 					actionLabel="Try again"
 					isError
-					message={describeError(upcomingEvents.error)}
-					onPressAction={() => void upcomingEvents.refetch()}
+					message={describeError(query.error)}
+					onPressAction={() => void query.refetch()}
 				/>
 			);
 		}
 
-		const events = upcomingEvents.data.items.slice(0, TAB_PREVIEW_COUNT);
+		const events = query.data.items.slice(0, TAB_PREVIEW_COUNT);
 
 		if (events.length === 0) {
-			return (
-				<StateMessage message="Upcoming events you are hosting or invited to will appear here." />
-			);
+			return <StateMessage message={emptyMessage} />;
 		}
 
 		return (
@@ -151,6 +162,33 @@ export default function ConnectionScreen() {
 						event={event}
 						key={event.id}
 						onOpen={openEvent}
+					/>
+				))}
+			</View>
+		);
+	}
+
+	function renderCommunities() {
+		if (communities.isPending) return <StateMessage message="Loading communities…" />;
+
+		if (communities.isError) {
+			return (
+				<StateMessage
+					actionLabel="Try again"
+					isError
+					message={describeError(communities.error)}
+					onPressAction={() => void communities.refetch()}
+				/>
+			);
+		}
+
+		return (
+			<View style={styles.cards}>
+				{communities.data.items.map((community) => (
+					<CommunityCard
+						community={community}
+						key={community.id}
+						onOpen={openCommunity}
 					/>
 				))}
 			</View>
@@ -217,22 +255,41 @@ export default function ConnectionScreen() {
 					</View>
 				) : null}
 
-				{tab === "events" ? (
+				{isEventsTab ? (
 					<View style={styles.padded}>
 						<SectionHeader
-							actionHint="Opens every event you are hosting or invited to"
+							actionHint="Opens every public event near you"
 							actionLabel="See All"
 							onPressAction={() => router.push("/connections/events")}
-							title="Upcoming Events"
+							title="Around You"
 						/>
 
-						{renderEvents()}
+						{renderEvents(nearbyEvents, "No public events near you right now.")}
+
+						<SectionHeader
+							actionHint="Opens every event you are hosting, invited to or going to"
+							actionLabel="See All"
+							onPressAction={() => router.push("/connections/events?tab=upcoming")}
+							title="Your Upcoming Events"
+						/>
+
+						{renderEvents(
+							upcomingEvents,
+							"Upcoming events you are hosting, invited to or going to will appear here.",
+						)}
 					</View>
 				) : null}
 
 				{tab === "community" ? (
 					<View style={styles.padded}>
-						<StateMessage message="Communities will appear here once the community module is built." />
+						<SectionHeader
+							actionHint="Opens every community"
+							actionLabel="See All"
+							onPressAction={() => router.push("/communities")}
+							title="Your Communities"
+						/>
+
+						{renderCommunities()}
 					</View>
 				) : null}
 			</ScrollView>

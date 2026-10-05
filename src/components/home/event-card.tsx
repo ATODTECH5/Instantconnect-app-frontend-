@@ -3,6 +3,7 @@ import { memo } from "react";
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 
 import PinSolidIcon from "@/assets/home/pin-solid.svg";
+import { RegisterLink } from "@/components/events/register-link";
 import { Brand, Gap, Ink, Radius, Spacing, Type } from "@/constants/theme";
 import type { ApiNearbyEvent } from "@/lib/api/event-schema";
 import { formatPrice } from "@/utils/format";
@@ -59,6 +60,8 @@ export const EventCard = memo(function EventCard({ event, width, onOpen }: Event
 						{venue}
 					</Text>
 				</View>
+
+				<RegisterLink event={event} />
 			</View>
 		</Pressable>
 	);

@@ -19,6 +19,12 @@ export function notificationRoute(kind: string, subjectId: string | null): Href 
 		return `/events/${subjectId}`;
 	}
 
+	if (kind === "community_invite" && subjectId) return `/communities/${subjectId}`;
+
+	if ((kind === "community_comment" || kind === "community_reply") && subjectId) {
+		return `/communities/posts/${subjectId}`;
+	}
+
 	if (kind === "kyc_approved" || kind === "kyc_rejected") return "/profile/kyc";
 
 	return "/(tabs)/connection";

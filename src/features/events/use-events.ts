@@ -42,15 +42,24 @@ const RECENT_VENUES_KEY = [...EVENTS_KEY, "recent-venues"] as const;
 export function useMyEvents(
 	when: EventTimeframe,
 	role: EventRole = "host",
+	enabled = true,
 ): UseQueryResult<ApiEventPage> {
 	return useQuery({
 		queryKey: myEventsKey(when, role),
 		queryFn: () => fetchMyEvents(when, role),
+		enabled,
 	});
 }
 
-export function useNearbyEvents(query: NearbyEventsQuery): UseQueryResult<ApiNearbyEventPage> {
-	return useQuery({ queryKey: nearbyEventsKey(query), queryFn: () => fetchNearbyEvents(query) });
+export function useNearbyEvents(
+	query: NearbyEventsQuery,
+	enabled = true,
+): UseQueryResult<ApiNearbyEventPage> {
+	return useQuery({
+		queryKey: nearbyEventsKey(query),
+		queryFn: () => fetchNearbyEvents(query),
+		enabled,
+	});
 }
 
 export function useEvent(id: string): UseQueryResult<ApiEventDetail> {

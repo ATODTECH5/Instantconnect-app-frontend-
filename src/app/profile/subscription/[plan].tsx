@@ -1,5 +1,6 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { openAuthSessionAsync } from "expo-web-browser";
 import { useCallback, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -7,6 +8,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { ScreenHeader } from "@/components/nav/screen-header";
 import { BillingSegment } from "@/components/subscription/billing-segment";
 import { FeatureRow } from "@/components/subscription/feature-row";
+import { FormErrorBanner } from "@/components/ui/form-error-banner";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { StateMessage } from "@/components/ui/state-message";
 import {
@@ -20,17 +22,17 @@ import {
 	Type,
 } from "@/constants/theme";
 import {
-	ANNUAL_DISCOUNT,
-	PLANS,
+	annualDiscountPercent,
 	annualSaving,
 	cycleSuffix,
 	cycleSuffixShort,
 	formatNaira,
-	includedFeatures,
-	isPaidPlanId,
 	priceFor,
 	type BillingCycle,
 } from "@/features/subscription/plans";
+import { startCheckout } from "@/features/subscription/subscription-service";
+import { useMySubscription, usePlans } from "@/features/subscription/use-subscription";
+import { describeError } from "@/lib/api/api-error";
 
 const EDGE_INSET = Spacing.three;
 const ON_GRADIENT_BODY = "rgba(255, 255, 255, 0.88)";
@@ -39,14 +41,21 @@ const ON_GRADIENT_PILL = "rgba(255, 255, 255, 0.19)";
 /**
  * Plan Details (Figma 2827:1887). The frame draws Pro; Premium borrows the
  * plans screen's pale card for its header so the two tiers keep their
- * colours across screens.
+ * colours across screens. Paying opens Paystack's own checkout page in an
+ * in-app browser session, so card details never enter the app.
  */
 export default function PlanDetailsScreen() {
 	const { plan: planParam } = useLocalSearchParams<{ plan?: string }>();
+	const plans = usePlans();
+	const mine = useMySubscription();
 	const [cycle, setCycle] = useState<BillingCycle>("monthly");
+	const [isStarting, setIsStarting] = useState(false);
+	const [error, setError] = useState<string | null>(null);
 	const goBack = useCallback(() => router.back(), []);
 
-	if (!isPaidPlanId(planParam)) {
+	const plan = plans.data?.find((candidate) => candidate.id === planParam);
+
+	if (plans.isPending || !plan) {
 		return (
 			<SafeAreaView edges={["top", "bottom"]} style={styles.screen}>
 				<StatusBar style="dark" />
@@ -54,29 +63,56 @@ export default function PlanDetailsScreen() {
 				<View style={styles.column}>
 					<ScreenHeader onBack={goBack} title="Plan Details" />
 
-					<StateMessage
-						actionLabel="Back to plans"
-						isError
-						message="We could not find that plan."
-						onPressAction={goBack}
-					/>
+					{plans.isPending ? (
+						<StateMessage message="Loading plan…" />
+					) : plans.isError ? (
+						<StateMessage
+							actionLabel="Try again"
+							isError
+							message={describeError(plans.error)}
+							onPressAction={() => void plans.refetch()}
+						/>
+					) : (
+						<StateMessage
+							actionLabel="Back to plans"
+							isError
+							message="We could not find that plan."
+							onPressAction={goBack}
+						/>
+					)}
 				</View>
 			</SafeAreaView>
 		);
 	}
 
-	const plan = PLANS[planParam];
-	const isPro = planParam === "pro";
-	const shortName = isPro ? "Pro" : "Premium";
+	const isPro = plan.id === "pro";
+	const shortName = plan.name.split(" ")[0];
 	const price = priceFor(plan, cycle);
 	const saving = annualSaving(plan);
 	const otherCycle: BillingCycle = cycle === "monthly" ? "annual" : "monthly";
+	const isCurrent = mine.data?.planId === plan.id && mine.data.cycle === cycle;
+	const paymentsEnabled = mine.data?.paymentsEnabled ?? true;
 
-	const proceed = () => {
-		router.push({
-			pathname: "/profile/subscription/payment-method",
-			params: { plan: planParam, cycle },
-		});
+	const proceed = async () => {
+		setError(null);
+		setIsStarting(true);
+
+		try {
+			const checkout = await startCheckout(plan.id, cycle);
+
+			// Closes itself when Paystack redirects to the callback. Whether it
+			// closed that way or the member backed out, the server has the answer.
+			await openAuthSessionAsync(checkout.authorizationUrl, checkout.callbackUrl);
+
+			router.replace({
+				pathname: "/profile/subscription/complete",
+				params: { reference: checkout.reference },
+			});
+		} catch (cause) {
+			setError(describeError(cause));
+		} finally {
+			setIsStarting(false);
+		}
 	};
 
 	return (
@@ -125,7 +161,7 @@ export default function PlanDetailsScreen() {
 					<View style={styles.pricingPanel}>
 						<BillingSegment
 							onChange={setCycle}
-							savingsLabel={`Save ${Math.round(ANNUAL_DISCOUNT * 100)}%`}
+							savingsLabel={`Save ${annualDiscountPercent(plan)}%`}
 							value={cycle}
 						/>
 
@@ -146,7 +182,7 @@ export default function PlanDetailsScreen() {
 							<View style={styles.switchGroup}>
 								<Text style={styles.altPrice}>
 									{cycle === "monthly"
-										? `${formatNaira(priceFor(plan, "annual"))}/year`
+										? `${formatNaira(plan.annualPrice)}/year`
 										: `You save ${formatNaira(saving)}`}
 								</Text>
 
@@ -176,7 +212,7 @@ export default function PlanDetailsScreen() {
 						</Text>
 
 						<View style={styles.featureList}>
-							{includedFeatures(plan).map((feature) => (
+							{plan.features.map((feature) => (
 								<FeatureRow key={feature} label={feature} />
 							))}
 						</View>
@@ -184,12 +220,24 @@ export default function PlanDetailsScreen() {
 				</ScrollView>
 
 				<View style={styles.footer}>
+					{error ? <FormErrorBanner message={error} /> : null}
+
 					<PrimaryButton
-						label={`Upgrade to ${shortName} — ${formatNaira(price)}${cycleSuffixShort(cycle)}`}
-						onPress={proceed}
+						disabled={isCurrent || !paymentsEnabled}
+						label={
+							isCurrent
+								? "Your Current Plan"
+								: `Upgrade to ${shortName} — ${formatNaira(price)}${cycleSuffixShort(cycle)}`
+						}
+						loading={isStarting}
+						onPress={() => void proceed()}
 					/>
 
-					<Text style={styles.footnote}>Cancel anytime. Terms and conditions apply.</Text>
+					<Text style={styles.footnote}>
+						{paymentsEnabled
+							? "Secure checkout by Paystack. Cancel anytime. Terms and conditions apply."
+							: "Upgrades aren't available right now."}
+					</Text>
 				</View>
 			</View>
 		</SafeAreaView>
