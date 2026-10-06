@@ -38,11 +38,16 @@ export function ConfirmDialog({
 			actions={
 				<View style={styles.actions}>
 					<View style={styles.action}>
-						<PrimaryButton label={cancelLabel} onPress={onCancel} />
+						<PrimaryButton label={cancelLabel} onPress={onCancel} singleLine />
 					</View>
 
 					<View style={styles.action}>
-						<SecondaryButton label={confirmLabel} onPress={onConfirm} tone="danger" />
+						<SecondaryButton
+							label={confirmLabel}
+							onPress={onConfirm}
+							singleLine
+							tone="danger"
+						/>
 					</View>
 				</View>
 			}

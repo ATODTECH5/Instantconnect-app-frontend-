@@ -1,9 +1,16 @@
-import { createURL } from "expo-linking";
 import { Share } from "react-native";
 
-export const communityLink = (communityId: string) => createURL(`/communities/${communityId}`);
+import { getApiBaseUrl } from "@/lib/api/api-config";
 
-export const postLink = (postId: string) => createURL(`/communities/posts/${postId}`);
+/**
+ * Shared links are https pages on the API that hand over to the app, because
+ * chat apps only make http(s) links tappable. Swap for a universal link once
+ * there is a domain.
+ */
+export const communityLink = (communityId: string) =>
+	`${getApiBaseUrl()}/links/communities/${communityId}`;
+
+export const postLink = (postId: string) => `${getApiBaseUrl()}/links/community-posts/${postId}`;
 
 /** The system share sheet. A dismissed sheet is not an error. */
 export async function shareLink(message: string, url: string): Promise<void> {

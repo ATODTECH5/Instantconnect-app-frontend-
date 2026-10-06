@@ -1,8 +1,8 @@
 import { Image } from "expo-image";
 import type { ImagePickerOptions } from "expo-image-picker";
-import { router, useLocalSearchParams } from "expo-router";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
 	FlatList,
 	KeyboardAvoidingView,
@@ -105,8 +105,25 @@ function CommunityBody({
 	onBack: () => void;
 }) {
 	const insets = useSafeAreaInsets();
+	const detail = useCommunity(community.id);
 	const feed = useCommunityFeed(community.id);
 	const profile = useProfile();
+	const refetchDetail = detail.refetch;
+	const refetchFeed = feed.refetch;
+	const hasFocused = useRef(false);
+
+	// Other members join, post and comment while this screen sits in the stack.
+	useFocusEffect(
+		useCallback(() => {
+			if (!hasFocused.current) {
+				hasFocused.current = true;
+				return;
+			}
+
+			void refetchDetail();
+			void refetchFeed();
+		}, [refetchDetail, refetchFeed]),
+	);
 	const join = useJoinCommunity();
 	const leave = useLeaveCommunity();
 	const createPost = useCreatePost(community.id);
@@ -240,7 +257,9 @@ function CommunityBody({
 							<Text numberOfLines={1} style={styles.heroMeta}>
 								{community.isOfficial
 									? "All users enrolled • Always active"
-									: `${community.isPublic ? "Public" : "Private"} • ${memberCountLabel(community.memberCount)}`}
+									: community.category
+										? `${community.isPublic ? "Public" : "Private"} • ${memberCountLabel(community.memberCount)}`
+										: memberCountLabel(community.memberCount)}
 							</Text>
 						</View>
 					</View>
@@ -359,8 +378,11 @@ function CommunityBody({
 					keyboardShouldPersistTaps="handled"
 					refreshControl={
 						<RefreshControl
-							onRefresh={() => void feed.refetch()}
-							refreshing={feed.isRefetching}
+							onRefresh={() => {
+								void detail.refetch();
+								void feed.refetch();
+							}}
+							refreshing={feed.isRefetching || detail.isRefetching}
 							tintColor={Brand.purple}
 						/>
 					}
