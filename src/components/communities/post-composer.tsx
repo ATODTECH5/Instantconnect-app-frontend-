@@ -1,5 +1,5 @@
 import { Image } from "expo-image";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
 import AttachImageIcon from "@/assets/chat/attach-image.svg";
@@ -45,6 +45,13 @@ export function PostComposer({
 	onRemoveAttachment,
 }: PostComposerProps) {
 	const [draft, setDraft] = useState("");
+	const inputRef = useRef<TextInput>(null);
+	const contextLabel = context?.label;
+
+	// Choosing Reply on a comment should land the cursor in the field.
+	useEffect(() => {
+		if (contextLabel) inputRef.current?.focus();
+	}, [contextLabel]);
 	const body = draft.trim();
 	const attachmentReady = Boolean(attachment && !attachment.uploading);
 	const canSend = !isSending && !attachment?.uploading && (body.length > 0 || attachmentReady);
@@ -116,6 +123,7 @@ export function PostComposer({
 						onChangeText={setDraft}
 						placeholder={placeholder}
 						placeholderTextColor={Ink.placeholder}
+						ref={inputRef}
 						style={styles.input}
 						value={draft}
 					/>

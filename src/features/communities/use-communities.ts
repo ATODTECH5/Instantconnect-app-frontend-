@@ -135,12 +135,16 @@ export function useUploadCommunityMedia(): UseMutationResult<
 	return useMutation({ mutationFn: ({ kind, photo }) => uploadCommunityMedia(kind, photo) });
 }
 
-/** Every community surface: lists, counts on the profile header, and details. */
+/**
+ * Every community surface: lists, counts on the profile header, details, and
+ * the feeds, whose admin badges change when someone joins, leaves or is promoted.
+ */
 function useInvalidateCommunities() {
 	const client = useQueryClient();
 
 	return () => {
 		void client.invalidateQueries({ queryKey: COMMUNITIES_KEY });
+		void client.invalidateQueries({ queryKey: POSTS_KEY });
 		void client.invalidateQueries({ queryKey: ["users", "me"] });
 	};
 }
