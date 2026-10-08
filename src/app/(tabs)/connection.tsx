@@ -20,6 +20,7 @@ import { Gap, Ink, MaxColumnWidth, Spacing, Type } from "@/constants/theme";
 import { connectionMeta } from "@/features/connections/connection-meta";
 import { useConnections } from "@/features/connections/use-connections";
 import { VISITED_PLACES } from "@/features/connections/visited-places";
+import { PLACES_AVAILABLE } from "@/features/places/availability";
 import { useCommunities } from "@/features/communities/use-communities";
 import { useMyEvents, useNearbyEvents } from "@/features/events/use-events";
 import { useNavBarInset } from "@/hooks/use-nav-bar-inset";
@@ -35,7 +36,7 @@ const TABS: ChipOption[] = [
 	{ id: "places", label: "Visited Places" },
 	{ id: "events", label: "Events" },
 	{ id: "community", label: "Community" },
-];
+].filter((tab) => PLACES_AVAILABLE || tab.id !== "places");
 
 /** How many cards each tab previews before its See All takes over. */
 const TAB_PREVIEW_COUNT = 2;

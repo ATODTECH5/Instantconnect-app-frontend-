@@ -10,6 +10,7 @@ import { DistanceSlider } from "@/components/ui/distance-slider";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { SelectField } from "@/components/ui/select-field";
 import { Brand, Gap, Ink, MaxColumnWidth, Spacing, Type } from "@/constants/theme";
+import { PLACES_AVAILABLE } from "@/features/places/availability";
 import { CATEGORY_OPTIONS } from "@/features/reference/categories";
 import {
 	decodeFilters,
@@ -24,8 +25,6 @@ import {
 } from "@/features/search/search-filters";
 
 const EDGE_INSET = Spacing.three;
-
-
 
 export default function FiltersScreen() {
 	const params = useLocalSearchParams<{ filters?: string }>();
@@ -113,21 +112,28 @@ export default function FiltersScreen() {
 						/>
 					</Field>
 
-					<Field label="Rating (Places & Businesses)">
-						<ChipGroup
-							accessibilityLabel="Minimum rating"
-							onSelect={(id) =>
-								setFilters((current) => ({ ...current, rating: id as RatingId }))
-							}
-							options={RATING_OPTIONS}
-							selectedId={filters.rating}
-						/>
-					</Field>
+					{PLACES_AVAILABLE ? (
+						<Field label="Rating (Places & Businesses)">
+							<ChipGroup
+								accessibilityLabel="Minimum rating"
+								onSelect={(id) =>
+									setFilters((current) => ({
+										...current,
+										rating: id as RatingId,
+									}))
+								}
+								options={RATING_OPTIONS}
+								selectedId={filters.rating}
+							/>
+						</Field>
+					) : null}
 
 					<Field label="Verified Only">
 						<View style={styles.toggleRow}>
 							<Text style={styles.toggleCopy}>
-								Show only verified users and places
+								{PLACES_AVAILABLE
+									? "Show only verified users and places"
+									: "Show only verified users"}
 							</Text>
 
 							<Switch
