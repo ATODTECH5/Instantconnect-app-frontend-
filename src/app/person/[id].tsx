@@ -7,6 +7,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import ArrowLeftIcon from "@/assets/auth/arrow-left.svg";
 import VerifiedIcon from "@/assets/search/verified-solid.svg";
+import { ReportPersonFlow } from "@/components/safety/report-person-flow";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { GlassIconButton } from "@/components/ui/glass-icon-button";
 import { GradientSpinner } from "@/components/ui/gradient-spinner";
@@ -91,6 +92,7 @@ function PersonDetails({ person, onBack }: PersonDetailsProps) {
 	const firstName = person.fullName.split(" ")[0];
 	const block = useBlockAction();
 	const [isBlocking, setIsBlocking] = useState(false);
+	const [isReporting, setIsReporting] = useState(false);
 
 	return (
 		<View style={styles.screen}>
@@ -195,18 +197,30 @@ function PersonDetails({ person, onBack }: PersonDetailsProps) {
 							tone="gradient"
 						/>
 
-						{/* Not on the frame. Blocked Users needs a way in, and a person's
-						    profile is where a report or block belongs; a quiet text link
-						    keeps it out of the way until the design settles on one. */}
-						<Pressable
-							accessibilityLabel={`Block ${firstName}`}
-							accessibilityRole="button"
-							hitSlop={Spacing.two}
-							onPress={() => setIsBlocking(true)}
-							style={styles.blockLink}
-						>
-							<Text style={styles.blockLabel}>Block {firstName}</Text>
-						</Pressable>
+						{/* Not on the frame. A person's profile is where a report or block
+						    belongs; quiet text links keep them out of the way until the
+						    design settles on one. */}
+						<View style={styles.safetyLinks}>
+							<Pressable
+								accessibilityLabel={`Report ${firstName}`}
+								accessibilityRole="button"
+								hitSlop={Spacing.two}
+								onPress={() => setIsReporting(true)}
+								style={styles.blockLink}
+							>
+								<Text style={styles.blockLabel}>Report {firstName}</Text>
+							</Pressable>
+
+							<Pressable
+								accessibilityLabel={`Block ${firstName}`}
+								accessibilityRole="button"
+								hitSlop={Spacing.two}
+								onPress={() => setIsBlocking(true)}
+								style={styles.blockLink}
+							>
+								<Text style={styles.blockLabel}>Block {firstName}</Text>
+							</Pressable>
+						</View>
 					</View>
 				</ScrollView>
 			</SafeAreaView>
@@ -223,6 +237,14 @@ function PersonDetails({ person, onBack }: PersonDetailsProps) {
 				title={`Block ${firstName}?`}
 				visible={isBlocking}
 			/>
+
+			<ReportPersonFlow
+				onBlocked={onBack}
+				onClose={() => setIsReporting(false)}
+				person={person}
+				source="profile"
+				visible={isReporting}
+			/>
 		</View>
 	);
 }
@@ -232,8 +254,12 @@ const styles = StyleSheet.create({
 		flex: 1,
 		backgroundColor: Ink.title,
 	},
+	safetyLinks: {
+		flexDirection: "row",
+		justifyContent: "center",
+		gap: Spacing.four,
+	},
 	blockLink: {
-		alignSelf: "center",
 		paddingVertical: Spacing.one,
 	},
 	blockLabel: {

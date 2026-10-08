@@ -2,6 +2,7 @@ import type { ImageSourcePropType } from "react-native";
 
 import { fetchNearbyPeople } from "@/features/discover/discovery-service";
 import { fetchNearbyEvents } from "@/features/events/event-service";
+import { PLACES_AVAILABLE } from "@/features/places/availability";
 import {
 	ratingFloor,
 	type SearchFilters,
@@ -218,7 +219,9 @@ export async function fetchSearchResults({
 	// Still fixtures, so still faked latency. People no longer wait on it.
 	if (PLACE_ONLY_TABS.includes(tab)) await delay(MOCK_LATENCY_MS);
 
-	const places = PLACES.filter((place) => keepPlace(place, term, filters));
+	const places = PLACES_AVAILABLE
+		? PLACES.filter((place) => keepPlace(place, term, filters))
+		: [];
 
 	if (tab === "people") return { people, places: [], events: [] };
 

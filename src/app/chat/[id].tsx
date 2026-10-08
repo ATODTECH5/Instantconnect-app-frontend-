@@ -13,25 +13,29 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import ArrowLeftIcon from "@/assets/auth/arrow-left.svg";
+import FlagIcon from "@/assets/communities/flag.svg";
+import MoreIcon from "@/assets/communities/more.svg";
+import BlockedIcon from "@/assets/profile/blocked.svg";
 import { MeetupCard } from "@/components/chat/meetup-card";
 import { MessageBubble } from "@/components/chat/message-bubble";
 import { MessageComposer } from "@/components/chat/message-composer";
 import { ProposeTimeSheet } from "@/components/chat/propose-time-sheet";
 import { SystemMessage } from "@/components/chat/system-message";
+import { ReportPersonFlow } from "@/components/safety/report-person-flow";
+import { ActionSheet } from "@/components/ui/action-sheet";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { PresenceAvatar } from "@/components/ui/presence-avatar";
 import { StateMessage } from "@/components/ui/state-message";
 import { Brand, Ink, MinTapTarget, Radius, Spacing, Type } from "@/constants/theme";
 import { useChatThreadSocket } from "@/features/chat/use-chat-socket";
-import {
-	CHAT_IMAGE_OPTIONS,
-	usePickPhoto,
-} from "@/features/profile/use-pick-photo";
+import { CHAT_IMAGE_OPTIONS, usePickPhoto } from "@/features/profile/use-pick-photo";
 import {
 	useConversationSummary,
 	useMarkReadOnOpen,
 	useMessages,
 	useSendMessage,
 } from "@/features/chat/use-thread";
+import { useBlockAction } from "@/features/blocks/use-blocks";
 import { useMeetupAction, useOpenMeetup } from "@/features/meetups/use-meetup";
 import { describeError } from "@/lib/api/api-error";
 import type { ApiMessage } from "@/lib/api/chat-schema";
@@ -59,9 +63,12 @@ export default function ChatThreadScreen() {
 	const meetupAction = useMeetupAction(id);
 	// Null: sheet closed. A string: the meetup being countered. "new": a fresh proposal.
 	const [proposing, setProposing] = useState<string | null>(null);
+	const [safety, setSafety] = useState<"none" | "menu" | "report" | "block">("none");
+	const block = useBlockAction();
 
 	const party = conversation?.party;
 	const partyName = party?.fullName ?? "";
+	const partyFirstName = partyName.split(" ")[0] || "them";
 	const items = useMemo(() => messages.data?.items ?? [], [messages.data]);
 
 	// Every transition posts a card and every card re-reads the same live
@@ -180,15 +187,24 @@ export default function ChatThreadScreen() {
 					</Text>
 
 					{isPartyTyping ? (
-						<Text style={[styles.presence, styles.presenceTyping]}>
-							typing…
-						</Text>
+						<Text style={[styles.presence, styles.presenceTyping]}>typing…</Text>
 					) : party ? (
 						<Text style={[styles.presence, party.isOnline && styles.presenceOnline]}>
 							{party.isOnline ? "Online" : "Offline"}
 						</Text>
 					) : null}
 				</View>
+
+				{party ? (
+					<Pressable
+						accessibilityLabel={`More options for ${party.fullName}`}
+						accessibilityRole="button"
+						onPress={() => setSafety("menu")}
+						style={({ pressed }) => [styles.more, pressed && styles.pressed]}
+					>
+						<MoreIcon color={Ink.title} height={BACK_ICON} width={BACK_ICON} />
+					</Pressable>
+				) : null}
 			</View>
 
 			<KeyboardAvoidingView
@@ -234,9 +250,7 @@ export default function ChatThreadScreen() {
 				<MessageComposer
 					isSending={isSending}
 					onAttachImage={handleAttachImage}
-					onProposeTime={
-						openMeetup.data === null ? () => setProposing("new") : undefined
-					}
+					onProposeTime={openMeetup.data === null ? () => setProposing("new") : undefined}
 					onSend={send}
 					onTyping={setTyping}
 				/>
@@ -249,6 +263,55 @@ export default function ChatThreadScreen() {
 				title={proposing === "new" ? "Propose a Time" : "Suggest other time"}
 				visible={proposing !== null}
 			/>
+
+			{party ? (
+				<>
+					<ActionSheet
+						items={[
+							{
+								key: "report",
+								label: `Report ${partyFirstName}`,
+								Icon: FlagIcon,
+								destructive: true,
+								onPress: () => setSafety("report"),
+							},
+							{
+								key: "block",
+								label: `Block ${partyFirstName}`,
+								Icon: BlockedIcon,
+								destructive: true,
+								onPress: () => setSafety("block"),
+							},
+						]}
+						onDismiss={() => setSafety("none")}
+						visible={safety === "menu"}
+					/>
+
+					<ReportPersonFlow
+						onBlocked={goBack}
+						onClose={() => setSafety("none")}
+						person={party}
+						source="chat"
+						visible={safety === "report"}
+					/>
+
+					<ConfirmDialog
+						cancelLabel="Keep"
+						confirmLabel="Block"
+						message={`${partyFirstName} will no longer see your profile, appear in your Discover feed or be able to message you. You can undo this from Blocked Users in your profile.`}
+						onCancel={() => setSafety("none")}
+						onConfirm={() => {
+							setSafety("none");
+							block.mutate(
+								{ type: "block", userId: party.id },
+								{ onSuccess: goBack },
+							);
+						}}
+						title={`Block ${partyFirstName}?`}
+						visible={safety === "block"}
+					/>
+				</>
+			) : null}
 		</SafeAreaView>
 	);
 }
@@ -277,6 +340,12 @@ const styles = StyleSheet.create({
 	},
 	identity: {
 		flex: 1,
+	},
+	more: {
+		width: MinTapTarget,
+		height: MinTapTarget,
+		alignItems: "center",
+		justifyContent: "center",
 	},
 	name: {
 		...Type.resultName,

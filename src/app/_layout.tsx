@@ -13,6 +13,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useColorScheme } from "react-native";
 
 import { BrandSplash } from "@/components/brand-splash";
+import { UpdateGate } from "@/components/update-required";
 import { AuthSessionProvider } from "@/features/auth/auth-session";
 import { SignUpDraftProvider } from "@/features/auth/sign-up-draft";
 import { StartupGate } from "@/features/auth/startup-gate";
@@ -74,6 +75,7 @@ export default function RootLayout() {
 							<Stack.Screen name="search" />
 						</Stack>
 					</SignUpDraftProvider>
+					<UpdateGate />
 					{isSplashVisible && (
 						<BrandSplash onFinish={handleSplashFinish} ready={hasDecided} />
 					)}

@@ -1,3 +1,5 @@
+import { PLACES_AVAILABLE } from "@/features/places/availability";
+
 export type SearchTabId = "all" | "people" | "events" | "restaurant" | "workspace";
 
 export type SearchTab = {
@@ -10,13 +12,15 @@ export type SearchTab = {
  * "Restaurant" on the next, "events" lowercase on another). Title case singular
  * is used throughout.
  */
+const PLACE_TABS: SearchTabId[] = ["restaurant", "workspace"];
+
 export const SEARCH_TABS: SearchTab[] = [
 	{ id: "all", label: "All" },
 	{ id: "people", label: "People" },
 	{ id: "events", label: "Events" },
 	{ id: "restaurant", label: "Restaurant" },
 	{ id: "workspace", label: "Work Space" },
-];
+].filter((tab) => PLACES_AVAILABLE || !PLACE_TABS.includes(tab.id as SearchTabId)) as SearchTab[];
 
 export function isSearchTabId(value: string): value is SearchTabId {
 	return SEARCH_TABS.some((tab) => tab.id === value);
@@ -33,7 +37,9 @@ export const LOOKING_FOR: { id: LookingForId; label: string }[] = [
 ];
 
 /** Doubles as the Popular Searches row on the idle state. */
-export const POPULAR_SEARCHES = LOOKING_FOR.map(({ label }) => label);
+export const POPULAR_SEARCHES = LOOKING_FOR.filter(
+	({ id }) => PLACES_AVAILABLE || (id !== "coffee" && id !== "coworking"),
+).map(({ label }) => label);
 
 export type OnlineStatusId = "any" | "online" | "recent";
 

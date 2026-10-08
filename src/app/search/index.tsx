@@ -30,6 +30,7 @@ import {
 } from "@/features/search/search-filters";
 import { useSearchHistory } from "@/features/search/search-history";
 import { useSearchResults, useSearchSuggestions } from "@/features/search/use-search";
+import { PLACES_AVAILABLE } from "@/features/places/availability";
 import { isEmptyResults } from "@/features/search/search-catalog";
 import { useNavBarInset } from "@/hooks/use-nav-bar-inset";
 
@@ -63,7 +64,7 @@ export default function SearchScreen() {
 	const isSearching = submitted !== null;
 	const isTyping = !isSearching && query.trim().length > 0;
 
-	const suggestions = useSearchSuggestions(isTyping ? query : "");
+	const suggestions = useSearchSuggestions(isTyping && PLACES_AVAILABLE ? query : "");
 	const results = useSearchResults({
 		query: submitted ?? query,
 		tab,
@@ -214,7 +215,7 @@ export default function SearchScreen() {
 	}
 
 	function renderSuggesting() {
-		if (suggestions.isPending) return renderBusy("Looking for matches");
+		if (PLACES_AVAILABLE && suggestions.isPending) return renderBusy("Looking for matches");
 
 		const terms = suggestions.data ?? [];
 
@@ -228,9 +229,10 @@ export default function SearchScreen() {
 				showsVerticalScrollIndicator={false}
 			>
 				<View style={styles.column}>
-					<SectionHeader title="Suggestions" />
+					{/* The suggestions are place fixtures, hidden with the rest of Places. */}
+					{!PLACES_AVAILABLE ? null : <SectionHeader title="Suggestions" />}
 
-					{terms.length > 0 ? (
+					{!PLACES_AVAILABLE ? null : terms.length > 0 ? (
 						<View style={styles.rows}>
 							{terms.map((term, index) => (
 								<SearchTermRow
