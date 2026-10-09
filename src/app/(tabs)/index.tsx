@@ -213,7 +213,7 @@ export default function HomeScreen() {
 					<View style={[styles.padded, { marginTop: BLOCK.beforeSection * vertical }]}>
 						<SectionHeader
 							actionLabel="View all"
-							onPressAction={() => openSearch({ tab: "events" })}
+							onPressAction={() => router.push("/connections/events")}
 							title="Happening Around You"
 						/>
 					</View>

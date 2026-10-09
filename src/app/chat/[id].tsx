@@ -21,6 +21,7 @@ import { MessageBubble } from "@/components/chat/message-bubble";
 import { MessageComposer } from "@/components/chat/message-composer";
 import { ProposeTimeSheet } from "@/components/chat/propose-time-sheet";
 import { SystemMessage } from "@/components/chat/system-message";
+import { UnverifiedPartyBanner } from "@/components/chat/unverified-party-banner";
 import { ReportPersonFlow } from "@/components/safety/report-person-flow";
 import { ActionSheet } from "@/components/ui/action-sheet";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -37,6 +38,7 @@ import {
 } from "@/features/chat/use-thread";
 import { useBlockAction } from "@/features/blocks/use-blocks";
 import { useMeetupAction, useOpenMeetup } from "@/features/meetups/use-meetup";
+import { useProfile } from "@/features/profile/use-profile";
 import { describeError } from "@/lib/api/api-error";
 import type { ApiMessage } from "@/lib/api/chat-schema";
 
@@ -65,6 +67,7 @@ export default function ChatThreadScreen() {
 	const [proposing, setProposing] = useState<string | null>(null);
 	const [safety, setSafety] = useState<"none" | "menu" | "report" | "block">("none");
 	const block = useBlockAction();
+	const profile = useProfile();
 
 	const party = conversation?.party;
 	const partyName = party?.fullName ?? "";
@@ -206,6 +209,10 @@ export default function ChatThreadScreen() {
 					</Pressable>
 				) : null}
 			</View>
+
+			{party && !party.isVerified && profile.data?.kycStatus === "verified" ? (
+				<UnverifiedPartyBanner firstName={partyFirstName} />
+			) : null}
 
 			<KeyboardAvoidingView
 				behavior={Platform.OS === "ios" ? "padding" : undefined}

@@ -3,8 +3,10 @@ import { uploadToProvider, type PickedFile } from "@/lib/api/direct-upload";
 import { uploadSignatureSchema } from "@/lib/api/upload-signature-schema";
 import {
 	conversationPageSchema,
+	conversationSchema,
 	messagePageSchema,
 	messageSchema,
+	type ApiConversation,
 	type ApiConversationPage,
 	type ApiMessage,
 	type ApiMessagePage,
@@ -39,6 +41,13 @@ export function fetchConversations(
 ): Promise<ApiConversationPage> {
 	return request(`/conversations${toSearch(query)}`, {
 		schema: conversationPageSchema,
+		auth: true,
+	});
+}
+
+export function fetchConversation(conversationId: string): Promise<ApiConversation> {
+	return request(`/conversations/${conversationId}`, {
+		schema: conversationSchema,
 		auth: true,
 	});
 }

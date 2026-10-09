@@ -46,5 +46,25 @@ export function StartupGate({ onDecided }: StartupGateProps) {
 		onDecided();
 	}, [navigationState?.key, status, hasSeenOnboarding, onDecided]);
 
+	/**
+	 * A session can end mid use (a rejected refresh token, a family revoked as
+	 * theft), and every screen left open would then fail its requests with
+	 * "could not load". The whole stack is dropped so Back cannot return to
+	 * a screen that needs the old session.
+	 */
+	const previousStatusRef = useRef(status);
+
+	useEffect(() => {
+		const previous = previousStatusRef.current;
+
+		previousStatusRef.current = status;
+
+		if (!hasRoutedRef.current) return;
+		if (previous !== "authenticated" || status !== "unauthenticated") return;
+
+		if (router.canDismiss()) router.dismissAll();
+		router.replace("/sign-in");
+	}, [status]);
+
 	return null;
 }
