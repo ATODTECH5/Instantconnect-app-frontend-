@@ -7,6 +7,7 @@ import {
 import { useEffect } from "react";
 
 import {
+	fetchConversation,
 	fetchMessages,
 	markThreadRead,
 	sendImageMessage,
@@ -29,23 +30,24 @@ export function useMessages(conversationId: string): UseQueryResult<ApiMessagePa
 }
 
 /**
- * The header needs the other party, which only the list endpoint reports.
- *
- * Reading the list's cache alone is not enough: it is empty whenever the thread
- * was not reached through the list, which includes a deep link and any reload
- * that lands straight on this route, and the header then degrades to a nameless
- * "Conversation". Sharing the list query instead means a warm cache answers
- * instantly and a cold one fetches once.
- *
- * Still bounded by the first page. A thread further down the list resolves to
- * undefined, and the real fix for that is a `GET /conversations/:id`.
+ * The header needs the other party. A thread reached through the list paints
+ * from its cache at once; one reached by a notification or a link, or sitting
+ * beyond the list's first page, is fetched on its own. The list stays the
+ * fallback, so a failed single fetch never takes away a header it can supply.
  */
 export function useConversationSummary(
 	conversationId: string,
 ): ApiConversation | undefined {
-	const conversations = useConversations("all");
+	const list = useConversations("all");
+	const listed = list.data?.items.find((item) => item.id === conversationId);
 
-	return conversations.data?.items.find((item) => item.id === conversationId);
+	const conversation = useQuery({
+		queryKey: [...CONVERSATIONS_KEY, "one", conversationId],
+		queryFn: () => fetchConversation(conversationId),
+		placeholderData: listed,
+	});
+
+	return conversation.data ?? listed;
 }
 
 type Outgoing = { kind: "text"; body: string } | { kind: "image"; image: PickedFile };

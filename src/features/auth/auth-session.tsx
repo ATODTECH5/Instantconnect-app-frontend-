@@ -67,12 +67,17 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
 	 * A session can also end without the user asking, when a refresh token is
 	 * rejected or the family is revoked as theft. Clearing the cache here rather
 	 * than in the sign out path covers both exits with one rule: no data outlives
-	 * the session it was fetched for.
+	 * the session it was fetched for. The chat socket goes too, since the server
+	 * checks the token at the handshake only and an open socket would keep
+	 * delivering the old account's messages.
 	 */
 	useEffect(() => {
 		const isAuthenticated = session !== null;
 
-		if (wasAuthenticatedRef.current && !isAuthenticated) queryClient.clear();
+		if (wasAuthenticatedRef.current && !isAuthenticated) {
+			queryClient.clear();
+			closeChatSocket();
+		}
 
 		wasAuthenticatedRef.current = isAuthenticated;
 	}, [queryClient, session]);
@@ -94,11 +99,6 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
 			// Deliberately not surfaced. Signing out has to succeed on the device
 			// whatever the network did, and the server expires the token regardless.
 		}
-
-		// A socket authenticated as the account being signed out must not
-		// outlive it: the server checks the token at the handshake only, so an
-		// open socket would keep delivering that account's messages.
-		closeChatSocket();
 
 		await clearSession();
 	}, []);
